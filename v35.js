@@ -13,8 +13,8 @@ FIRING_SQUAD_SHEET.onload=()=>{
  V35_FIRING_SHEET_READY=FIRING_SQUAD_SHEET.naturalWidth===1774&&FIRING_SQUAD_SHEET.naturalHeight===887;
  if(!V35_FIRING_SHEET_READY)console.error('v35: firing squad sheet dimensions do not match the supplied 1774x887 source image');
 };
-FIRING_SQUAD_SHEET.onerror=()=>{V35_FIRING_SHEET_READY=false;console.warn('v35: exact firing squad sheet is not present at assets/firing_squad_sheet.png; using existing procedural fallback');};
-FIRING_SQUAD_SHEET.src='assets/firing_squad_sheet.png?v=35';
+FIRING_SQUAD_SHEET.onerror=()=>{V35_FIRING_SHEET_READY=false;console.warn('v35: exact firing squad sheet is not present at firing_squad_sheet.png; using existing procedural fallback');};
+FIRING_SQUAD_SHEET.src='firing_squad_sheet.png?v=36';
 
 // Source rectangles in the original 1774x887 sheet. We deliberately crop the
 // source image in canvas rather than creating derivative sprite files.
