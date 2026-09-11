@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v15</title>
-<link rel="stylesheet" href="style.css?v=15">
-<link rel="stylesheet" href="v15.css?v=15">
+<title>Alien Planet Defense v16</title>
+<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="v15.css?v=16">
+<link rel="stylesheet" href="v16.css?v=16">
 </head>
 <body>
 <div id="gameWrap">
   <div id="hud">
     <div><b>BASE</b> <span id="baseHp">300</span>/<span id="baseMax">300</span></div>
-    <div><b>XP</b> <span id="xp">0</span>/<span id="nextXp">90</span></div>
-    <div><b>LEVEL</b> <span id="level">1</span></div>
-    <div><b>CREDITS</b> <span id="credits">450</span></div>
+    <div><b>GOLD</b> <span id="credits">650</span></div>
+    <div><b>METAL</b> <span id="metal">160</span></div>
     <div><b>WORKERS</b> <span id="workers">3/3 free</span></div>
     <div><b>ALIENS</b> <span id="aliens">0</span></div>
     <div><b>SURVIVAL</b> <span id="survival">0:00</span></div>
+    <div class="legacyStat"><span id="xp">0</span><span id="nextXp">999999</span><span id="level">1</span></div>
   </div>
 
   <div id="canvasShell">
@@ -24,26 +25,29 @@
     <button id="pauseBtn" aria-label="Pause game">⏸ PAUSE</button>
     <button id="cancelUnitBtn" aria-label="Cancel selected unit">✕</button>
   </div>
-  <div id="message">Build an economy, defend the base, survive.</div>
+  <div id="message">Kill aliens for gold. Export crystal for gold. Refine ore into metal for defenses.</div>
 
   <div id="menuTabs">
     <button class="menuTab active" data-menu="unitsMenu">MOVABLE UNITS</button>
     <button class="menuTab" data-menu="towersMenu">TOWERS</button>
-    <button class="menuTab" data-menu="passiveMenu">PASSIVE BUILDINGS</button>
+    <button class="menuTab" data-menu="passiveMenu">BUILDINGS</button>
   </div>
 
   <div id="unitsMenu" class="buildMenu active">
-    <button class="buildBtn selected" data-type="soldier">🪖 Fire Squad <small>35</small></button>
-    <button class="buildBtn" data-type="truck">🚚 Crystal Truck <small>65</small></button>
+    <button class="buildBtn selected" data-type="soldier">🪖 Fire Squad <small>35 gold</small></button>
+    <button class="buildBtn" data-type="truck">🚚 Logistics Truck <small>70 gold</small></button>
   </div>
   <div id="towersMenu" class="buildMenu">
-    <button class="buildBtn" data-type="laser">🔴 Laser Sniper <small>75</small></button>
-    <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>60</small></button>
-    <button class="buildBtn" data-type="wall">🧱 Wall <small>length based</small></button>
+    <button class="buildBtn" data-type="laser">🔴 Laser Sniper <small>70 metal</small></button>
+    <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>55 metal</small></button>
+    <button class="buildBtn" data-type="wall">🧱 Wall <small>metal / length</small></button>
   </div>
   <div id="passiveMenu" class="buildMenu">
-    <button class="buildBtn" data-type="safespot">⬡ Tower Safe Spot <small>45</small></button>
-    <button class="buildBtn" data-type="mine">💎 Crystal Mine <small>85</small></button>
+    <button class="buildBtn" data-type="safespot">⬡ Tower Safe Spot <small>50 gold</small></button>
+    <button class="buildBtn" data-type="mine">💎 Crystal Mine <small>95 gold</small></button>
+    <button class="buildBtn" data-type="oremine">⛏ Ore Mine <small>100 gold</small></button>
+    <button class="buildBtn" data-type="refinery">🏭 Refinery <small>240 gold</small></button>
+    <button class="buildBtn expensive" data-type="landingpad">🚀 Landing Pad <small>500 gold</small></button>
   </div>
 
   <div id="unitActions">
@@ -61,13 +65,13 @@
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Desktop: arrow keys pan the camera; Space pauses. Mobile: drag the map. Wall: select Wall, click/tap the start point, then the end point, review the price, and confirm.</div>
+  <div id="hint">Crystal/Ore Mines snap directly onto matching depots. Trucks automatically load nearby mines: take crystal to Landing Pads and ore to Refineries. Landing ships sell crystal when full and attract nearby aliens. Towers and Walls cost metal.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
 <div id="debugPanel" class="debug-panel">
   <div class="debug-title">DEBUG MENU</div>
-  <label><input id="debugCash" type="checkbox"> Unlimited cash</label>
+  <label><input id="debugCash" type="checkbox"> Unlimited gold</label>
   <label><input id="debugLives" type="checkbox"> Unlimited lives</label>
   <button id="debugHeal">HEAL BASE</button>
 </div>
@@ -76,7 +80,7 @@
   <div class="wall-confirm-card">
     <div class="wall-confirm-title">BUILD WALL?</div>
     <div>Length: <b><span id="wallLength">0</span></b></div>
-    <div>Cost: <b><span id="wallCost">0</span> credits</b></div>
+    <div>Cost: <b><span id="wallCost">0</span> metal</b></div>
     <div>Build time: <b><span id="wallBuildTime">0</span>s</b></div>
     <div class="wall-confirm-actions">
       <button id="wallCancel">CANCEL</button>
@@ -85,19 +89,17 @@
   </div>
 </div>
 
-<div id="cardOverlay" class="hidden">
-  <div id="cardPanel">
-    <div class="cardTitle">LEVEL UP</div>
-    <div class="cardSub">Choose one upgrade for this run.</div>
-    <div id="cards"></div>
-  </div>
-</div>
+<!-- Kept for compatibility with the v14 core; v16 never displays it. -->
+<div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=15"></script>
-<script src="v14a.js?v=15"></script>
-<script src="v14b.js?v=15"></script>
-<script src="v14c.js?v=15"></script>
-<script src="v14d.js?v=15"></script>
-<script src="v15_patch.js?v=15"></script>
+<script src="config.js?v=16"></script>
+<script src="v14a.js?v=16"></script>
+<script src="v14b.js?v=16"></script>
+<script src="v14c.js?v=16"></script>
+<script src="v14d.js?v=16"></script>
+<script src="v15_patch.js?v=16"></script>
+<script src="v16a.js?v=16"></script>
+<script src="v16b.js?v=16"></script>
+<script src="v16c.js?v=16"></script>
 </body>
 </html>
