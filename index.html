@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v17</title>
-<link rel="stylesheet" href="style.css?v=17">
-<link rel="stylesheet" href="v15.css?v=17">
-<link rel="stylesheet" href="v16.css?v=17">
+<title>Alien Planet Defense v18</title>
+<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="v15.css?v=18">
+<link rel="stylesheet" href="v16.css?v=18">
+<link rel="stylesheet" href="v18.css?v=18">
 </head>
 <body>
 <div id="gameWrap">
@@ -46,6 +47,8 @@
     <button class="buildBtn" data-type="railgun">⚡ Railgun Tower <small>120 metal</small></button>
     <button class="buildBtn" data-type="tesla">🟣 Tesla Tower <small>95 metal</small></button>
     <button class="buildBtn" data-type="wall">🧱 Wall <small>metal / length</small></button>
+    <button id="wallCancelModeBtn" class="wall-inline-action" title="Cancel wall placement" aria-label="Cancel wall placement">✕</button>
+    <button id="wallConfirmPathBtn" class="wall-inline-action" title="Review and build wall path" aria-label="Confirm wall path">✓</button>
   </div>
   <div id="passiveMenu" class="buildMenu">
     <button class="buildBtn" data-type="safespot">⬡ Tower Safe Spot <small>50 gold</small></button>
@@ -70,7 +73,7 @@
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Riflemen are general-purpose; Heavy Gunners trade range for sustained fire; Rocketeers deal splash damage; Medics heal damaged friendlies. Railguns pierce lines of aliens and Tesla Towers chain between nearby targets.</div>
+  <div id="hint">Wall: click bend points or drag/paint a path, then press ✓ to review its metal cost; ✕ cancels. Newly recorded truck loops start automatically when the truck reaches their first point.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -88,24 +91,24 @@
     <div>Cost: <b><span id="wallCost">0</span> metal</b></div>
     <div>Build time: <b><span id="wallBuildTime">0</span>s</b></div>
     <div class="wall-confirm-actions">
-      <button id="wallCancel">CANCEL</button>
+      <button id="wallCancel">KEEP EDITING</button>
       <button id="wallAccept">BUILD WALL</button>
     </div>
   </div>
 </div>
 
-<!-- Kept for compatibility with the older core; v16+ never displays it. -->
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=17"></script>
-<script src="v14a.js?v=17"></script>
-<script src="v14b.js?v=17"></script>
-<script src="v14c.js?v=17"></script>
-<script src="v14d.js?v=17"></script>
-<script src="v15_patch.js?v=17"></script>
-<script src="v16a.js?v=17"></script>
-<script src="v16b.js?v=17"></script>
-<script src="v16c.js?v=17"></script>
-<script src="v17.js?v=17"></script>
+<script src="config.js?v=18"></script>
+<script src="v14a.js?v=18"></script>
+<script src="v14b.js?v=18"></script>
+<script src="v14c.js?v=18"></script>
+<script src="v14d.js?v=18"></script>
+<script src="v15_patch.js?v=18"></script>
+<script src="v16a.js?v=18"></script>
+<script src="v16b.js?v=18"></script>
+<script src="v16c.js?v=18"></script>
+<script src="v17.js?v=18"></script>
+<script src="v18.js?v=18"></script>
 </body>
 </html>
