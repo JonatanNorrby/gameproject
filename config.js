@@ -1,7 +1,7 @@
-// Alien Planet Defense v22 - CONFIG
+// Alien Planet Defense v24 - CONFIG
 // ------------------------------------------------------------
-// v22 continues the Game backlog with six specialized towers plus Flyers.
-// Every combat tower follows the same 1/3 -> 3/3 metal upgrade model.
+// v24 continues the Game backlog with specialized enemy roles that pressure
+// Walls, logistics and economy infrastructure in different ways.
 // ------------------------------------------------------------
 const CONFIG={
   GAME:{STARTING_CREDITS:650,STARTING_METAL:160,STARTING_BASE_HP:300},
@@ -30,7 +30,6 @@ const CONFIG={
   MEDIC:{COST:80,MEMBERS:3,HEAL_RANGE:165,HEAL_PER_SECOND:11,MOVE_SPEED:165,HP:140},
   TRUCK:{COST:70,MOVE_SPEED:185,HP:135,CAPACITY:45,PICKUP_RANGE:100,UNLOAD_RANGE:100},
 
-  // Tower COST values are METAL costs.
   LASER:{COST:70,RANGE:400,FIRE_INTERVAL:1.42,DAMAGE:72,BULLET_SPEED:1050,HP:190},
   FLAME:{COST:55,RANGE:160,FIRE_INTERVAL:0.11,BURN_TICK_DAMAGE:4.2,BURN_TICK_INTERVAL:0.28,BURN_DURATION:3.1,HP:170},
   RAILGUN:{COST:120,RANGE:620,FIRE_INTERVAL:3.20,DAMAGE:145,PIERCE_WIDTH:18,MAX_TARGETS:3,HP:225},
@@ -42,86 +41,47 @@ const CONFIG={
   MISSILE:{COST:125,RANGE:570,FIRE_INTERVAL:2.25,DAMAGE:82,SPLASH_RADIUS:82,HP:215},
   DRONE_BAY:{COST:110,RANGE:305,FIRE_INTERVAL:0.56,DAMAGE:8,BULLET_SPEED:880,HP:245,ORBIT_RADIUS:34},
   BLOCKADE:{COST:22,HP:420,WIDTH:78,HEIGHT:22},
-
-  // Bootstrap compatibility only. Safe Spots are removed from gameplay by v21.
   SAFE_SPOT:{COST:50,RADIUS:31,PLACEMENT_CLEARANCE:50,HP:180},
 
   TOWER_UPGRADES:{
-    laser:{
-      2:{COST:45,NAME:'Focus Optics',DESC:'+15% range, +40% damage, 10% faster fire.'},
-      3:{COST:70,NAME:'Prism Core',DESC:'+25% range, +75% damage, 18% faster fire, shots pierce 2 aliens.'}
-    },
-    flame:{
-      2:{COST:35,NAME:'Napalm Mix',DESC:'+16% range and ignites 2 aliens at once.'},
-      3:{COST:55,NAME:'Inferno Projector',DESC:'+28% range, 10% faster fire and ignites 4 aliens at once.'}
-    },
-    railgun:{
-      2:{COST:75,NAME:'Accelerator Rails',DESC:'+15% range, +45% damage and pierces up to 5 aliens.'},
-      3:{COST:115,NAME:'Hypervelocity Core',DESC:'+25% range, +85% damage, 18% faster fire and pierces up to 7 aliens.'}
-    },
-    tesla:{
-      2:{COST:60,NAME:'Arc Capacitors',DESC:'+14% range, +24% damage, stronger arcs and 5 chains.'},
-      3:{COST:90,NAME:'Storm Core',DESC:'+24% range, +52% damage, 27% faster fire and 7 chains.'}
-    },
-    antiair:{
-      2:{COST:40,NAME:'Twin Autocannons',DESC:'Fires 2 rounds per burst with +10% range. Excellent metal efficiency against Flyers.'},
-      3:{COST:65,NAME:'Flak Matrix',DESC:'Fires 3-round bursts and each hit damages nearby Flyers with flak splash.'}
-    },
-    cryo:{
-      2:{COST:50,NAME:'Deep Freeze Cells',DESC:'Stronger slow, +18% range and chills 2 aliens at once.'},
-      3:{COST:75,NAME:'Absolute Zero Pulse',DESC:'Chills 4 aliens at once, nearly halving movement speed and dealing increased damage.'}
-    },
-    mortar:{
-      2:{COST:65,NAME:'High-Explosive Shells',DESC:'+30% damage and a much larger blast radius.'},
-      3:{COST:95,NAME:'Cluster Payload',DESC:'Main shell gains range and damage, then bursts into 3 secondary explosions.'}
-    },
-    minigun:{
-      2:{COST:55,NAME:'Powered Feed',DESC:'25% faster fire, +20% damage and improved range.'},
-      3:{COST:80,NAME:'Dual Rotary Mount',DESC:'Two barrels fire together with higher damage and range.'}
-    },
-    missile:{
-      2:{COST:75,NAME:'Seeker Warhead',DESC:'+18% range, +35% damage and larger splash.'},
-      3:{COST:105,NAME:'Tandem Rack',DESC:'Launches 2 missiles per salvo with major splash and faster reload.'}
-    },
-    dronebay:{
-      2:{COST:70,NAME:'Second Launch Rail',DESC:'Deploys 2 defense drones with improved range and damage.'},
-      3:{COST:100,NAME:'Autonomous Wing',DESC:'Deploys 3 faster-firing defense drones covering a large area around the bay.'}
-    }
+    laser:{2:{COST:45,NAME:'Focus Optics',DESC:'+15% range, +40% damage, 10% faster fire.'},3:{COST:70,NAME:'Prism Core',DESC:'+25% range, +75% damage, 18% faster fire, shots pierce 2 aliens.'}},
+    flame:{2:{COST:35,NAME:'Napalm Mix',DESC:'+16% range and ignites 2 aliens at once.'},3:{COST:55,NAME:'Inferno Projector',DESC:'+28% range, 10% faster fire and ignites 4 aliens at once.'}},
+    railgun:{2:{COST:75,NAME:'Accelerator Rails',DESC:'+15% range, +45% damage and pierces up to 5 aliens.'},3:{COST:115,NAME:'Hypervelocity Core',DESC:'+25% range, +85% damage, 18% faster fire and pierces up to 7 aliens.'}},
+    tesla:{2:{COST:60,NAME:'Arc Capacitors',DESC:'+14% range, +24% damage, stronger arcs and 5 chains.'},3:{COST:90,NAME:'Storm Core',DESC:'+24% range, +52% damage, 27% faster fire and 7 chains.'}},
+    antiair:{2:{COST:40,NAME:'Twin Autocannons',DESC:'Fires 2 rounds per burst with +10% range. Excellent metal efficiency against Flyers.'},3:{COST:65,NAME:'Flak Matrix',DESC:'Fires 3-round bursts and each hit damages nearby Flyers with flak splash.'}},
+    cryo:{2:{COST:50,NAME:'Deep Freeze Cells',DESC:'Stronger slow, +18% range and chills 2 aliens at once.'},3:{COST:75,NAME:'Absolute Zero Pulse',DESC:'Chills 4 aliens at once, nearly halving movement speed and dealing increased damage.'}},
+    mortar:{2:{COST:65,NAME:'High-Explosive Shells',DESC:'+30% damage and a much larger blast radius.'},3:{COST:95,NAME:'Cluster Payload',DESC:'Main shell gains range and damage, then bursts into 3 secondary explosions.'}},
+    minigun:{2:{COST:55,NAME:'Powered Feed',DESC:'25% faster fire, +20% damage and improved range.'},3:{COST:80,NAME:'Dual Rotary Mount',DESC:'Two barrels fire together with higher damage and range.'}},
+    missile:{2:{COST:75,NAME:'Seeker Warhead',DESC:'+18% range, +35% damage and larger splash.'},3:{COST:105,NAME:'Tandem Rack',DESC:'Launches 2 missiles per salvo with major splash and faster reload.'}},
+    dronebay:{2:{COST:70,NAME:'Second Launch Rail',DESC:'Deploys 2 defense drones with improved range and damage.'},3:{COST:100,NAME:'Autonomous Wing',DESC:'Deploys 3 faster-firing defense drones covering a large area around the bay.'}}
   },
 
-  CRYSTALS:{
-    DEPOT_COUNT:9,DEPOT_RADIUS:34,DEPOT_BASE_CLEARANCE:300,DEPOT_SEPARATION:250,
-    NEAR_STOCK:850,STOCK_PER_PIXEL:0.72,
-    MINE_COST:95,MINE_HP:180,MINE_RATE:3.2,MINE_STORAGE:100,
-    GOLD_PER_CRYSTAL:2.2,
-    DEPOT_BASE_STOCK:850,MINE_PLACEMENT_RANGE:70,MONEY_PER_CRYSTAL:2.2
-  },
-
-  ORE:{
-    DEPOT_COUNT:8,DEPOT_RADIUS:34,DEPOT_BASE_CLEARANCE:300,DEPOT_SEPARATION:250,
-    NEAR_STOCK:700,STOCK_PER_PIXEL:0.60,
-    MINE_COST:100,MINE_HP:190,MINE_RATE:2.8,MINE_STORAGE:100
-  },
-
+  CRYSTALS:{DEPOT_COUNT:9,DEPOT_RADIUS:34,DEPOT_BASE_CLEARANCE:300,DEPOT_SEPARATION:250,NEAR_STOCK:850,STOCK_PER_PIXEL:0.72,MINE_COST:95,MINE_HP:180,MINE_RATE:3.2,MINE_STORAGE:100,GOLD_PER_CRYSTAL:2.2,DEPOT_BASE_STOCK:850,MINE_PLACEMENT_RANGE:70,MONEY_PER_CRYSTAL:2.2},
+  ORE:{DEPOT_COUNT:8,DEPOT_RADIUS:34,DEPOT_BASE_CLEARANCE:300,DEPOT_SEPARATION:250,NEAR_STOCK:700,STOCK_PER_PIXEL:0.60,MINE_COST:100,MINE_HP:190,MINE_RATE:2.8,MINE_STORAGE:100},
   REFINERY:{COST:240,HP:260,ORE_CAPACITY:260,REFINE_RATE:4.5,METAL_PER_ORE:1.0,UNLOAD_RANGE:105},
   LANDING_PAD:{COST:500,HP:330,RADIUS:48,TRUCK_UNLOAD_RANGE:120,SHIP_CAPACITY:220,COOLDOWN:120,INITIAL_COOLDOWN:0,ATTRACT_RADIUS:720},
-
   PATHFINDING:{CELL_SIZE:48,MAX_VISITED:8000},
 
+  // Baseline enemies.
+  RAVAGER:{BASE_HP:6,HP_PER_LEVEL:0.55,BASE_SPEED:70,SPEED_PER_LEVEL:0.8,RADIUS:6,BASE_DAMAGE:1.5,GOLD_REWARD:3},
   SWARM:{BASE_HP:3.5,HP_PER_LEVEL:0.35,BASE_SPEED:78,SPEED_PER_LEVEL:1.0,RADIUS:4.7,BASE_DAMAGE:1,GOLD_REWARD:2},
   RUNNER:{BASE_HP:5.5,HP_PER_LEVEL:0.5,BASE_SPEED:108,SPEED_PER_LEVEL:1.3,RADIUS:6.2,BASE_DAMAGE:2,GOLD_REWARD:3},
   BRUTE:{BASE_HP:34,HP_PER_LEVEL:3.2,BASE_SPEED:36,SPEED_PER_LEVEL:0.5,RADIUS:14,BASE_DAMAGE:8,GOLD_REWARD:11},
   RANGED_ALIEN:{SPAWN_CHANCE:0.03,BASE_HP:18,HP_PER_LEVEL:1.5,BASE_SPEED:40,SPEED_PER_LEVEL:0.4,RADIUS:10,BASE_DAMAGE:3,GOLD_REWARD:6,ATTACK_RANGE:195,SHOT_DAMAGE:7,FIRE_INTERVAL:1.8,PROJECTILE_SPEED:285},
   FLYER:{SPAWN_CHANCE:0.10,START_AFTER_SECONDS:35,BASE_HP:13,HP_PER_LEVEL:1.0,BASE_SPEED:92,SPEED_PER_LEVEL:0.8,RADIUS:9,BASE_DAMAGE:4,GOLD_REWARD:7},
 
+  // Backlog special enemies.
+  SIEGE_BEAST:{START_AFTER_SECONDS:120,WEIGHT:0.7,BASE_HP:175,HP_PER_LEVEL:16,BASE_SPEED:24,SPEED_PER_LEVEL:0.25,RADIUS:20,BASE_DAMAGE:24,GOLD_REWARD:30,WALL_DAMAGE_MULTIPLIER:2.2},
+  BURROWER:{START_AFTER_SECONDS:85,WEIGHT:1.0,BASE_HP:19,HP_PER_LEVEL:1.6,BASE_SPEED:58,SPEED_PER_LEVEL:0.55,RADIUS:9,BASE_DAMAGE:5,GOLD_REWARD:10,BURROW_DISTANCE:155,BURROW_TIME:0.75,BURROW_COOLDOWN:8},
+  CLIMBER:{START_AFTER_SECONDS:65,WEIGHT:1.25,BASE_HP:10,HP_PER_LEVEL:0.8,BASE_SPEED:82,SPEED_PER_LEVEL:0.8,RADIUS:7,BASE_DAMAGE:3,GOLD_REWARD:6,CLIMB_SPEED_FACTOR:0.32,VULNERABILITY:1.55},
+  ACID_LOBBER:{START_AFTER_SECONDS:105,WEIGHT:0.85,BASE_HP:27,HP_PER_LEVEL:2.2,BASE_SPEED:34,SPEED_PER_LEVEL:0.35,RADIUS:11,BASE_DAMAGE:4,GOLD_REWARD:13,ATTACK_RANGE:285,SHOT_DAMAGE:9,FIRE_INTERVAL:2.7,ACID_DURATION:6,ARMOR_DAMAGE_MULTIPLIER:1.4},
+  CRUSHER:{START_AFTER_SECONDS:135,WEIGHT:0.7,BASE_HP:72,HP_PER_LEVEL:6.0,BASE_SPEED:40,SPEED_PER_LEVEL:0.4,RADIUS:15,BASE_DAMAGE:9,GOLD_REWARD:19,CHARGE_SCAN_RANGE:300,CHARGE_SPEED_MULTIPLIER:3.4,CHARGE_WINDUP:1.15,CHARGE_DAMAGE:145,CHARGE_COOLDOWN:8},
+  HARVESTER_HUNTER:{START_AFTER_SECONDS:70,WEIGHT:1.15,BASE_HP:13,HP_PER_LEVEL:0.9,BASE_SPEED:122,SPEED_PER_LEVEL:1.0,RADIUS:8,BASE_DAMAGE:6,GOLD_REWARD:9},
+  SABOTEUR:{START_AFTER_SECONDS:145,WEIGHT:0.65,BASE_HP:20,HP_PER_LEVEL:1.5,BASE_SPEED:74,SPEED_PER_LEVEL:0.65,RADIUS:8,BASE_DAMAGE:10,GOLD_REWARD:15,REVEAL_RANGE:145},
+  SPECIAL_ENEMIES:{BASE_CHANCE:0.08,MAX_CHANCE:0.36,RAMP_SECONDS:600},
+
   TOWER_DURABILITY:{MELEE_ATTACK_RANGE:20,MELEE_AGGRO_RANGE:105,MELEE_DAMAGE_MULTIPLIER:1.0},
-
-  TERRAIN:{
-    FEATURE_COUNT:16,MIN_RX:85,MAX_RX:175,MIN_RY:60,MAX_RY:135,
-    FEATURE_SEPARATION:45,BUILD_CLEARANCE:2,ENEMY_STEER_STRENGTH:245,
-    MIN_OBSTACLES:0,EXTRA_OBSTACLES_RANDOM:0,MIN_RADIUS:24,MAX_RADIUS:50
-  },
-
+  TERRAIN:{FEATURE_COUNT:16,MIN_RX:85,MAX_RX:175,MIN_RY:60,MAX_RY:135,FEATURE_SEPARATION:45,BUILD_CLEARANCE:2,ENEMY_STEER_STRENGTH:245,MIN_OBSTACLES:0,EXTRA_OBSTACLES_RANDOM:0,MIN_RADIUS:24,MAX_RADIUS:50},
   XP:{START_TO_LEVEL:999999,GROWTH:2},
   CARD_RARITY:{COMMON:58,UNCOMMON:28,RARE:11,EPIC:3}
 };
