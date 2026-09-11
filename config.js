@@ -1,8 +1,7 @@
-// Alien Planet Defense v21 - CONFIG
+// Alien Planet Defense v22 - CONFIG
 // ------------------------------------------------------------
-// v21 removes Tower Safe Spots from gameplay and adds 3-level tower upgrades.
-// Upgrade prices are tuned to reward investing in an existing tower instead of
-// simply duplicating it, especially when space and firing lanes matter.
+// v22 continues the Game backlog with six specialized towers plus Flyers.
+// Every combat tower follows the same 1/3 -> 3/3 metal upgrade model.
 // ------------------------------------------------------------
 const CONFIG={
   GAME:{STARTING_CREDITS:650,STARTING_METAL:160,STARTING_BASE_HP:300},
@@ -11,7 +10,7 @@ const CONFIG={
   WORKERS:{COUNT:3},
   BUILD_TIME:{
     LASER:6.0,FLAME:5.0,BLOCKADE:3.0,SAFE_SPOT:3.5,MINE:7.0,ORE_MINE:7.0,REFINERY:9.0,LANDING_PAD:12.0,
-    RAILGUN:9.0,TESLA:7.0
+    RAILGUN:9.0,TESLA:7.0,ANTI_AIR:5.5,CRYO:6.5,MORTAR:8.0,MINIGUN:6.5,MISSILE:9.0,DRONE_BAY:10.0
   },
 
   WALL:{
@@ -31,14 +30,20 @@ const CONFIG={
   MEDIC:{COST:80,MEMBERS:3,HEAL_RANGE:165,HEAL_PER_SECOND:11,MOVE_SPEED:165,HP:140},
   TRUCK:{COST:70,MOVE_SPEED:185,HP:135,CAPACITY:45,PICKUP_RANGE:100,UNLOAD_RANGE:100},
 
+  // Tower COST values are METAL costs.
   LASER:{COST:70,RANGE:400,FIRE_INTERVAL:1.42,DAMAGE:72,BULLET_SPEED:1050,HP:190},
   FLAME:{COST:55,RANGE:160,FIRE_INTERVAL:0.11,BURN_TICK_DAMAGE:4.2,BURN_TICK_INTERVAL:0.28,BURN_DURATION:3.1,HP:170},
   RAILGUN:{COST:120,RANGE:620,FIRE_INTERVAL:3.20,DAMAGE:145,PIERCE_WIDTH:18,MAX_TARGETS:3,HP:225},
   TESLA:{COST:95,RANGE:250,FIRE_INTERVAL:0.85,DAMAGE:21,CHAINS:4,CHAIN_RANGE:120,CHAIN_DAMAGE_MULTIPLIER:0.72,HP:210},
+  ANTI_AIR:{COST:65,RANGE:370,FIRE_INTERVAL:0.38,DAMAGE:14,BULLET_SPEED:1100,HP:180},
+  CRYO:{COST:80,RANGE:235,FIRE_INTERVAL:0.82,DAMAGE:5,SLOW_FACTOR:0.72,SLOW_DURATION:1.7,HP:205},
+  MORTAR:{COST:105,RANGE:520,MIN_RANGE:105,FIRE_INTERVAL:2.35,DAMAGE:42,SPLASH_RADIUS:72,HP:195},
+  MINIGUN:{COST:85,RANGE:245,FIRE_INTERVAL:0.12,DAMAGE:5.5,BULLET_SPEED:900,HP:220},
+  MISSILE:{COST:125,RANGE:570,FIRE_INTERVAL:2.25,DAMAGE:82,SPLASH_RADIUS:82,HP:215},
+  DRONE_BAY:{COST:110,RANGE:305,FIRE_INTERVAL:0.56,DAMAGE:8,BULLET_SPEED:880,HP:245,ORBIT_RADIUS:34},
   BLOCKADE:{COST:22,HP:420,WIDTH:78,HEIGHT:22},
 
-  // Kept only so the older bootstrap scripts can initialize safely. v21 removes
-  // this building from the UI and forces findSafeSpotAt() to return null.
+  // Bootstrap compatibility only. Safe Spots are removed from gameplay by v21.
   SAFE_SPOT:{COST:50,RADIUS:31,PLACEMENT_CLEARANCE:50,HP:180},
 
   TOWER_UPGRADES:{
@@ -57,6 +62,30 @@ const CONFIG={
     tesla:{
       2:{COST:60,NAME:'Arc Capacitors',DESC:'+14% range, +24% damage, stronger arcs and 5 chains.'},
       3:{COST:90,NAME:'Storm Core',DESC:'+24% range, +52% damage, 27% faster fire and 7 chains.'}
+    },
+    antiair:{
+      2:{COST:40,NAME:'Twin Autocannons',DESC:'Fires 2 rounds per burst with +10% range. Excellent metal efficiency against Flyers.'},
+      3:{COST:65,NAME:'Flak Matrix',DESC:'Fires 3-round bursts and each hit damages nearby Flyers with flak splash.'}
+    },
+    cryo:{
+      2:{COST:50,NAME:'Deep Freeze Cells',DESC:'Stronger slow, +18% range and chills 2 aliens at once.'},
+      3:{COST:75,NAME:'Absolute Zero Pulse',DESC:'Chills 4 aliens at once, nearly halving movement speed and dealing increased damage.'}
+    },
+    mortar:{
+      2:{COST:65,NAME:'High-Explosive Shells',DESC:'+30% damage and a much larger blast radius.'},
+      3:{COST:95,NAME:'Cluster Payload',DESC:'Main shell gains range and damage, then bursts into 3 secondary explosions.'}
+    },
+    minigun:{
+      2:{COST:55,NAME:'Powered Feed',DESC:'25% faster fire, +20% damage and improved range.'},
+      3:{COST:80,NAME:'Dual Rotary Mount',DESC:'Two barrels fire together with higher damage and range.'}
+    },
+    missile:{
+      2:{COST:75,NAME:'Seeker Warhead',DESC:'+18% range, +35% damage and larger splash.'},
+      3:{COST:105,NAME:'Tandem Rack',DESC:'Launches 2 missiles per salvo with major splash and faster reload.'}
+    },
+    dronebay:{
+      2:{COST:70,NAME:'Second Launch Rail',DESC:'Deploys 2 defense drones with improved range and damage.'},
+      3:{COST:100,NAME:'Autonomous Wing',DESC:'Deploys 3 faster-firing defense drones covering a large area around the bay.'}
     }
   },
 
@@ -83,6 +112,7 @@ const CONFIG={
   RUNNER:{BASE_HP:5.5,HP_PER_LEVEL:0.5,BASE_SPEED:108,SPEED_PER_LEVEL:1.3,RADIUS:6.2,BASE_DAMAGE:2,GOLD_REWARD:3},
   BRUTE:{BASE_HP:34,HP_PER_LEVEL:3.2,BASE_SPEED:36,SPEED_PER_LEVEL:0.5,RADIUS:14,BASE_DAMAGE:8,GOLD_REWARD:11},
   RANGED_ALIEN:{SPAWN_CHANCE:0.03,BASE_HP:18,HP_PER_LEVEL:1.5,BASE_SPEED:40,SPEED_PER_LEVEL:0.4,RADIUS:10,BASE_DAMAGE:3,GOLD_REWARD:6,ATTACK_RANGE:195,SHOT_DAMAGE:7,FIRE_INTERVAL:1.8,PROJECTILE_SPEED:285},
+  FLYER:{SPAWN_CHANCE:0.10,START_AFTER_SECONDS:35,BASE_HP:13,HP_PER_LEVEL:1.0,BASE_SPEED:92,SPEED_PER_LEVEL:0.8,RADIUS:9,BASE_DAMAGE:4,GOLD_REWARD:7},
 
   TOWER_DURABILITY:{MELEE_ATTACK_RANGE:20,MELEE_AGGRO_RANGE:105,MELEE_DAMAGE_MULTIPLIER:1.0},
 
