@@ -41,12 +41,23 @@ const CONFIG = {
     FIRE_INTERVAL: 0.48,
     DAMAGE: 1.35,
     BULLET_SPEED: 740,
-    MOVE_SPEED: 155              // World pixels per second while moving to a clicked destination
+    MOVE_SPEED: 155
   },
 
   LASER: { COST:70, RANGE:390, FIRE_INTERVAL:1.45, DAMAGE:68, BULLET_SPEED:1050 },
   FLAME: { COST:55, RANGE:155, FIRE_INTERVAL:0.11, BURN_TICK_DAMAGE:4.1, BURN_TICK_INTERVAL:0.28, BURN_DURATION:3.0 },
   BLOCKADE: { COST:20, HP:380, WIDTH:78, HEIGHT:22, ENEMY_DAMAGE_MULTIPLIER:0.48, COLLISION_SPEED_MULTIPLIER:0.12 },
+
+  // Compatibility only: the rover is disabled by rts_patch.js. These values
+  // remain so the older split engine can initialize before the RTS patch loads.
+  ROVER: {
+    MOVE_SPEED: 1,
+    STARTING_WEAPON: "pistol",
+    PISTOL:{ RANGE:1, DAMAGE:0, FIRE_INTERVAL:99, BULLET_SPEED:1 },
+    TWIN:{ RANGE:1, DAMAGE_MULTIPLIER:0, FIRE_INTERVAL:99, BULLET_SPEED:1 },
+    SHOTGUN:{ RANGE:1, PELLETS:1, DAMAGE_MULTIPLIER_PER_PELLET:0, FIRE_INTERVAL:99, BULLET_SPEED:1, SPREAD_RADIANS:0 },
+    PULSE:{ RANGE:1, DAMAGE_MULTIPLIER:0, FIRE_INTERVAL:99, BULLET_SPEED:1 }
+  },
 
   // ==========================================================
   // WAVE SIZE / SPAWNING
@@ -64,22 +75,13 @@ const CONFIG = {
     RUNNER_CHANCE_CUTOFF:0.94
   },
 
-  // ==========================================================
-  // ENEMIES
-  // ==========================================================
   SWARM:{ BASE_HP:3.5, HP_PER_WAVE:0.32, BASE_SPEED:78, SPEED_PER_WAVE:0.9, RADIUS:4.7, BASE_DAMAGE:1, CREDIT_REWARD:4 },
   RUNNER:{ BASE_HP:5.5, HP_PER_WAVE:0.48, BASE_SPEED:108, SPEED_PER_WAVE:1.2, RADIUS:6.2, BASE_DAMAGE:2, CREDIT_REWARD:6 },
   BRUTE:{ BASE_HP:34, HP_PER_WAVE:3.0, BASE_SPEED:36, SPEED_PER_WAVE:0.45, RADIUS:14, BASE_DAMAGE:8, CREDIT_REWARD:22 },
 
-  // ==========================================================
-  // DEFENSE SURVIVABILITY
-  // ==========================================================
   TOWER_DURABILITY:{ SOLDIER_HP:145, LASER_HP:180, FLAME_HP:165, MELEE_ATTACK_RANGE:20, MELEE_DAMAGE_MULTIPLIER:1.1 },
   SAFE_SPOT:{ COST:40, RADIUS:31, PLACEMENT_CLEARANCE:48 },
 
-  // ==========================================================
-  // RANGED ALIEN
-  // ==========================================================
   RANGED_ALIEN:{
     SPAWN_CHANCE:0.025,
     BASE_HP:18,
