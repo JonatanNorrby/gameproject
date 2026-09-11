@@ -1,0 +1,75 @@
+/* Alien Planet Defense v20 - mobile-first polish */
+:root{--safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px)}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{min-height:100dvh;padding-left:max(8px,var(--safe-left));padding-right:max(8px,var(--safe-right));padding-bottom:max(8px,var(--safe-bottom))}
+button,input{font:inherit}button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}.buildBtn,.menuTab,#unitActions button,#utilityBar button{user-select:none;-webkit-user-select:none}
+#mobileMenuBtn{display:none;position:absolute;left:14px;top:14px;z-index:13;min-width:72px;min-height:48px;padding:9px 12px;background:rgba(8,20,30,.94);border:2px solid #6b91aa;color:#e7f6ff;box-shadow:0 4px 16px rgba(0,0,0,.42)}
+
+/* Main menu works on short phones and landscape phones without clipping. */
+#mainMenu{padding:max(14px,var(--safe-top)) max(14px,var(--safe-right)) max(14px,var(--safe-bottom)) max(14px,var(--safe-left));overflow-y:auto;overscroll-behavior:contain}
+.menu-card{margin:auto;max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 28px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.menu-actions button,.menu-back{min-height:52px}
+.option-row{min-height:52px}.option-row input{width:24px;height:24px;transform:none}
+
+@media (hover:none) and (pointer:coarse){
+ button{min-height:48px;padding:10px 13px}
+ .buildBtn{min-height:52px}
+ #pauseBtn{min-height:50px}
+ #cancelUnitBtn{width:48px;height:48px;min-height:48px;line-height:44px}
+ .wall-inline-action{min-width:48px;min-height:48px}
+}
+
+@media(max-width:760px){
+ body{padding:var(--safe-top) 0 var(--safe-bottom);display:block;overflow-x:hidden}
+ #gameWrap{width:100%;max-width:none}
+ #canvasShell{background:#050b10;display:flex;justify-content:center;overflow:hidden}
+ #game{width:100%;height:auto;max-width:100%;max-height:none!important;margin:0 auto;border-left:0;border-right:0}
+ #mobileMenuBtn{display:inline-flex;align-items:center;justify-content:center;left:max(8px,var(--safe-left));top:8px}
+ #pauseBtn{right:max(8px,var(--safe-right));top:8px;padding:10px 12px;font-size:14px}
+ #hud{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding:6px max(8px,var(--safe-left));-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+ #hud::-webkit-scrollbar,#menuTabs::-webkit-scrollbar,.buildMenu::-webkit-scrollbar,#utilityBar::-webkit-scrollbar,#unitActions::-webkit-scrollbar{display:none}
+ #hud>div{flex:0 0 auto;scroll-snap-align:start;padding:3px 5px;border-radius:4px;background:rgba(25,45,60,.45)}
+ #message{min-height:36px;padding:8px 10px;font-size:12px;line-height:1.35}
+ #menuTabs{overflow-x:auto;flex-wrap:nowrap;gap:5px;padding:6px max(7px,var(--safe-left));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+ .menuTab{flex:1 0 32%;min-width:105px;min-height:48px;font-size:10px;white-space:nowrap}
+ .buildMenu.active{display:flex;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:7px max(8px,var(--safe-left)) 9px;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}
+ .buildBtn{flex:0 0 auto;min-width:145px;white-space:nowrap;scroll-snap-align:start;font-size:12px;text-align:left}
+ .buildBtn small{display:block;margin:3px 0 0;font-size:10px}
+ #unitActions.active,#utilityBar{display:flex;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;gap:6px;padding:7px max(8px,var(--safe-left));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+ #unitActions button,#utilityBar button{flex:0 0 auto;white-space:nowrap;min-height:48px}
+ .unitActionLabel{flex:0 0 auto;align-self:center;padding:0 5px}
+ #hint{padding:7px 10px calc(7px + var(--safe-bottom));font-size:10px;line-height:1.35}
+ #debugBtn{left:max(8px,var(--safe-left));bottom:max(8px,var(--safe-bottom));min-height:40px}
+ .debug-panel{left:max(8px,var(--safe-left));bottom:calc(52px + var(--safe-bottom));width:min(240px,calc(100vw - 16px - var(--safe-left) - var(--safe-right)))}
+ .debug-panel label{min-height:36px}.debug-panel input{width:22px;height:22px}
+ .wall-confirm{padding:max(12px,var(--safe-top)) max(12px,var(--safe-right)) max(12px,var(--safe-bottom)) max(12px,var(--safe-left))}
+ .wall-confirm-card{max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 24px);overflow:auto}
+ .wall-confirm-actions{flex-direction:column}.wall-confirm-actions button{width:100%;min-height:50px}
+ .menu-card{width:min(96vw,560px);padding:20px 14px;border-radius:9px}
+ .menu-logo{font-size:clamp(25px,8vw,32px);letter-spacing:1.7px}
+ .menu-subtitle{margin-bottom:18px}
+ .menu-panel{padding:13px;max-height:none;overflow:visible}
+ .guide-grid{grid-template-columns:1fr;gap:8px}.guide-box{padding:10px}.guide-box p{font-size:12px}
+}
+
+/* Portrait: use full device width. The 16:10 playfield remains undistorted. */
+@media(max-width:760px) and (orientation:portrait){
+ #game{width:100%;height:auto}
+}
+
+/* Landscape phones: letterbox the 16:10 game view to keep the HUD/control dock reachable. */
+@media(max-width:950px) and (orientation:landscape) and (max-height:520px){
+ body{padding-top:var(--safe-top)}
+ #hud{font-size:10px;padding-top:4px;padding-bottom:4px}
+ #canvasShell{min-height:0}
+ #game{width:min(100%,calc((100dvh - 92px - var(--safe-top) - var(--safe-bottom))*1.6));height:auto;max-height:calc(100dvh - 92px - var(--safe-top) - var(--safe-bottom))!important}
+ #message{display:none}
+ #hint{display:none}
+ #menuTabs{padding-top:4px;padding-bottom:4px}
+ .menuTab{min-height:42px}
+ .buildBtn{min-height:46px}
+ #mobileMenuBtn,#pauseBtn{top:6px}
+ .menu-card{width:min(760px,94vw);padding:16px;max-height:calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px)}
+ #mainMenuHome .menu-logo{font-size:27px}.menu-subtitle{margin:4px 0 13px}.menu-actions{gap:8px}.menu-actions button{min-height:44px}
+ .guide-grid{grid-template-columns:1fr 1fr}.guide-box p{font-size:11px;margin:4px 0}.guide-box{padding:8px}
+}
