@@ -57,12 +57,13 @@ button,input{font:inherit}button{-webkit-tap-highlight-color:transparent;touch-a
  #game{width:100%;height:auto}
 }
 
-/* Landscape phones: letterbox the 16:10 game view to keep the HUD/control dock reachable. */
+/* Landscape phones: letterbox the intrinsic 16:10 canvas by constraining height.
+   Width:auto uses the canvas's real 1280:800 aspect ratio and avoids distortion. */
 @media(max-width:950px) and (orientation:landscape) and (max-height:520px){
  body{padding-top:var(--safe-top)}
  #hud{font-size:10px;padding-top:4px;padding-bottom:4px}
  #canvasShell{min-height:0}
- #game{width:min(100%,calc((100dvh - 92px - var(--safe-top) - var(--safe-bottom))*1.6));height:auto;max-height:calc(100dvh - 92px - var(--safe-top) - var(--safe-bottom))!important}
+ #game{width:auto;height:calc(100dvh - 92px - var(--safe-top) - var(--safe-bottom));max-width:100%;max-height:calc(100dvh - 92px - var(--safe-top) - var(--safe-bottom))!important}
  #message{display:none}
  #hint{display:none}
  #menuTabs{padding-top:4px;padding-bottom:4px}
