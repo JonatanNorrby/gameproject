@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071017">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Alien Planet Defense v25</title>
-<link rel="stylesheet" href="style.css?v=25">
-<link rel="stylesheet" href="v15.css?v=25">
-<link rel="stylesheet" href="v16.css?v=25">
-<link rel="stylesheet" href="v18.css?v=25">
-<link rel="stylesheet" href="v19.css?v=25">
-<link rel="stylesheet" href="v20.css?v=25">
-<link rel="stylesheet" href="v21.css?v=25">
-<link rel="stylesheet" href="v23.css?v=25">
+<title>Alien Planet Defense v27</title>
+<link rel="stylesheet" href="style.css?v=27">
+<link rel="stylesheet" href="v15.css?v=27">
+<link rel="stylesheet" href="v16.css?v=27">
+<link rel="stylesheet" href="v18.css?v=27">
+<link rel="stylesheet" href="v19.css?v=27">
+<link rel="stylesheet" href="v20.css?v=27">
+<link rel="stylesheet" href="v21.css?v=27">
+<link rel="stylesheet" href="v23.css?v=27">
+<link rel="stylesheet" href="v27.css?v=27">
 </head>
 <body>
 <div id="mainMenu">
@@ -43,22 +44,6 @@
         <div class="guide-box"><b>Command Menu</b><p>Press ☰ MENU during a run to open resources, construction, unit actions, tower upgrades, pause and utility controls.</p></div>
         <div class="guide-box"><b>Resources</b><p>Killing aliens gives Gold. Crystal exports create more Gold. Ore delivered to Refineries creates Metal for Towers, Walls and Tower upgrades.</p></div>
         <div class="guide-box"><b>Core Infantry</b><p>Riflemen are general-purpose, Heavy Gunners supply sustained fire, Rocketeers splash groups and Medics heal infantry.</p></div>
-        <div class="guide-box"><b>Engineer</b><p>Engineers repair damaged structures, Trucks, Mechs and aircraft. Standing near construction also speeds the build by 40%; two Engineers can stack to +80%.</p></div>
-        <div class="guide-box"><b>Scout</b><p>Scouts move extremely quickly, reveal Saboteurs from much farther away and mark enemies they shoot so all subsequent damage is increased temporarily.</p></div>
-        <div class="guide-box"><b>Sniper</b><p>Sniper Squads are fragile and slow-moving but engage enemies from very long range with powerful precision shots.</p></div>
-        <div class="guide-box"><b>Flamethrower Troopers</b><p>Short-range infantry that ignite several nearby aliens simultaneously. Best behind Walls or inside a Bunker.</p></div>
-        <div class="guide-box"><b>Sneaky Spotters</b><p>Spotter Squads do not attack and enemies ignore them. Nearby enemies are continuously marked, increasing damage they take from your army and Towers.</p></div>
-        <div class="guide-box"><b>Mine Layer</b><p>Select a Mine Layer and use DROP MINE in the Command Menu. Mines cost Gold, stay hidden on the ground and explode when a ground alien enters the trigger radius.</p></div>
-        <div class="guide-box"><b>Combat Mech</b><p>A slow, expensive and heavily armored mobile weapons platform with dual cannons. Useful for holding exposed economic positions.</p></div>
-        <div class="guide-box"><b>Combat Drone</b><p>Fast flying defense unit that ignores terrain and Walls. Fragile, but useful for quickly reinforcing another side of the map.</p></div>
-        <div class="guide-box"><b>Combat Ship</b><p>A heavy flying support unit. Only one may be active, it is expensive, and it must deploy near a built Landing Pad. Its weapon has modest splash rather than overwhelming DPS.</p></div>
-        <div class="guide-box"><b>Bunker</b><p>Bunkers are Gold-funded buildings. Move an eligible infantry squad nearby and use GARRISON. The squad becomes protected and gains +28% range and +35% damage until it leaves or the Bunker is destroyed.</p></div>
-        <div class="guide-box"><b>Truck Routes</b><p>Record at least two route points. The Truck moves to point one and automatically begins the repeating logistics route.</p></div>
-        <div class="guide-box"><b>Walls</b><p>Choose Wall, click bends or drag to paint the path, then press ✓ to review its Metal cost and build time.</p></div>
-        <div class="guide-box"><b>Flyers</b><p>Flyers ignore terrain and Walls. Anti-Air Cannons are the most Metal-efficient counter.</p></div>
-        <div class="guide-box"><b>Wall Threats</b><p>Siege Beasts attack Walls, Burrowers tunnel through a line, Climbers scale them slowly and Crushers telegraph a destructive charge.</p></div>
-        <div class="guide-box"><b>Logistics Threats</b><p>Harvester Hunters seek Trucks and economy infrastructure. Saboteurs remain cloaked until detected and prioritize Mines, Refineries and Landing Pads.</p></div>
-        <div class="guide-box"><b>Acid Lobbers</b><p>Acid Lobbers corrode structures from range. Corroded structures take increased enemy damage for several seconds.</p></div>
       </div>
       <button id="guideBackBtn" class="menu-back">BACK</button>
     </div>
@@ -175,7 +160,7 @@
       <button id="centerBtn">CENTER BASE</button>
       <button id="restartBtn">RESTART</button>
     </div>
-    <div id="hint">Select support units on the battlefield, then open this menu for Mine Layer and Bunker actions.</div>
+    <div id="hint">Landscape recommended on phones.</div>
 
     <div class="debug-wrap">
       <button id="debugBtn">DEBUG</button>
@@ -204,28 +189,29 @@
 
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=25"></script>
-<script src="v14a.js?v=25"></script>
-<script src="v14b.js?v=25"></script>
-<script src="v14c.js?v=25"></script>
-<script src="v14d.js?v=25"></script>
-<script src="v15_patch.js?v=25"></script>
-<script src="v16a.js?v=25"></script>
-<script src="v16b.js?v=25"></script>
-<script src="v16c.js?v=25"></script>
-<script src="v17.js?v=25"></script>
-<script src="v18.js?v=25"></script>
-<script src="v18_hotfix.js?v=25"></script>
-<script src="v19.js?v=25"></script>
-<script src="v20.js?v=25"></script>
-<script src="v21.js?v=25"></script>
-<script src="v22.js?v=25"></script>
-<script src="v22_hotfix.js?v=25"></script>
-<script src="v23.js?v=25"></script>
-<script src="v24.js?v=25"></script>
-<script src="v25.js?v=25"></script>
-<script src="v25_hotfix.js?v=25"></script>
-<script src="v26.js?v=26"></script>
-<script src="v26_hotfix.js?v=26"></script>
+<script src="config.js?v=27"></script>
+<script src="v14a.js?v=27"></script>
+<script src="v14b.js?v=27"></script>
+<script src="v14c.js?v=27"></script>
+<script src="v14d.js?v=27"></script>
+<script src="v15_patch.js?v=27"></script>
+<script src="v16a.js?v=27"></script>
+<script src="v16b.js?v=27"></script>
+<script src="v16c.js?v=27"></script>
+<script src="v17.js?v=27"></script>
+<script src="v18.js?v=27"></script>
+<script src="v18_hotfix.js?v=27"></script>
+<script src="v19.js?v=27"></script>
+<script src="v20.js?v=27"></script>
+<script src="v21.js?v=27"></script>
+<script src="v22.js?v=27"></script>
+<script src="v22_hotfix.js?v=27"></script>
+<script src="v23.js?v=27"></script>
+<script src="v24.js?v=27"></script>
+<script src="v25.js?v=27"></script>
+<script src="v25_hotfix.js?v=27"></script>
+<script src="v26.js?v=27"></script>
+<script src="v26_hotfix.js?v=27"></script>
+<script src="v27.js?v=27"></script>
 </body>
 </html>
