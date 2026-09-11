@@ -3,13 +3,53 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v18</title>
-<link rel="stylesheet" href="style.css?v=18">
-<link rel="stylesheet" href="v15.css?v=18">
-<link rel="stylesheet" href="v16.css?v=18">
-<link rel="stylesheet" href="v18.css?v=18">
+<title>Alien Planet Defense v19</title>
+<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="v15.css?v=19">
+<link rel="stylesheet" href="v16.css?v=19">
+<link rel="stylesheet" href="v18.css?v=19">
+<link rel="stylesheet" href="v19.css?v=19">
 </head>
 <body>
+<div id="mainMenu">
+  <div class="menu-card">
+    <div id="mainMenuHome">
+      <div class="menu-logo">ALIEN PLANET DEFENSE</div>
+      <div class="menu-subtitle">RTS / Tower Defense</div>
+      <div class="menu-actions">
+        <button id="startGameBtn">START GAME</button>
+        <button id="optionsBtn">OPTIONS</button>
+        <button id="guideBtn">GUIDE</button>
+      </div>
+    </div>
+
+    <div id="optionsPanel" class="menu-panel hidden">
+      <h2>OPTIONS</h2>
+      <div class="option-row"><span>Show tower reach</span><input id="optShowReach" type="checkbox"></div>
+      <div class="option-row"><span>Incoming enemy arrows</span><input id="optEnemyArrows" type="checkbox" checked></div>
+      <div class="option-row"><span>Off-screen unit arrows</span><input id="optUnitArrows" type="checkbox" checked></div>
+      <button id="optionsBackBtn" class="menu-back">BACK</button>
+    </div>
+
+    <div id="guidePanel" class="menu-panel hidden">
+      <h2>GUIDE</h2>
+      <div class="guide-grid">
+        <div class="guide-box"><b>Objective</b><p>Defend the central base for as long as possible while expanding your economy and defenses. Enemies continuously spawn and become more dangerous over time.</p></div>
+        <div class="guide-box"><b>Camera & Pause</b><p>Arrow keys pan the battlefield. On mobile, drag the map. Press Space or the large Pause button to pause. You can still issue orders and plan construction while paused.</p></div>
+        <div class="guide-box"><b>Movable Units</b><p>Click/tap a squad or truck to select it, then click/tap a destination. Units path around terrain and buildings. The ✕ beside a selected unit clears the selection.</p></div>
+        <div class="guide-box"><b>Resources</b><p>Killing aliens gives Gold. Crystal Mines snap onto crystal deposits; Trucks carry crystal to Landing Pads where ships export it for Gold. Ore Mines feed Refineries, which create Metal.</p></div>
+        <div class="guide-box"><b>Gold</b><p>Gold buys movable units and economy/support buildings such as Mines, Refineries, Landing Pads and Tower Safe Spots.</p></div>
+        <div class="guide-box"><b>Metal</b><p>Metal builds combat Towers and Walls. Establish Ore Mine → Truck → Refinery routes to sustain defensive expansion.</p></div>
+        <div class="guide-box"><b>Truck Routes</b><p>Select a Truck and record at least two route points. When finished, the Truck drives to the first point and automatically begins repeating the route.</p></div>
+        <div class="guide-box"><b>Walls</b><p>Select Wall, then click bend points or drag to paint a path. Press ✓ to review total metal cost and build time. Press ✕ to cancel the current wall path.</p></div>
+        <div class="guide-box"><b>Landing Pads</b><p>Ships periodically land at Landing Pads, load deposited crystal and launch when full. A landing ship attracts nearby aliens, so protect the pad.</p></div>
+        <div class="guide-box"><b>Combat</b><p>Riflemen are general-purpose, Heavy Gunners provide sustained fire, Rocketeers deal splash damage and Medics heal friendlies. Railguns pierce enemies and Tesla Towers chain damage.</p></div>
+      </div>
+      <button id="guideBackBtn" class="menu-back">BACK</button>
+    </div>
+  </div>
+</div>
+
 <div id="gameWrap">
   <div id="hud">
     <div><b>BASE</b> <span id="baseHp">300</span>/<span id="baseMax">300</span></div>
@@ -99,17 +139,18 @@
 
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=18"></script>
-<script src="v14a.js?v=18"></script>
-<script src="v14b.js?v=18"></script>
-<script src="v14c.js?v=18"></script>
-<script src="v14d.js?v=18"></script>
-<script src="v15_patch.js?v=18"></script>
-<script src="v16a.js?v=18"></script>
-<script src="v16b.js?v=18"></script>
-<script src="v16c.js?v=18"></script>
-<script src="v17.js?v=18"></script>
-<script src="v18.js?v=18"></script>
-<script src="v18_hotfix.js?v=18"></script>
+<script src="config.js?v=19"></script>
+<script src="v14a.js?v=19"></script>
+<script src="v14b.js?v=19"></script>
+<script src="v14c.js?v=19"></script>
+<script src="v14d.js?v=19"></script>
+<script src="v15_patch.js?v=19"></script>
+<script src="v16a.js?v=19"></script>
+<script src="v16b.js?v=19"></script>
+<script src="v16c.js?v=19"></script>
+<script src="v17.js?v=19"></script>
+<script src="v18.js?v=19"></script>
+<script src="v18_hotfix.js?v=19"></script>
+<script src="v19.js?v=19"></script>
 </body>
 </html>
