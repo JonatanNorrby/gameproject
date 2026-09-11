@@ -1,8 +1,10 @@
 // Alien Planet Defense v39
-// Dynamic threat scaling: horde size and frequency now respond to the amount of
+// Dynamic threat scaling: horde size and frequency respond to the amount of
 // friendly units and infrastructure currently on the map.
-document.title='Alien Planet Defense v39';
-
+// v42 loads this file explicitly; keep it idempotent so an older cached v38 cannot
+// accidentally install the threat wrapper twice.
+if(!window.__v39DynamicThreatInstalled){
+window.__v39DynamicThreatInstalled=true;
 (function installV39DynamicThreatScaling(){
   const V39={
     UNIT_WEIGHT:1.0,
@@ -56,8 +58,7 @@ document.title='Alien Planet Defense v39';
     v38UpdateDirectorV39(dt*timerScale);
 
     // v38 creates the new horde at the end of its idle timer, then begins batching
-    // it on the following update. That gives us one deterministic point to scale
-    // the full wave before any member is spawned.
+    // it on the following update. Scale the full wave before any member is spawned.
     if((d.hordeNo||0)>beforeHorde&&(d.queue||0)>0&&beforeQueue<=0){
       const launched=v39Scaling();
       const baseSize=d.queue;
@@ -84,7 +85,8 @@ document.title='Alien Planet Defense v39';
   const guide=document.querySelector('#guidePanel .guide-grid');
   if(guide&&!document.getElementById('v39ThreatGuide')){
     const d=document.createElement('div');d.className='guide-box';d.id='v39ThreatGuide';
-    d.innerHTML='<b>Adaptive Horde Threat</b><p>The alien director now reacts to how much you have deployed. More movable units and more buildings increase the next horde size and shorten the recovery gap. Buildings under construction count less, while Wall segments contribute only a small capped amount so long walls cannot cause runaway scaling. The first horde delay remains unchanged so the opening still has setup time.</p>';
+    d.innerHTML='<b>Adaptive Horde Threat</b><p>The alien director reacts to how much you have deployed. More movable units and more buildings increase the next horde size and shorten the recovery gap. Buildings under construction count less, while Wall segments contribute only a small capped amount so long walls cannot cause runaway scaling. The first horde delay remains unchanged so the opening still has setup time.</p>';
     guide.appendChild(d);
   }
 })();
+}
