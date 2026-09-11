@@ -2,7 +2,7 @@ function drawBackdrop(){
  const th=stageTheme();
  ctx.fillStyle=th.ground;ctx.fillRect(0,0,WORLD_W,WORLD_H);
  for(let i=0;i<520;i++){
-   const x=(i*173+state.stage*31)%WORLD_W,y=(i*97+state.stage*19)%WORLD_H;
+   const x=(i*173+31)%WORLD_W,y=(i*97+19)%WORLD_H;
    ctx.fillStyle=i%4?th.patch:th.accent;ctx.globalAlpha=i%4?.42:.14;
    ctx.fillRect(x,y,1+(i%4),1+(i%3));
  }
@@ -26,9 +26,9 @@ function drawBase(){
  ctx.fillStyle="#7bd6e8";ctx.globalAlpha=.75;ctx.beginPath();ctx.arc(0,0,BASE_RADIUS*.35,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
  const bw=150,bh=12,y=-BASE_RADIUS-38;
  ctx.fillStyle="rgba(5,10,16,.88)";ctx.fillRect(-bw/2-8,y-22,bw+16,42);
- ctx.fillStyle="#eaf7ff";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText(`BASE ${Math.ceil(state.baseHp)} / ${state.maxBaseHp}` ,0,y-6);
+ ctx.fillStyle="#eaf7ff";ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText(state.debug.unlimitedLives?"BASE ∞ HP":`BASE ${Math.ceil(state.baseHp)} / ${state.maxBaseHp}`,0,y-6);
  ctx.fillStyle="#111";ctx.fillRect(-bw/2,y+2,bw,bh);
- ctx.fillStyle=hpRatio>.5?"#59d878":hpRatio>.25?"#f0c65a":"#ef6666";ctx.fillRect(-bw/2,y+2,bw*hpRatio,bh);
+ ctx.fillStyle=state.debug.unlimitedLives?"#67e8ff":hpRatio>.5?"#59d878":hpRatio>.25?"#f0c65a":"#ef6666";ctx.fillRect(-bw/2,y+2,bw*(state.debug.unlimitedLives?1:hpRatio),bh);
  ctx.strokeStyle="#9eb6c8";ctx.lineWidth=1;ctx.strokeRect(-bw/2,y+2,bw,bh);
  ctx.restore();
 }
@@ -106,7 +106,13 @@ function draw(){
  for(const p of state.particles){ctx.globalAlpha=Math.max(0,p.life/.5);ctx.fillStyle=p.kind==="fire"?"#ff9a3c":"#b9ff8a";ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1}
  ctx.restore();
  if(totalActiveWaves()>1){ctx.fillStyle="rgba(255,210,90,.9)";ctx.font="bold 15px Arial";ctx.textAlign="left";ctx.fillText(`MULTI-WAVE BONUS ×${(1+(totalActiveWaves()-1)*state.mods.stackBonus).toFixed(2)}`,18,28)}
- ctx.fillStyle="rgba(225,240,250,.65)";ctx.font="12px Arial";ctx.textAlign="right";ctx.fillText("Arrow keys: move camera   WASD: rover",W-16,H-16);
+ if(state.debug.unlimitedCash||state.debug.unlimitedLives){ctx.fillStyle="rgba(110,230,255,.92)";ctx.font="bold 13px Arial";ctx.textAlign="left";ctx.fillText(`DEBUG: ${state.debug.unlimitedCash?"∞ CASH ":""}${state.debug.unlimitedLives?"∞ LIVES":""}`,18,H-16);}
+ ctx.fillStyle="rgba(225,240,250,.65)";ctx.font="12px Arial";ctx.textAlign="right";ctx.fillText("Arrow keys: camera   WASD: rover",W-16,H-16);
 }
-function loop(now){const dt=Math.min(.033,(now-state.last)/1000);state.last=now;update(dt);draw();requestAnimationFrame(loop)}
+function loop(now){
+ const dt=Math.min(.033,(now-state.last)/1000);state.last=now;
+ update(dt);
+ if(state.debug&&state.debug.unlimitedLives){state.gameOver=false;state.baseHp=state.maxBaseHp;}
+ draw();requestAnimationFrame(loop);
+}
 reset();requestAnimationFrame(loop);
