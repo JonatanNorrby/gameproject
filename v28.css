@@ -1,0 +1,37 @@
+/* Alien Planet Defense v28 - persistent resources + Platoon/APC mobile polish */
+#persistentResources{position:fixed;z-index:90;top:max(9px,var(--safe-top,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:5px;pointer-events:none;white-space:nowrap;padding:5px 7px;border:1px solid rgba(96,149,178,.75);border-radius:7px;background:rgba(5,15,22,.90);box-shadow:0 4px 16px rgba(0,0,0,.34);font-size:10px;color:#9fb8c8;backdrop-filter:blur(3px)}
+#persistentResources span{display:inline-flex;align-items:center;gap:3px;padding:3px 5px;border-radius:4px;background:rgba(18,37,49,.72)}
+#persistentResources b{color:#f1fbff;font-size:11px}
+#persistGold{color:#ffe08a!important}#persistMetal{color:#c3dce8!important}
+#persistPaused{display:none!important;background:#4c3b14!important;color:#ffe687!important;font-weight:950;letter-spacing:.5px}
+#persistPaused.active{display:inline-flex!important}
+#persistentResources.title-hidden{opacity:0;visibility:hidden}
+
+/* Transport controls are created dynamically but should look like normal contextual actions. */
+#apcLoadBtn,#apcUnloadBtn{font-weight:900}
+
+@media (hover:none) and (pointer:coarse){
+ #persistentResources{font-size:9px;padding:4px 5px;gap:3px}
+ #persistentResources span{padding:3px 4px}
+ #persistentResources b{font-size:10px}
+}
+
+@media (orientation:landscape) and (max-height:650px),
+       (orientation:landscape) and (hover:none) and (pointer:coarse){
+ #persistentResources{top:max(7px,var(--safe-top,0px));max-width:252px;overflow:hidden;font-size:8.5px;padding:3px 5px;gap:3px}
+ #persistentResources span{padding:3px 4px}
+ #persistentResources b{font-size:9.5px}
+ body.command-open-v28 #persistentResources{left:max(102px,calc(var(--safe-left,0px) + 102px));transform:none}
+ #commandDrawer #unitActions.active{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+@media (orientation:landscape) and (max-width:720px){
+ #persistentResources{max-width:235px}
+ #persistentResources span:nth-child(4){display:none}
+}
+
+@media (orientation:portrait) and (max-width:520px){
+ #persistentResources{top:max(8px,var(--safe-top,0px));left:auto;right:max(8px,var(--safe-right,0px));transform:none;max-width:calc(100vw - 118px);overflow-x:auto;scrollbar-width:none}
+ #persistentResources::-webkit-scrollbar{display:none}
+ #persistentResources span:nth-child(4){display:none}
+}
