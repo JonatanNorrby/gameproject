@@ -2,39 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alien Planet Defense v12</title>
-<link rel="stylesheet" href="style.css?v=12">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Alien Planet Defense v13</title>
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <div id="gameWrap">
-  <canvas id="game" width="1280" height="800"></canvas>
-
   <div id="hud">
-    <div><b>BASE</b> <span id="baseHp">250</span>/<span id="baseMax">250</span></div>
-    <div><b>NEXT WAVE</b> <span id="wave">1</span></div>
-    <div><b>ACTIVE</b> <span id="activeWaves">0</span></div>
-    <div><b>MULTI-WAVE BONUS</b> <span id="multiBonus">+0%</span></div>
-    <div><b>CREDITS</b> <span id="credits">350</span></div>
+    <div><b>BASE</b> <span id="baseHp">300</span>/<span id="baseMax">300</span></div>
+    <div><b>XP</b> <span id="xp">0</span>/<span id="nextXp">90</span></div>
+    <div><b>LEVEL</b> <span id="level">1</span></div>
+    <div><b>CREDITS</b> <span id="credits">450</span></div>
     <div><b>ALIENS</b> <span id="aliens">0</span></div>
+    <div><b>SURVIVAL</b> <span id="survival">0:00</span></div>
   </div>
 
-  <div id="message">Defend the central base.</div>
+  <canvas id="game" width="1280" height="800"></canvas>
+  <div id="message">Build an economy, defend the base, survive.</div>
 
-  <div id="buildbar">
-    <button class="towerBtn selected" data-type="soldier">🪖 Fire Squad <small>30</small></button>
-    <button class="towerBtn" data-type="laser">🔴 Laser Sniper <small>70</small></button>
-    <button class="towerBtn" data-type="flame">🔥 Flamethrower <small>55</small></button>
-    <button class="towerBtn" data-type="blockade">🧱 Blockade <small>20</small></button>
-    <button class="towerBtn" data-type="safespot">⬡ Tower Safe Spot <small>40</small></button>
-    <button id="cancelSelectionBtn" title="Cancel current squad selection">✕</button>
-    <button id="startBtn">START WAVE</button>
-    <button id="fiveBtn">START 5 WAVES</button>
-    <button id="restartBtn">RESTART</button>
+  <div id="menuTabs">
+    <button class="menuTab active" data-menu="unitsMenu">MOVABLE UNITS</button>
+    <button class="menuTab" data-menu="towersMenu">TOWERS</button>
+    <button class="menuTab" data-menu="passiveMenu">PASSIVE BUILDINGS</button>
+  </div>
+
+  <div id="unitsMenu" class="buildMenu active">
+    <button class="buildBtn selected" data-type="soldier">🪖 Fire Squad <small>35</small></button>
+    <button class="buildBtn" data-type="truck">🚚 Crystal Truck <small>65</small></button>
+  </div>
+  <div id="towersMenu" class="buildMenu">
+    <button class="buildBtn" data-type="laser">🔴 Laser Sniper <small>75</small></button>
+    <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>60</small></button>
+    <button class="buildBtn" data-type="blockade">🧱 Blockade <small>22</small></button>
+  </div>
+  <div id="passiveMenu" class="buildMenu">
+    <button class="buildBtn" data-type="safespot">⬡ Tower Safe Spot <small>45</small></button>
+    <button class="buildBtn" data-type="mine">💎 Crystal Mine <small>85</small></button>
+  </div>
+
+  <div id="utilityBar">
     <button id="reachBtn">SHOW REACH: OFF</button>
+    <button id="centerBtn">CENTER BASE</button>
+    <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Arrow keys move the camera. Click a Fire Squad to select it, then click the map to move it. Press ✕ to cancel the current squad selection.</div>
+  <div id="hint">Desktop: arrow keys move camera. Mobile: drag the map. Tap a movable unit, then tap a destination. Mines need a nearby crystal depot; trucks carry mined crystals back to the base.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -47,16 +59,13 @@
 
 <div id="cardOverlay" class="hidden">
   <div id="cardPanel">
-    <div class="cardTitle">WAVE REWARD</div>
-    <div class="cardSub">Choose one upgrade. Higher rarities are stronger and less common.</div>
+    <div class="cardTitle">LEVEL UP</div>
+    <div class="cardSub">Choose one upgrade for this run.</div>
     <div id="cards"></div>
   </div>
 </div>
 
-<script src="config.js?v=12"></script>
-<script src="game_01.js?v=12"></script>
-<script src="game_02.js?v=12"></script>
-<script src="game_03.js?v=12"></script>
-<script src="game_04.js?v=12"></script>
+<script src="config.js?v=13"></script>
+<script src="game_v13.js?v=13"></script>
 </body>
 </html>
