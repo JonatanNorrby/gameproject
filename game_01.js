@@ -1,30 +1,23 @@
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-const W=canvas.width,H=canvas.height,STAGE_WAVES=CONFIG.GAME.WAVES_PER_STAGE;
+const W=canvas.width,H=canvas.height;
 const WORLD_W=CONFIG.WORLD.WIDTH,WORLD_H=CONFIG.WORLD.HEIGHT;
 const BASE_X=WORLD_W/2,BASE_Y=WORLD_H/2,BASE_RADIUS=CONFIG.WORLD.BASE_RADIUS;
 
-// =============================================================
-// SKITTER SPRITES — extracted from the artwork supplied by you.
-// Each horizontal strip contains transparent 128×128 frames.
-// =============================================================
 const SKITTER_MOVE = new Image();
 SKITTER_MOVE.src = "assets/skitter_move.png";
 const SKITTER_IDLE = new Image();
 SKITTER_IDLE.src = "assets/skitter_idle.png";
 const SKITTER_FRAME_SIZE = 128;
-
-// Brute art — extracted directly from the top-down in-game preview in the
-// Brute concept sheet supplied for this project.
 const BRUTE_SPRITE = new Image();
 BRUTE_SPRITE.src = "assets/brute_topdown.png";
 
 const els={
  baseHp:document.getElementById("baseHp"),baseMax:document.getElementById("baseMax"),
- stage:document.getElementById("stage"),wave:document.getElementById("wave"),
- active:document.getElementById("activeWaves"),credits:document.getElementById("credits"),
+ wave:document.getElementById("wave"),active:document.getElementById("activeWaves"),credits:document.getElementById("credits"),
  aliens:document.getElementById("aliens"),multiBonus:document.getElementById("multiBonus"),message:document.getElementById("message"),
- start:document.getElementById("startBtn"),all:document.getElementById("allBtn"),
- restart:document.getElementById("restartBtn"),money:document.getElementById("moneyBtn"),reach:document.getElementById("reachBtn"),
+ start:document.getElementById("startBtn"),five:document.getElementById("fiveBtn"),restart:document.getElementById("restartBtn"),reach:document.getElementById("reachBtn"),
+ debugBtn:document.getElementById("debugBtn"),debugPanel:document.getElementById("debugPanel"),debugCash:document.getElementById("debugCash"),
+ debugLives:document.getElementById("debugLives"),debugHeal:document.getElementById("debugHeal"),
  overlay:document.getElementById("cardOverlay"),cards:document.getElementById("cards")
 };
 
@@ -38,10 +31,7 @@ const TOWERS={
 const SOLDIER_OFFSETS=[[-13,-10],[0,-13],[13,-10],[-13,8],[0,11],[13,8]];
 
 const RARITIES={
- common:{weight:CONFIG.CARD_RARITY.COMMON},
- uncommon:{weight:CONFIG.CARD_RARITY.UNCOMMON},
- rare:{weight:CONFIG.CARD_RARITY.RARE},
- epic:{weight:CONFIG.CARD_RARITY.EPIC}
+ common:{weight:CONFIG.CARD_RARITY.COMMON},uncommon:{weight:CONFIG.CARD_RARITY.UNCOMMON},rare:{weight:CONFIG.CARD_RARITY.RARE},epic:{weight:CONFIG.CARD_RARITY.EPIC}
 };
 
 const UPGRADES=[
@@ -67,45 +57,42 @@ let state,selected="soldier",keys={};
 
 function reset(){
  state={
-  stage:1,nextWaveInStage:1,credits:CONFIG.GAME.STARTING_CREDITS,baseHp:CONFIG.GAME.STARTING_BASE_HP,maxBaseHp:CONFIG.GAME.STARTING_BASE_HP,
+  nextWave:1,credits:CONFIG.GAME.STARTING_CREDITS,baseHp:CONFIG.GAME.STARTING_BASE_HP,maxBaseHp:CONFIG.GAME.STARTING_BASE_HP,
   enemies:[],towers:[],safeSpots:[],terrain:[],bullets:[],enemyBullets:[],particles:[],waveSpawners:[],
   gameOver:false,choosing:false,showReach:false,last:performance.now(),cardsPending:0,
-  mods:{soldierRate:1,soldierDamage:1,extraSoldiers:0,laserDamage:1,laserRate:1,
-        flameDamage:1,flameRange:1,burnDuration:1,blockadeHp:1,blockadeCost:1,
-        reward:1,vehicleDamage:1,vehicleRate:1,stackBonus:CONFIG.MULTI_WAVE.BONUS_PER_EXTRA_ACTIVE_WAVE},
+  debug:{unlimitedCash:false,unlimitedLives:false},
+  mods:{soldierRate:1,soldierDamage:1,extraSoldiers:0,laserDamage:1,laserRate:1,flameDamage:1,flameRange:1,burnDuration:1,blockadeHp:1,blockadeCost:1,reward:1,vehicleDamage:1,vehicleRate:1,stackBonus:CONFIG.MULTI_WAVE.BONUS_PER_EXTRA_ACTIVE_WAVE},
   vehicle:{x:BASE_X,y:BASE_Y+BASE_RADIUS+55,angle:-Math.PI/2,speed:CONFIG.ROVER.MOVE_SPEED,cool:0,weapon:CONFIG.ROVER.STARTING_WEAPON},
   camera:{x:BASE_X-W/2,y:BASE_Y-H/2,speed:CONFIG.WORLD.CAMERA_SPEED}
  };
  els.overlay.classList.add("hidden");
- state.terrain=generateTerrain(state.stage);
- els.message.textContent="Deploy defenses. Towers can now be destroyed by aliens.";
+ els.debugCash.checked=false;els.debugLives.checked=false;
+ state.terrain=generateTerrain();
+ els.message.textContent="Endless run started. Launch waves whenever you're ready.";
  updateHud();
 }
 function totalActiveWaves(){return state.waveSpawners.length}
-function currentDisplayWave(){return Math.min(state.nextWaveInStage,STAGE_WAVES)}
 function updateHud(){
+ if(state.debug.unlimitedCash&&state.credits<999999)state.credits=999999;
+ if(state.debug.unlimitedLives)state.baseHp=state.maxBaseHp;
  els.baseHp.textContent=Math.max(0,Math.ceil(state.baseHp));els.baseMax.textContent=state.maxBaseHp;
- els.stage.textContent=state.stage;els.wave.textContent=currentDisplayWave();
- els.active.textContent=totalActiveWaves();
+ els.wave.textContent=state.nextWave;els.active.textContent=totalActiveWaves();
  const bonusPct=Math.round(Math.max(0,totalActiveWaves()-1)*state.mods.stackBonus*100);
  els.multiBonus.textContent=`+${bonusPct}%`;
- els.credits.textContent=state.credits;els.aliens.textContent=state.enemies.length;
- const stageFinished=state.nextWaveInStage>STAGE_WAVES;
- els.start.disabled=state.gameOver||state.choosing||stageFinished;
- els.all.disabled=state.gameOver||state.choosing||stageFinished;
+ els.credits.textContent=state.debug.unlimitedCash?"∞":state.credits;els.aliens.textContent=state.enemies.length;
+ els.start.disabled=state.gameOver||state.choosing;els.five.disabled=state.gameOver||state.choosing;
  document.querySelectorAll(".towerBtn").forEach(b=>b.classList.toggle("selected",b.dataset.type===selected));
 }
+
 document.querySelectorAll(".towerBtn").forEach(b=>b.onclick=()=>{selected=b.dataset.type;els.message.textContent=`Selected ${TOWERS[selected].label}.`;updateHud()});
-els.start.onclick=()=>launchWave(state.nextWaveInStage++);
-els.all.onclick=()=>{
- if(state.nextWaveInStage>STAGE_WAVES)return;
- const first=state.nextWaveInStage;
- while(state.nextWaveInStage<=STAGE_WAVES)launchWave(state.nextWaveInStage++);
- els.message.textContent=`Stage ${state.stage}: launched waves ${first}-${STAGE_WAVES} together!`;
-};
+els.start.onclick=()=>{launchWave(state.nextWave);state.nextWave++;updateHud()};
+els.five.onclick=()=>{for(let i=0;i<5;i++){launchWave(state.nextWave);state.nextWave++;}updateHud()};
 els.restart.onclick=reset;
-els.money.onclick=()=>{state.credits=999999;els.message.textContent="TEST MODE: 999,999 credits granted.";updateHud()};
 els.reach.onclick=()=>{state.showReach=!state.showReach;els.reach.textContent=`SHOW REACH: ${state.showReach?"ON":"OFF"}`;};
+els.debugBtn.onclick=()=>{els.debugPanel.style.display=els.debugPanel.style.display==="none"?"block":"none";};
+els.debugCash.onchange=()=>{state.debug.unlimitedCash=els.debugCash.checked;if(state.debug.unlimitedCash)state.credits=999999;updateHud();};
+els.debugLives.onchange=()=>{state.debug.unlimitedLives=els.debugLives.checked;if(state.debug.unlimitedLives)state.baseHp=state.maxBaseHp;updateHud();};
+els.debugHeal.onclick=()=>{state.baseHp=state.maxBaseHp;updateHud();};
 
 window.addEventListener("keydown",e=>{
  const controlKeys=["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d","W","A","S","D"];
@@ -115,14 +102,9 @@ window.addEventListener("keyup",e=>{keys[e.key]=false});
 
 function updateCamera(dt){
  const c=state.camera;
- let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);
- let dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
- if(dx||dy){
-   const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
-   c.x+=dx*c.speed*dt;c.y+=dy*c.speed*dt;
- }
- c.x=Math.max(0,Math.min(WORLD_W-W,c.x));
- c.y=Math.max(0,Math.min(WORLD_H-H,c.y));
+ let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+ if(dx||dy){const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;c.x+=dx*c.speed*dt;c.y+=dy*c.speed*dt;}
+ c.x=Math.max(0,Math.min(WORLD_W-W,c.x));c.y=Math.max(0,Math.min(WORLD_H-H,c.y));
 }
 
 function towerBaseHp(type){
@@ -132,10 +114,5 @@ function towerBaseHp(type){
  if(type==="blockade")return CONFIG.BLOCKADE.HP*state.mods.blockadeHp;
  return 1;
 }
-function towerRadius(t){
- if(t.type==="blockade")return Math.max(t.w,t.h)/2;
- return 23;
-}
-function pointBlockedByTerrain(x,y,extra=0){
- return state.terrain.some(o=>Math.hypot(x-o.x,y-o.y)<o.r+CONFIG.TERRAIN.BUILD_CLEARANCE+extra);
-}
+function towerRadius(t){if(t.type==="blockade")return Math.max(t.w,t.h)/2;return 23;}
+function pointBlockedByTerrain(x,y,extra=0){return state.terrain.some(o=>Math.hypot(x-o.x,y-o.y)<o.r+CONFIG.TERRAIN.BUILD_CLEARANCE+extra);}
