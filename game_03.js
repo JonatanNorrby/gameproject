@@ -16,51 +16,56 @@ function blockadeCollision(e,b){
  const nx=Math.max(b.x-b.w/2,Math.min(e.x,b.x+b.w/2)),ny=Math.max(b.y-b.h/2,Math.min(e.y,b.y+b.h/2));
  return (e.x-nx)**2+(e.y-ny)**2<e.r**2;
 }
-
 function steerAroundTerrain(e,o,dt){
  const dx=e.x-o.x,dy=e.y-o.y,d=Math.hypot(dx,dy)||1;
  const side=(dx>=0?1:-1);
  e.x+=side*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*(1.1-Math.min(1,Math.abs(dx)/(o.r+35)));
- if(d<o.r+e.r+3){
-   e.x+=dx/d*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*.7;
-   e.y+=dy/d*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*.18;
- }
+ if(d<o.r+e.r+3){e.x+=dx/d*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*.7;e.y+=dy/d*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*.18;}
 }
 function closestTowerForEnemy(e,maxRange,includeProtected=true){
  let best=null,bestD=Infinity;
- for(const t of state.towers){
-   if(!includeProtected&&t.protected)continue;
-   const d=Math.hypot(e.x-t.x,e.y-t.y);
-   if(d<maxRange&&d<bestD){best=t;bestD=d}
- }
+ for(const t of state.towers){if(!includeProtected&&t.protected)continue;const d=Math.hypot(e.x-t.x,e.y-t.y);if(d<maxRange&&d<bestD){best=t;bestD=d}}
  return best;
 }
 function fireEnemyShot(e,t){
  const dx=t.x-e.x,dy=t.y-e.y,d=Math.hypot(dx,dy)||1;
- state.enemyBullets.push({x:e.x,y:e.y,vx:dx/d*CONFIG.RANGED_ALIEN.PROJECTILE_SPEED,vy:dy/d*CONFIG.RANGED_ALIEN.PROJECTILE_SPEED,
-   dmg:CONFIG.RANGED_ALIEN.SHOT_DAMAGE,life:2.2,target:t});
+ state.enemyBullets.push({x:e.x,y:e.y,vx:dx/d*CONFIG.RANGED_ALIEN.PROJECTILE_SPEED,vy:dy/d*CONFIG.RANGED_ALIEN.PROJECTILE_SPEED,dmg:CONFIG.RANGED_ALIEN.SHOT_DAMAGE,life:2.2,target:t});
 }
 
-function updateVehicle(dt){
- const v=state.vehicle;
- let dx=((keys.d||keys.D)?1:0)-((keys.a||keys.A)?1:0),dy=((keys.s||keys.S)?1:0)-((keys.w||keys.W)?1:0);
- if(dx||dy){const l=Math.hypot(dx,dy);dx/=l;dy/=l;v.x+=dx*v.speed*dt;v.y+=dy*v.speed*dt;v.angle=Math.atan2(dy,dx)}
- v.x=Math.max(25,Math.min(WORLD_W-25,v.x));v.y=Math.max(25,Math.min(WORLD_H-25,v.y));
- v.cool-=dt;
- const target=findTarget(v.x,v.y,v.weapon==="shotgun"?CONFIG.ROVER.SHOTGUN.RANGE:CONFIG.ROVER.PISTOL.RANGE);
- if(target&&v.cool<=0){
-  const dmg=CONFIG.ROVER.PISTOL.DAMAGE*state.mods.vehicleDamage;
-  if(v.weapon==="pistol"){shootFrom(v.x,v.y,target,"vehicle",dmg,CONFIG.ROVER.PISTOL.BULLET_SPEED);v.cool=CONFIG.ROVER.PISTOL.FIRE_INTERVAL*state.mods.vehicleRate}
-  if(v.weapon==="twin"){shootFrom(v.x-5,v.y,target,"vehicle",dmg*CONFIG.ROVER.TWIN.DAMAGE_MULTIPLIER,CONFIG.ROVER.TWIN.BULLET_SPEED,.03);shootFrom(v.x+5,v.y,target,"vehicle",dmg*CONFIG.ROVER.TWIN.DAMAGE_MULTIPLIER,CONFIG.ROVER.TWIN.BULLET_SPEED,.03);v.cool=CONFIG.ROVER.TWIN.FIRE_INTERVAL*state.mods.vehicleRate}
-  if(v.weapon==="shotgun"){for(let i=0;i<CONFIG.ROVER.SHOTGUN.PELLETS;i++)shootFrom(v.x,v.y,target,"vehicle",dmg*CONFIG.ROVER.SHOTGUN.DAMAGE_MULTIPLIER_PER_PELLET,CONFIG.ROVER.SHOTGUN.BULLET_SPEED,CONFIG.ROVER.SHOTGUN.SPREAD_RADIANS);v.cool=CONFIG.ROVER.SHOTGUN.FIRE_INTERVAL*state.mods.vehicleRate}
-  if(v.weapon==="pulse"){shootFrom(v.x,v.y,target,"pulse",dmg*CONFIG.ROVER.PULSE.DAMAGE_MULTIPLIER,CONFIG.ROVER.PULSE.BULLET_SPEED,.015);v.cool=CONFIG.ROVER.PULSE.FIRE_INTERVAL*state.mods.vehicleRate}
+function updateFireSquads(dt){
+ for(const t of state.towers){
+  if(t.type!=="soldier"||!t.moveTarget)continue;
+  const dx=t.moveTarget.x-t.x,dy=t.moveTarget.y-t.y,d=Math.hypot(dx,dy);
+  if(d<5){
+   t.x=t.moveTarget.x;t.y=t.moveTarget.y;t.moveTarget=null;
+   const pad=findSafeSpotAt(t.x,t.y);
+   if(pad){t.x=pad.x;t.y=pad.y;t.protected=true;t.safeSpotId=pad.id;pad.occupied=true;}
+   continue;
+  }
+  const speed=(t.moveSpeed||CONFIG.SOLDIER.MOVE_SPEED)*state.mods.squadMove;
+  const step=Math.min(d,speed*dt),a=Math.atan2(dy,dx);
+  let nx=t.x+Math.cos(a)*step,ny=t.y+Math.sin(a)*step;
+
+  // Simple local avoidance around natural terrain.
+  if(pointBlockedByTerrain(nx,ny,18)){
+   let found=false;
+   for(const off of [.45,-.45,.8,-.8,1.15,-1.15]){
+    const aa=a+off,tx=t.x+Math.cos(aa)*step,ty=t.y+Math.sin(aa)*step;
+    if(!pointBlockedByTerrain(tx,ty,18)){nx=tx;ny=ty;found=true;break;}
+   }
+   if(!found)continue;
+  }
+  if(Math.hypot(nx-BASE_X,ny-BASE_Y)<BASE_RADIUS+28)continue;
+  t.x=Math.max(25,Math.min(WORLD_W-25,nx));
+  t.y=Math.max(25,Math.min(WORLD_H-25,ny));
  }
 }
+
 function update(dt){
  if(state.gameOver)return;
  updateCamera(dt);
  if(state.choosing)return;
- updateVehicle(dt);
+ updateFireSquads(dt);
 
  for(const sp of state.waveSpawners){
   sp.timer-=dt;
@@ -75,10 +80,7 @@ function update(dt){
  if(completed>0)state.cardsPending+=completed;
 
  for(const e of [...state.enemies]){
-  if(e.burn>0){
-   e.burn-=dt;e.burnTick-=dt;
-   if(e.burnTick<=0){hitEnemy(e,CONFIG.FLAME.BURN_TICK_DAMAGE*state.mods.flameDamage);e.burnTick=CONFIG.FLAME.BURN_TICK_INTERVAL}
-  }
+  if(e.burn>0){e.burn-=dt;e.burnTick-=dt;if(e.burnTick<=0){hitEnemy(e,CONFIG.FLAME.BURN_TICK_DAMAGE*state.mods.flameDamage);e.burnTick=CONFIG.FLAME.BURN_TICK_INTERVAL}}
  }
 
  for(const t of state.towers){
@@ -109,24 +111,17 @@ function update(dt){
   }
  }
 
- // Enemies navigate the large world toward the circular central base.
  for(let i=state.enemies.length-1;i>=0;i--){
-  const e=state.enemies[i];
-  let speed=e.speed,attacking=false;
+  const e=state.enemies[i];let speed=e.speed,attacking=false;
 
-  for(const o of state.terrain){
-   if(Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r+34)steerAroundTerrain(e,o,dt);
-  }
+  for(const o of state.terrain){if(Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r+34)steerAroundTerrain(e,o,dt);}
 
   for(const b of state.towers){
    if(b.type!=="blockade")continue;
    if(Math.hypot(e.x-b.x,e.y-b.y)<Math.max(b.w,b.h)/2+e.r+22){
     const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy)||1;
     e.x+=dx/d*120*dt;e.y+=dy/d*120*dt;
-    if(blockadeCollision(e,b)){
-     speed*=CONFIG.BLOCKADE.COLLISION_SPEED_MULTIPLIER;
-     b.hp-=e.damage*dt*CONFIG.BLOCKADE.ENEMY_DAMAGE_MULTIPLIER;attacking=true;
-    }
+    if(blockadeCollision(e,b)){speed*=CONFIG.BLOCKADE.COLLISION_SPEED_MULTIPLIER;b.hp-=e.damage*dt*CONFIG.BLOCKADE.ENEMY_DAMAGE_MULTIPLIER;attacking=true;}
    }
   }
 
@@ -138,18 +133,16 @@ function update(dt){
    const target=closestTowerForEnemy(e,CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r+25,false);
    if(target&&target.type!=="blockade"){
     const d=Math.hypot(e.x-target.x,e.y-target.y);
-    if(d<CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r){target.hp-=e.damage*CONFIG.TOWER_DURABILITY.MELEE_DAMAGE_MULTIPLIER*dt;speed=0;attacking=true}
+    if(d<CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r){target.hp-=e.damage*CONFIG.TOWER_DURABILITY.MELEE_DAMAGE_MULTIPLIER*dt;speed=0;attacking=true;}
    }
   }
 
-  if(!attacking||speed>0){
-   const dx=BASE_X-e.x,dy=BASE_Y-e.y,d=Math.hypot(dx,dy)||1;
-   e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt;
-  }
+  if(!attacking||speed>0){const dx=BASE_X-e.x,dy=BASE_Y-e.y,d=Math.hypot(dx,dy)||1;e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt;}
 
   if(Math.hypot(e.x-BASE_X,e.y-BASE_Y)<=BASE_RADIUS+e.r){
-   state.enemies.splice(i,1);state.baseHp-=e.damage;
-   if(state.baseHp<=0){state.baseHp=0;state.gameOver=true;els.message.textContent="THE BASE HAS FALLEN — press RESTART."}
+   state.enemies.splice(i,1);
+   if(!state.debug.unlimitedLives)state.baseHp-=e.damage;
+   if(state.baseHp<=0&&!state.debug.unlimitedLives){state.baseHp=0;state.gameOver=true;els.message.textContent="THE BASE HAS FALLEN — press RESTART."}
   }
  }
 
@@ -159,29 +152,19 @@ function update(dt){
   const b=state.bullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
   if(b.life<=0){state.bullets.splice(i,1);continue}
   let hit=false;
-  for(const e of [...state.enemies]){
-   if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+5){hitEnemy(e,b.dmg);hit=true;break}
-  }
+  for(const e of [...state.enemies]){if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+5){hitEnemy(e,b.dmg);hit=true;break}}
   if(hit)state.bullets.splice(i,1);
  }
 
  for(let i=state.enemyBullets.length-1;i>=0;i--){
   const b=state.enemyBullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
   if(b.life<=0||!state.towers.includes(b.target)){state.enemyBullets.splice(i,1);continue}
-  if(Math.hypot(b.x-b.target.x,b.y-b.target.y)<towerRadius(b.target)+4){
-   b.target.hp-=b.dmg;
-   state.enemyBullets.splice(i,1);
-  }
+  if(Math.hypot(b.x-b.target.x,b.y-b.target.y)<towerRadius(b.target)+4){b.target.hp-=b.dmg;state.enemyBullets.splice(i,1);}
  }
  removeDeadTowers();
 
- for(let i=state.particles.length-1;i>=0;i--){
-  const p=state.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
-  if(p.life<=0)state.particles.splice(i,1);
- }
+ for(let i=state.particles.length-1;i>=0;i--){const p=state.particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)state.particles.splice(i,1);}
 
- if(state.cardsPending>0&&state.enemies.length===0&&state.waveSpawners.length===0){
-  state.cardsPending=0;showCards();
- }
- advanceIfStageComplete();updateHud();
+ if(state.cardsPending>0&&state.enemies.length===0&&state.waveSpawners.length===0){state.cardsPending=0;showCards();}
+ updateHud();
 }
