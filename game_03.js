@@ -19,7 +19,6 @@ function blockadeCollision(e,b){
 
 function steerAroundTerrain(e,o,dt){
  const dx=e.x-o.x,dy=e.y-o.y,d=Math.hypot(dx,dy)||1;
- // Terrain cannot be destroyed, so push primarily sideways to preserve downward flow.
  const side=(dx>=0?1:-1);
  e.x+=side*CONFIG.TERRAIN.ENEMY_STEER_STRENGTH*dt*(1.1-Math.min(1,Math.abs(dx)/(o.r+35)));
  if(d<o.r+e.r+3){
@@ -44,9 +43,9 @@ function fireEnemyShot(e,t){
 
 function updateVehicle(dt){
  const v=state.vehicle;
- let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0),dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+ let dx=((keys.d||keys.D)?1:0)-((keys.a||keys.A)?1:0),dy=((keys.s||keys.S)?1:0)-((keys.w||keys.W)?1:0);
  if(dx||dy){const l=Math.hypot(dx,dy);dx/=l;dy/=l;v.x+=dx*v.speed*dt;v.y+=dy*v.speed*dt;v.angle=Math.atan2(dy,dx)}
- v.x=Math.max(25,Math.min(W-25,v.x));v.y=Math.max(35,Math.min(BASE_Y-25,v.y));
+ v.x=Math.max(25,Math.min(WORLD_W-25,v.x));v.y=Math.max(25,Math.min(WORLD_H-25,v.y));
  v.cool-=dt;
  const target=findTarget(v.x,v.y,v.weapon==="shotgun"?CONFIG.ROVER.SHOTGUN.RANGE:CONFIG.ROVER.PISTOL.RANGE);
  if(target&&v.cool<=0){
@@ -58,7 +57,9 @@ function updateVehicle(dt){
  }
 }
 function update(dt){
- if(state.gameOver||state.choosing)return;
+ if(state.gameOver)return;
+ updateCamera(dt);
+ if(state.choosing)return;
  updateVehicle(dt);
 
  for(const sp of state.waveSpawners){
@@ -80,7 +81,6 @@ function update(dt){
   }
  }
 
- // Tower fire
  for(const t of state.towers){
   if(t.type==="blockade")continue;
   if(t.type==="soldier"){
@@ -109,54 +109,45 @@ function update(dt){
   }
  }
 
- // Enemy movement, terrain routing, melee tower attacks, ranged tower attacks.
+ // Enemies navigate the large world toward the circular central base.
  for(let i=state.enemies.length-1;i>=0;i--){
   const e=state.enemies[i];
-  let speed=e.speed;
-  let attacking=false;
+  let speed=e.speed,attacking=false;
 
-  // Permanent natural terrain blocks enemy movement.
   for(const o of state.terrain){
-   if(Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r+32)steerAroundTerrain(e,o,dt);
+   if(Math.hypot(e.x-o.x,e.y-o.y)<o.r+e.r+34)steerAroundTerrain(e,o,dt);
   }
 
-  // Player blockades redirect and can be destroyed.
   for(const b of state.towers){
    if(b.type!=="blockade")continue;
-   const near=Math.abs(e.x-b.x)<b.w/2+e.r+26&&(e.y+e.r+9>b.y-b.h/2-22&&e.y<b.y+b.h/2+25);
-   if(near){
-    steerAroundBlockade(e,b,dt);
+   if(Math.hypot(e.x-b.x,e.y-b.y)<Math.max(b.w,b.h)/2+e.r+22){
+    const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy)||1;
+    e.x+=dx/d*120*dt;e.y+=dy/d*120*dt;
     if(blockadeCollision(e,b)){
      speed*=CONFIG.BLOCKADE.COLLISION_SPEED_MULTIPLIER;
-     b.hp-=e.damage*dt*CONFIG.BLOCKADE.ENEMY_DAMAGE_MULTIPLIER;
-     attacking=true;
+     b.hp-=e.damage*dt*CONFIG.BLOCKADE.ENEMY_DAMAGE_MULTIPLIER;attacking=true;
     }
    }
   }
 
   if(e.type==="spitter"){
    e.rangeCooldown-=dt;
-   // Ranged monsters can attack ANY tower, including towers protected on Safe Spots.
    const target=closestTowerForEnemy(e,CONFIG.RANGED_ALIEN.ATTACK_RANGE,true);
-   if(target){
-    speed*=.18;
-    if(e.rangeCooldown<=0){fireEnemyShot(e,target);e.rangeCooldown=CONFIG.RANGED_ALIEN.FIRE_INTERVAL}
-   }
+   if(target){speed*=.18;if(e.rangeCooldown<=0){fireEnemyShot(e,target);e.rangeCooldown=CONFIG.RANGED_ALIEN.FIRE_INTERVAL}}
   }else{
-   // Normal monsters can kill ordinary towers, but cannot melee towers on Safe Spots.
    const target=closestTowerForEnemy(e,CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r+25,false);
    if(target&&target.type!=="blockade"){
     const d=Math.hypot(e.x-target.x,e.y-target.y);
-    if(d<CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r){
-     target.hp-=e.damage*CONFIG.TOWER_DURABILITY.MELEE_DAMAGE_MULTIPLIER*dt;
-     speed=0;attacking=true;
-    }
+    if(d<CONFIG.TOWER_DURABILITY.MELEE_ATTACK_RANGE+e.r){target.hp-=e.damage*CONFIG.TOWER_DURABILITY.MELEE_DAMAGE_MULTIPLIER*dt;speed=0;attacking=true}
    }
   }
 
-  if(!attacking||speed>0)e.y+=speed*dt;
+  if(!attacking||speed>0){
+   const dx=BASE_X-e.x,dy=BASE_Y-e.y,d=Math.hypot(dx,dy)||1;
+   e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt;
+  }
 
-  if(e.y>=BASE_Y-20){
+  if(Math.hypot(e.x-BASE_X,e.y-BASE_Y)<=BASE_RADIUS+e.r){
    state.enemies.splice(i,1);state.baseHp-=e.damage;
    if(state.baseHp<=0){state.baseHp=0;state.gameOver=true;els.message.textContent="THE BASE HAS FALLEN — press RESTART."}
   }
@@ -164,7 +155,6 @@ function update(dt){
 
  removeDeadTowers();
 
- // Friendly projectiles -> enemies
  for(let i=state.bullets.length-1;i>=0;i--){
   const b=state.bullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
   if(b.life<=0){state.bullets.splice(i,1);continue}
@@ -175,7 +165,6 @@ function update(dt){
   if(hit)state.bullets.splice(i,1);
  }
 
- // Ranged alien projectiles -> towers
  for(let i=state.enemyBullets.length-1;i>=0;i--){
   const b=state.enemyBullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
   if(b.life<=0||!state.towers.includes(b.target)){state.enemyBullets.splice(i,1);continue}
@@ -196,4 +185,3 @@ function update(dt){
  }
  advanceIfStageComplete();updateHud();
 }
-
