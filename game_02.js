@@ -1,17 +1,16 @@
 function generateTerrain(stage){
- // Deterministic-ish stage layout: same stage number gives a stable style of map,
- // while still using simple natural round obstacles that aliens must route around.
  const result=[];
- const count=CONFIG.TERRAIN.MIN_OBSTACLES+Math.floor(Math.random()*(CONFIG.TERRAIN.EXTRA_OBSTACLES_RANDOM+1));
+ const areaScale=(WORLD_W*WORLD_H)/(1280*800);
+ const count=Math.round((CONFIG.TERRAIN.MIN_OBSTACLES+Math.floor(Math.random()*(CONFIG.TERRAIN.EXTRA_OBSTACLES_RANDOM+1)))*areaScale*.55);
  let attempts=0;
- while(result.length<count&&attempts<250){
+ while(result.length<count&&attempts<count*40){
    attempts++;
    const r=CONFIG.TERRAIN.MIN_RADIUS+Math.random()*(CONFIG.TERRAIN.MAX_RADIUS-CONFIG.TERRAIN.MIN_RADIUS);
-   const x=r+45+Math.random()*(W-2*r-90);
-   const y=CONFIG.TERRAIN.SPAWN_TOP_CLEARANCE+r+Math.random()*(BASE_Y-CONFIG.TERRAIN.BASE_CLEARANCE-CONFIG.TERRAIN.SPAWN_TOP_CLEARANCE-2*r);
-   if(Math.hypot(x-W/2,y-(BASE_Y-55))<120)continue;
-   if(result.some(o=>Math.hypot(x-o.x,y-o.y)<r+o.r+35))continue;
-   result.push({x,y,r,kind:Math.random()<.5?"rock":"crystal"});
+   const x=r+40+Math.random()*(WORLD_W-2*r-80);
+   const y=r+40+Math.random()*(WORLD_H-2*r-80);
+   if(Math.hypot(x-BASE_X,y-BASE_Y)<BASE_RADIUS+150)continue;
+   if(result.some(o=>Math.hypot(x-o.x,y-o.y)<r+o.r+28))continue;
+   result.push({x,y,r,kind:Math.random()<.58?"rock":"crystal"});
  }
  return result;
 }
@@ -34,14 +33,16 @@ function removeDeadTowers(){
 
 canvas.addEventListener("click",e=>{
  if(state.gameOver||state.choosing)return;
- const r=canvas.getBoundingClientRect(),rawX=(e.clientX-r.left)*W/r.width,rawY=(e.clientY-r.top)*H/r.height;
- if(rawY<=65||rawY>=BASE_Y-22)return;
+ const r=canvas.getBoundingClientRect();
+ const screenX=(e.clientX-r.left)*W/r.width,screenY=(e.clientY-r.top)*H/r.height;
+ const rawX=screenX+state.camera.x,rawY=screenY+state.camera.y;
+ if(rawX<25||rawY<25||rawX>WORLD_W-25||rawY>WORLD_H-25)return;
+ if(Math.hypot(rawX-BASE_X,rawY-BASE_Y)<BASE_RADIUS+25){els.message.textContent="You cannot build inside the base.";return;}
 
  const def=TOWERS[selected];
  let cost=selected==="blockade"?Math.max(1,Math.round(def.cost*state.mods.blockadeCost)):def.cost;
  if(state.credits<cost){els.message.textContent=`Need ${cost} credits for ${def.label}.`;return}
 
- // Safe Spots are themselves placeable map objects.
  if(selected==="safespot"){
    if(pointBlockedByTerrain(rawX,rawY,CONFIG.SAFE_SPOT.RADIUS)){els.message.textContent="Natural terrain blocks that Safe Spot location.";return}
    if(state.safeSpots.some(s=>Math.hypot(s.x-rawX,s.y-rawY)<CONFIG.SAFE_SPOT.PLACEMENT_CLEARANCE)){els.message.textContent="Safe Spots are too close together.";return}
@@ -55,13 +56,10 @@ canvas.addEventListener("click",e=>{
  if(pad&&selected!=="blockade"){
    x=pad.x;y=pad.y;protectedTower=true;safeSpotId=pad.id;
  }
-
- // Natural terrain blocks all normal tower and blockade placement.
  if(pointBlockedByTerrain(x,y,selected==="blockade"?28:20)){
    els.message.textContent="Natural terrain blocks tower placement there.";
    return;
  }
-
  if(selected==="blockade"){
    if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<52)){els.message.textContent="Defenses cannot overlap.";return}
    const hp=towerBaseHp("blockade");
@@ -99,12 +97,20 @@ function launchWave(localWave){
 }
 function spawnCluster(sp){
  const count=CONFIG.SPAWN.BASE_CLUSTER_SIZE+Math.floor(Math.random()*CONFIG.SPAWN.RANDOM_CLUSTER_SIZE)+Math.min(9,Math.floor(sp.absoluteWave/2)*CONFIG.SPAWN.EXTRA_CLUSTER_SIZE_PER_TWO_WAVES);
- const family=Math.random(),center=80+Math.random()*(W-160);
+ const family=Math.random();
+ const edge=Math.floor(Math.random()*4);
+ const margin=35;
+ const clusterPos={x:BASE_X,y:BASE_Y};
+ if(edge===0){clusterPos.x=margin+Math.random()*(WORLD_W-2*margin);clusterPos.y=margin;}
+ if(edge===1){clusterPos.x=WORLD_W-margin;clusterPos.y=margin+Math.random()*(WORLD_H-2*margin);}
+ if(edge===2){clusterPos.x=margin+Math.random()*(WORLD_W-2*margin);clusterPos.y=WORLD_H-margin;}
+ if(edge===3){clusterPos.x=margin;clusterPos.y=margin+Math.random()*(WORLD_H-2*margin);}
  for(let i=0;i<count&&sp.remaining>0;i++){
-  let type;if(Math.random()<CONFIG.RANGED_ALIEN.SPAWN_CHANCE)type="spitter";else type=family<CONFIG.SPAWN.SWARM_CHANCE?"swarm":family<CONFIG.SPAWN.RUNNER_CHANCE_CUTOFF?"runner":"brute";spawnEnemy(type,sp.absoluteWave,sp.localWave,center);sp.remaining--;
+  let type;if(Math.random()<CONFIG.RANGED_ALIEN.SPAWN_CHANCE)type="spitter";else type=family<CONFIG.SPAWN.SWARM_CHANCE?"swarm":family<CONFIG.SPAWN.RUNNER_CHANCE_CUTOFF?"runner":"brute";
+  spawnEnemy(type,sp.absoluteWave,sp.localWave,clusterPos);sp.remaining--;
  }
 }
-function spawnEnemy(type,wave,sourceWave,center){
+function spawnEnemy(type,wave,sourceWave,clusterPos){
  const specs={
   swarm:{hp:CONFIG.SWARM.BASE_HP+wave*CONFIG.SWARM.HP_PER_WAVE,speed:CONFIG.SWARM.BASE_SPEED+wave*CONFIG.SWARM.SPEED_PER_WAVE,r:CONFIG.SWARM.RADIUS,damage:CONFIG.SWARM.BASE_DAMAGE,reward:CONFIG.SWARM.CREDIT_REWARD},
   runner:{hp:CONFIG.RUNNER.BASE_HP+wave*CONFIG.RUNNER.HP_PER_WAVE,speed:CONFIG.RUNNER.BASE_SPEED+wave*CONFIG.RUNNER.SPEED_PER_WAVE,r:CONFIG.RUNNER.RADIUS,damage:CONFIG.RUNNER.BASE_DAMAGE,reward:CONFIG.RUNNER.CREDIT_REWARD},
@@ -112,7 +118,7 @@ function spawnEnemy(type,wave,sourceWave,center){
   spitter:{hp:CONFIG.RANGED_ALIEN.BASE_HP+wave*CONFIG.RANGED_ALIEN.HP_PER_WAVE,speed:CONFIG.RANGED_ALIEN.BASE_SPEED+wave*CONFIG.RANGED_ALIEN.SPEED_PER_WAVE,r:CONFIG.RANGED_ALIEN.RADIUS,damage:CONFIG.RANGED_ALIEN.BASE_DAMAGE,reward:CONFIG.RANGED_ALIEN.CREDIT_REWARD}
  };
  const s=specs[type];
- state.enemies.push({x:center+(Math.random()-.5)*100,y:-20-Math.random()*115,hp:s.hp,maxHp:s.hp,
+ state.enemies.push({x:clusterPos.x+(Math.random()-.5)*90,y:clusterPos.y+(Math.random()-.5)*90,hp:s.hp,maxHp:s.hp,
   speed:s.speed,r:s.r,damage:s.damage,reward:s.reward,type,burn:0,burnTick:0,sourceWave,animOffset:Math.random()*100,rangeCooldown:Math.random()*CONFIG.RANGED_ALIEN.FIRE_INTERVAL});
 }
 function weightedRarity(){
@@ -145,16 +151,16 @@ function showCards(){
 function advanceIfStageComplete(){
  if(state.nextWaveInStage>STAGE_WAVES&&state.waveSpawners.length===0&&state.enemies.length===0&&!state.choosing){
   state.stage++;state.nextWaveInStage=1;state.credits+=CONFIG.GAME.STAGE_CLEAR_BONUS+state.stage*CONFIG.GAME.STAGE_CLEAR_BONUS_PER_STAGE;
-  state.vehicle.x=W/2;state.vehicle.y=BASE_Y-65;
+  state.vehicle.x=BASE_X;state.vehicle.y=BASE_Y+BASE_RADIUS+55;
+  state.camera.x=BASE_X-W/2;state.camera.y=BASE_Y-H/2;
   state.terrain=generateTerrain(state.stage);
-  // Existing defenses are cleared between natural maps so terrain never spawns on top of them.
   state.towers=[];state.safeSpots=[];
   els.message.textContent=`Stage ${state.stage} reached. New natural terrain generated; defenses must be rebuilt.`;
  }
 }
 function findTarget(x,y,range){
  let target=null,best=-Infinity;
- for(const e of state.enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<range){const score=e.y*2-d;if(score>best){best=score;target=e}}}
+ for(const e of state.enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<range){const score=-Math.hypot(e.x-BASE_X,e.y-BASE_Y)-d*.15;if(score>best){best=score;target=e}}}
  return target;
 }
 function shootFrom(x,y,e,type,damage,speed,angleJitter=0){
