@@ -1,0 +1,22 @@
+/* v19 main menu */
+#mainMenu{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 35%,rgba(25,55,76,.86),rgba(3,8,13,.97) 58%,#020507 100%)}
+#mainMenu.hidden{display:none}
+.menu-card{width:min(560px,94vw);padding:30px;background:linear-gradient(180deg,rgba(11,24,36,.96),rgba(6,13,20,.98));border:2px solid #45677f;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.7);text-align:center}
+.menu-logo{font-size:38px;font-weight:950;letter-spacing:3px;color:#eaf8ff;text-shadow:0 0 24px rgba(112,220,255,.3)}
+.menu-subtitle{margin:8px 0 26px;color:#8eb3c8;font-size:14px;letter-spacing:1.4px;text-transform:uppercase}
+.menu-actions{display:flex;flex-direction:column;gap:12px}
+.menu-actions button{min-height:54px;font-size:17px;letter-spacing:.8px}
+#startGameBtn{background:#224a34;border-color:#70d68d;color:#effff3}
+.menu-panel{margin-top:18px;padding:18px;text-align:left;background:#07111a;border:1px solid #31495d;border-radius:8px}
+.menu-panel.hidden{display:none}
+.menu-panel h2{margin:0 0 12px;font-size:20px;color:#dff6ff}
+.menu-panel h3{margin:16px 0 6px;font-size:14px;color:#88dcff}
+.menu-panel p{margin:7px 0;color:#c4d4df;line-height:1.5;font-size:13px}
+.option-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 0;border-bottom:1px solid #1b2d3b;color:#d7e6ee;font-size:14px}
+.option-row:last-child{border-bottom:0}
+.option-row input{transform:scale(1.15)}
+.menu-back{margin-top:16px;width:100%}
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.guide-box{padding:12px;background:#0a1722;border:1px solid #263d4f;border-radius:7px}
+.guide-box b{display:block;color:#f2dd89;margin-bottom:5px}
+@media(max-width:760px){.menu-card{padding:22px 16px}.menu-logo{font-size:30px}.guide-grid{grid-template-columns:1fr}.menu-actions button{min-height:50px}.menu-panel{max-height:62vh;overflow:auto}}
