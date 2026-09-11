@@ -6,6 +6,14 @@ document.title='Alien Planet Defense v35';
 
 const FIRING_SQUAD_SHEET=new Image();
 FIRING_SQUAD_SHEET.decoding='async';
+let V35_FIRING_SHEET_READY=false;
+FIRING_SQUAD_SHEET.onload=()=>{
+ // The exact source sheet supplied in chat is 1774x887. Refuse to substitute a
+ // different/corrupt image so the old renderer remains a safe fallback.
+ V35_FIRING_SHEET_READY=FIRING_SQUAD_SHEET.naturalWidth===1774&&FIRING_SQUAD_SHEET.naturalHeight===887;
+ if(!V35_FIRING_SHEET_READY)console.error('v35: firing squad sheet dimensions do not match the supplied 1774x887 source image');
+};
+FIRING_SQUAD_SHEET.onerror=()=>{V35_FIRING_SHEET_READY=false;console.warn('v35: exact firing squad sheet is not present at assets/firing_squad_sheet.png; using existing procedural fallback');};
 FIRING_SQUAD_SHEET.src='assets/firing_squad_sheet.png?v=35';
 
 // Source rectangles in the original 1774x887 sheet. We deliberately crop the
@@ -36,13 +44,9 @@ function v35RiflemanTarget(u){
 }
 
 function v35DrawRifleSprite(frame,dx,dy,angle,stateName){
- ctx.save();
- ctx.translate(dx,dy);
- // The sheet's rifle points approximately to world-right. Rotation happens only
- // in code so the exact supplied pixels remain untouched.
- ctx.rotate(angle||0);
- const h=stateName==='move'?35:stateName==='fire'?34:34;
- const w=h*(frame.w/frame.h);
+ ctx.save();ctx.translate(dx,dy);ctx.rotate(angle||0);
+ // Preserve the source aspect ratio; only canvas scale/rotation is applied.
+ const h=stateName==='move'?35:34,w=h*(frame.w/frame.h);
  ctx.drawImage(FIRING_SQUAD_SHEET,frame.x,frame.y,frame.w,frame.h,-w*.48,-h*.53,w,h);
  ctx.restore();
 }
@@ -69,24 +73,15 @@ function v35DrawRiflemanSquad(u){
  const cfg=typeof roleConfig==='function'?roleConfig(u):CONFIG.SOLDIER;
  const members=Math.max(1,Math.min(V35_SQUAD_OFFSETS.length,Number(cfg?.MEMBERS)||CONFIG.SOLDIER.MEMBERS||4));
  for(let i=0;i<members;i++){
-  const raw=V35_SQUAD_OFFSETS[i];
-  // Rotate the formation with the squad so movement/aim direction reads clearly.
-  const c=Math.cos(facing),s=Math.sin(facing);
+  const raw=V35_SQUAD_OFFSETS[i],c=Math.cos(facing),s=Math.sin(facing);
   const ox=raw[0]*c-raw[1]*s,oy=raw[0]*s+raw[1]*c;
-  const frame=frames[(baseFrame+i)%frames.length];
-  v35DrawRifleSprite(frame,ox,oy,facing,stateName);
+  v35DrawRifleSprite(frames[(baseFrame+i)%frames.length],ox,oy,facing,stateName);
  }
 
- // Retain existing gameplay overlays instead of baking UI into the sprite art.
+ // Retain gameplay overlays instead of baking them into the source artwork.
  if(u.attachedTo){ctx.strokeStyle='#d2a8ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,34,0,Math.PI*2);ctx.stroke();}
- if(state.selectedUnit===u){
-  ctx.strokeStyle='#ffe47b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='#f7eaa5';ctx.font='bold 9px Arial';ctx.textAlign='center';ctx.fillText('RIFLEMAN SQUAD',0,-45);
- }
- if(u.hp<u.maxHp){
-  ctx.fillStyle='#111';ctx.fillRect(-27,39,54,5);
-  ctx.fillStyle='#ef6666';ctx.fillRect(-27,39,54*Math.max(0,u.hp/u.maxHp),5);
- }
+ if(state.selectedUnit===u){ctx.strokeStyle='#ffe47b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.stroke();}
+ if(u.hp<u.maxHp){ctx.fillStyle='#111';ctx.fillRect(-27,39,54,5);ctx.fillStyle='#ef6666';ctx.fillRect(-27,39,54*Math.max(0,u.hp/u.maxHp),5);}
  ctx.restore();
 }
 
@@ -94,8 +89,6 @@ function v35DrawRiflemanSquad(u){
 const v34DrawUnitV35=drawUnit;
 drawUnit=function(u){
  const role=typeof unitRole==='function'?unitRole(u):(u.role||u.type);
- if(role!=='rifleman'||!FIRING_SQUAD_SHEET.complete||!FIRING_SQUAD_SHEET.naturalWidth)return v34DrawUnitV35(u);
+ if(role!=='rifleman'||!V35_FIRING_SHEET_READY)return v34DrawUnitV35(u);
  return v35DrawRiflemanSquad(u);
 };
-
-FIRING_SQUAD_SHEET.onerror=()=>console.error('v35: failed to load assets/firing_squad_sheet.png');
