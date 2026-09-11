@@ -65,7 +65,8 @@ function v35DrawRiflemanSquad(u){
  const target=moving?null:v35RiflemanTarget(u);
  const stateName=moving?'move':target?'fire':'idle';
  const frames=V35_RIFLE_FRAMES[stateName];
- const speedMs=stateName==='fire'?105:stateName==='move'?145:290;
+ // Idle is 150% slower than the previous 290ms/frame timing: 290 * 2.5 = 725ms.
+ const speedMs=stateName==='fire'?105:stateName==='move'?145:725;
  const baseFrame=Math.floor(performance.now()/speedMs);
  let facing=Number(u.heading)||0;
  if(target)facing=Math.atan2(target.y-u.y,target.x-u.x);
