@@ -1,7 +1,7 @@
 // Alien Planet Defense - CONFIG
 // ------------------------------------------------------------
 // Main balance variables. Edit these values by hand to tune the game.
-// Lower enemy values and higher tower values generally make the game easier.
+// Lower enemy values and higher defense values generally make the game easier.
 // ------------------------------------------------------------
 
 const CONFIG = {
@@ -10,8 +10,8 @@ const CONFIG = {
   // GENERAL RUN
   // ==========================================================
   GAME: {
-    STARTING_CREDITS: 350,       // More starting cash so the player can establish defenses
-    STARTING_BASE_HP: 250        // Much more forgiving than the previous 100 HP
+    STARTING_CREDITS: 350,
+    STARTING_BASE_HP: 250
   },
 
   // ==========================================================
@@ -28,28 +28,28 @@ const CONFIG = {
   // MULTI-WAVE RISK / REWARD
   // ==========================================================
   MULTI_WAVE: {
-    BONUS_PER_EXTRA_ACTIVE_WAVE: 0.35 // +35% kill money per extra active wave
+    BONUS_PER_EXTRA_ACTIVE_WAVE: 0.35
   },
 
   // ==========================================================
-  // PLAYER DEFENSES - BUFFED FOR A FAIRER EARLY GAME
+  // FIRE SQUADS
   // ==========================================================
-  SOLDIER: { COST:30, RANGE:205, MEMBERS:6, FIRE_INTERVAL:0.48, DAMAGE:1.35, BULLET_SPEED:740 },
+  SOLDIER: {
+    COST: 30,
+    RANGE: 205,
+    MEMBERS: 6,
+    FIRE_INTERVAL: 0.48,
+    DAMAGE: 1.35,
+    BULLET_SPEED: 740,
+    MOVE_SPEED: 155              // World pixels per second while moving to a clicked destination
+  },
+
   LASER: { COST:70, RANGE:390, FIRE_INTERVAL:1.45, DAMAGE:68, BULLET_SPEED:1050 },
   FLAME: { COST:55, RANGE:155, FIRE_INTERVAL:0.11, BURN_TICK_DAMAGE:4.1, BURN_TICK_INTERVAL:0.28, BURN_DURATION:3.0 },
   BLOCKADE: { COST:20, HP:380, WIDTH:78, HEIGHT:22, ENEMY_DAMAGE_MULTIPLIER:0.48, COLLISION_SPEED_MULTIPLIER:0.12 },
 
-  ROVER: {
-    MOVE_SPEED:270,
-    STARTING_WEAPON:"pistol",
-    PISTOL:{ RANGE:270, DAMAGE:7, FIRE_INTERVAL:0.34, BULLET_SPEED:800 },
-    TWIN:{ RANGE:270, DAMAGE_MULTIPLIER:0.9, FIRE_INTERVAL:0.27, BULLET_SPEED:820 },
-    SHOTGUN:{ RANGE:175, PELLETS:5, DAMAGE_MULTIPLIER_PER_PELLET:0.82, FIRE_INTERVAL:0.52, BULLET_SPEED:710, SPREAD_RADIANS:0.30 },
-    PULSE:{ RANGE:285, DAMAGE_MULTIPLIER:2.0, FIRE_INTERVAL:0.17, BULLET_SPEED:940 }
-  },
-
   // ==========================================================
-  // WAVE SIZE / SPAWNING - REDUCED EARLY SCALING
+  // WAVE SIZE / SPAWNING
   // ==========================================================
   SPAWN: {
     BASE_ENEMIES_PER_WAVE:18,
@@ -65,20 +65,20 @@ const CONFIG = {
   },
 
   // ==========================================================
-  // ENEMIES - LOWER DAMAGE / SLOWER SCALING
+  // ENEMIES
   // ==========================================================
   SWARM:{ BASE_HP:3.5, HP_PER_WAVE:0.32, BASE_SPEED:78, SPEED_PER_WAVE:0.9, RADIUS:4.7, BASE_DAMAGE:1, CREDIT_REWARD:4 },
   RUNNER:{ BASE_HP:5.5, HP_PER_WAVE:0.48, BASE_SPEED:108, SPEED_PER_WAVE:1.2, RADIUS:6.2, BASE_DAMAGE:2, CREDIT_REWARD:6 },
   BRUTE:{ BASE_HP:34, HP_PER_WAVE:3.0, BASE_SPEED:36, SPEED_PER_WAVE:0.45, RADIUS:14, BASE_DAMAGE:8, CREDIT_REWARD:22 },
 
   // ==========================================================
-  // TOWER SURVIVABILITY
+  // DEFENSE SURVIVABILITY
   // ==========================================================
   TOWER_DURABILITY:{ SOLDIER_HP:145, LASER_HP:180, FLAME_HP:165, MELEE_ATTACK_RANGE:20, MELEE_DAMAGE_MULTIPLIER:1.1 },
   SAFE_SPOT:{ COST:40, RADIUS:31, PLACEMENT_CLEARANCE:48 },
 
   // ==========================================================
-  // RANGED ALIEN - NOW RARER AND LESS PUNISHING
+  // RANGED ALIEN
   // ==========================================================
   RANGED_ALIEN:{
     SPAWN_CHANCE:0.025,
