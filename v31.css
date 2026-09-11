@@ -1,0 +1,39 @@
+/* Alien Planet Defense v31 - true full-screen battlefield */
+html,body{width:100%;height:100%;margin:0!important;padding:0!important;overflow:hidden!important;background:#020609!important}
+body{position:fixed!important;inset:0!important;min-width:0!important;min-height:0!important}
+
+/* The battlefield owns the whole visual viewport. Nothing in normal document flow
+   is allowed to reserve space around it. */
+#gameWrap{position:fixed!important;inset:0!important;z-index:0!important;width:100vw!important;height:100dvh!important;min-height:0!important;max-width:none!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#020609!important}
+#canvasShell{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;background:#020609!important}
+
+/* Cover rather than contain: preserve the 16:10 render aspect while allowing a
+   small crop on wider/taller devices instead of black bars around the map. */
+#game{display:block!important;flex:none!important;width:max(100vw,160dvh)!important;height:auto!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;margin:0!important;border:0!important;box-shadow:none!important;touch-action:none!important}
+
+/* Every persistent gameplay control is a layer above the map. */
+#mobileMenuBtn{position:fixed!important;z-index:110!important}
+#persistentResources{position:fixed!important;z-index:109!important}
+#cancelUnitBtn{position:absolute!important;z-index:108!important}
+#commandBackdrop{position:fixed!important;z-index:118!important}
+#commandDrawer{position:fixed!important;z-index:120!important}
+#mainMenu{position:fixed!important;inset:0!important;z-index:130!important}
+#wallConfirm{position:fixed!important;inset:0!important;z-index:140!important}
+
+/* Keep zoom controls visually distinct and reliably tappable. */
+#zoomOutBtn,#zoomInBtn{touch-action:manipulation!important;user-select:none!important;-webkit-user-select:none!important;font-weight:950!important}
+#zoomOutBtn:disabled,#zoomInBtn:disabled{opacity:.38!important;cursor:not-allowed!important}
+#zoomLabel{pointer-events:none!important;white-space:nowrap!important}
+
+/* Landscape phones: use every pixel, including short/wide devices. */
+@media (orientation:landscape){
+ #gameWrap,#canvasShell{width:100vw!important;height:100dvh!important}
+ #game{width:max(100vw,160dvh)!important;height:auto!important}
+}
+
+/* Portrait remains supported; cover behavior prevents empty bars, although
+   landscape remains the recommended mobile orientation for gameplay. */
+@media (orientation:portrait){
+ #gameWrap,#canvasShell{width:100vw!important;height:100dvh!important}
+ #game{height:max(100dvh,62.5vw)!important;width:auto!important}
+}
