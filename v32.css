@@ -1,0 +1,25 @@
+/* Alien Planet Defense v32 - fog/rivers/economy presentation */
+
+/* Main-menu backsplash hook. The requested artwork is expected at this path;
+   the dark gradients keep text readable over the image. */
+#mainMenu{
+  background-image:
+    linear-gradient(90deg,rgba(2,7,11,.88) 0%,rgba(2,7,11,.54) 46%,rgba(2,7,11,.76) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.62)),
+    url('assets/main_menu_background.png')!important;
+  background-size:cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+}
+#mainMenu .menu-card{background:linear-gradient(180deg,rgba(7,17,25,.82),rgba(4,10,16,.91))!important;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+
+/* Fog is rendered on the canvas; this tiny legend makes the feature discoverable
+   without taking screen space away from the full-screen map. */
+#persistentResources::after{content:'FOG';display:inline-flex;align-items:center;padding:3px 5px;border-radius:4px;background:rgba(13,29,39,.78);color:#89a9b9;font-size:8px;font-weight:900;letter-spacing:.5px}
+
+@media (orientation:landscape) and (max-height:650px),
+       (orientation:landscape) and (hover:none) and (pointer:coarse){
+ #mainMenu{background-position:center center!important}
+ #mainMenu .menu-card{background:rgba(5,13,20,.80)!important}
+ #persistentResources::after{display:none}
+}
