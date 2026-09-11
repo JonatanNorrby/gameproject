@@ -157,7 +157,10 @@ document.title='Alien Planet Defense v36';
   const V36_FOG_CELL=96,V36_FOG_COLS=Math.ceil(WORLD_W/V36_FOG_CELL),V36_FOG_ROWS=Math.ceil(WORLD_H/V36_FOG_CELL);
   const v36FogCanvas=document.createElement('canvas');v36FogCanvas.width=W;v36FogCanvas.height=H;
   const v36FogCtx=v36FogCanvas.getContext('2d');
-  const v36BaseDraw=(typeof v31DrawV32==='function')?v31DrawV32:draw;
+  // Keep every later draw wrapper intact. If v32's fog function exists, replace
+  // only that overlay with a no-op so the v36 fog below is applied exactly once.
+  if(typeof window.drawFogOverlayV32==='function')window.drawFogOverlayV32=function(){};
+  const v36BaseDraw=draw;
 
   function v36RoleCfg(u){try{return typeof roleConfig==='function'?(roleConfig(u)||{}):{};}catch{return {};}}
   function v36VisionForUnit(u){
