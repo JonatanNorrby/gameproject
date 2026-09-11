@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v13</title>
-<link rel="stylesheet" href="style.css?v=13">
+<title>Alien Planet Defense v14</title>
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <div id="gameWrap">
@@ -13,11 +13,16 @@
     <div><b>XP</b> <span id="xp">0</span>/<span id="nextXp">90</span></div>
     <div><b>LEVEL</b> <span id="level">1</span></div>
     <div><b>CREDITS</b> <span id="credits">450</span></div>
+    <div><b>WORKERS</b> <span id="workers">3/3 free</span></div>
     <div><b>ALIENS</b> <span id="aliens">0</span></div>
     <div><b>SURVIVAL</b> <span id="survival">0:00</span></div>
   </div>
 
-  <canvas id="game" width="1280" height="800"></canvas>
+  <div id="canvasShell">
+    <canvas id="game" width="1280" height="800"></canvas>
+    <button id="pauseBtn" aria-label="Pause game">⏸ PAUSE</button>
+    <button id="cancelUnitBtn" aria-label="Cancel selected unit">✕</button>
+  </div>
   <div id="message">Build an economy, defend the base, survive.</div>
 
   <div id="menuTabs">
@@ -40,13 +45,22 @@
     <button class="buildBtn" data-type="mine">💎 Crystal Mine <small>85</small></button>
   </div>
 
+  <div id="unitActions">
+    <span class="unitActionLabel">SELECTED UNIT</span>
+    <button id="routeRecordBtn">RECORD ROUTE</button>
+    <button id="routeLoopBtn">START LOOP</button>
+    <button id="routeClearBtn">CLEAR ROUTE</button>
+    <button id="attachBtn">ATTACH TO TRUCK</button>
+    <button id="detachBtn">DETACH</button>
+  </div>
+
   <div id="utilityBar">
     <button id="reachBtn">SHOW REACH: OFF</button>
     <button id="centerBtn">CENTER BASE</button>
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Desktop: arrow keys move camera. Mobile: drag the map. Tap a movable unit, then tap a destination. Mines need a nearby crystal depot; trucks carry mined crystals back to the base.</div>
+  <div id="hint">Desktop: arrow keys pan the camera; Space pauses. Mobile: drag the map. You can issue unit orders and queue buildings while paused. Trucks can record looping routes; Fire Squads can attach to a truck escort.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -65,10 +79,10 @@
   </div>
 </div>
 
-<script src="config.js?v=13"></script>
-<script src="v13a.js?v=13"></script>
-<script src="v13b.js?v=13"></script>
-<script src="v13c.js?v=13"></script>
-<script src="v13d.js?v=13"></script>
+<script src="config.js?v=14"></script>
+<script src="v14a.js?v=14"></script>
+<script src="v14b.js?v=14"></script>
+<script src="v14c.js?v=14"></script>
+<script src="v14d.js?v=14"></script>
 </body>
 </html>
