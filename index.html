@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alien Planet Defense</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="game" width="1280" height="800"></canvas>
+
+  <div id="hud">
+    <div><b>BASE</b> <span id="baseHp">100</span>/<span id="baseMax">100</span></div>
+    <div><b>STAGE</b> <span id="stage">1</span></div>
+    <div><b>WAVE</b> <span id="wave">1</span>/3</div>
+    <div><b>ACTIVE</b> <span id="activeWaves">0</span></div>
+    <div><b>MULTI-WAVE BONUS</b> <span id="multiBonus">+0%</span></div>
+    <div><b>CREDITS</b> <span id="credits">180</span></div>
+    <div><b>ALIENS</b> <span id="aliens">0</span></div>
+  </div>
+
+  <div id="message">Deploy units, then start the wave.</div>
+
+  <div id="buildbar">
+    <button class="towerBtn selected" data-type="soldier">🪖 Soldier Squad <small>40</small></button>
+    <button class="towerBtn" data-type="laser">🔴 Laser Sniper <small>90</small></button>
+    <button class="towerBtn" data-type="flame">🔥 Flamethrower <small>70</small></button>
+    <button class="towerBtn" data-type="blockade">🧱 Blockade <small>30</small></button>
+    <button id="startBtn">START NEXT WAVE</button>
+    <button id="allBtn">LAUNCH ALL STAGE WAVES</button>
+    <button id="restartBtn">RESTART</button>
+    <button id="moneyBtn">∞ TEST MONEY</button>
+  </div>
+
+  <div id="hint">Arrow keys drive the rover. Multiple active waves award a stacking kill bonus. All-wave launch only launches waves remaining in the current 3-wave stage.</div>
+</div>
+
+<div id="cardOverlay" class="hidden">
+  <div id="cardPanel">
+    <div class="cardTitle">WAVE REWARD</div>
+    <div class="cardSub">Choose one upgrade. Higher rarities are stronger and less common.</div>
+    <div id="cards"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
