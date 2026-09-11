@@ -70,6 +70,22 @@ updateEnemies=function(dt){
  try{v31UpdateEnemiesV32(dt);}finally{for(const [e,speed] of slowed)if(state.enemies.includes(e))e.speed=speed;}
 };
 
+// Keep the platoon movement rule coherent through rivers: if any member's adjusted
+// speed becomes the slowest, every member receives that effective speed.
+const v32RiverUnitSpeedBase=unitSpeed;
+unitSpeed=function(u){
+ if(u?.platoonId&&typeof platoonMembers==='function'&&typeof canUsePlatoon==='function'){
+  const members=platoonMembers(u.platoonId).filter(canUsePlatoon);
+  if(members.length>=2){
+   return Math.min(...members.map(m=>{
+    const own=typeof v28UnitSpeedV29==='function'?v28UnitSpeedV29(m):v31UnitSpeedV32(m);
+    return (!isFlyingUnit(m)&&pointInRiver(m.x,m.y))?own*CONFIG.RIVERS.SLOW_FACTOR:own;
+   }));
+  }
+ }
+ return v32RiverUnitSpeedBase(u);
+};
+
 // -----------------------------------------------------------------------------
 // FOG OF WAR
 // Black = unexplored. Dim = explored but not currently visible.
