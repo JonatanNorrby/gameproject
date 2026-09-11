@@ -193,6 +193,9 @@ document.title='Alien Planet Defense v36';
     }
   }
   function v36PointVisible(x,y){for(const v of state.v36VisionSources||[])if(Math.hypot(x-v.x,y-v.y)<=v.r)return true;return false;}
+  // Reuse v36 visibility everywhere the older fog layer is referenced.
+  if(typeof window.refreshFogSourcesV32==='function')window.refreshFogSourcesV32=v36RefreshFog;
+  if(typeof window.pointVisibleV32==='function')window.pointVisibleV32=v36PointVisible;
   function v36DrawFog(){
     const z=v36Zoom(),cam=state.camera,fc=v36FogCtx;
     fc.setTransform(1,0,0,1,0,0);fc.clearRect(0,0,W,H);
