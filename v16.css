@@ -1,0 +1,10 @@
+.legacyStat,.legacyOverlay{display:none!important}
+#hud #metal{color:#b9d2df}
+.buildBtn.expensive{border-color:#af7b43}
+.buildBtn.expensive small{color:#ffd08b}
+.resourceGold{color:#ffd86a}.resourceMetal{color:#b9d2df}
+@media(max-width:760px){
+  #hud{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  #hud>div{flex:0 0 auto;white-space:nowrap}
+  #passiveMenu{padding-bottom:10px}
+}
