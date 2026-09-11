@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v14</title>
-<link rel="stylesheet" href="style.css?v=14">
+<title>Alien Planet Defense v15</title>
+<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="v15.css?v=15">
 </head>
 <body>
 <div id="gameWrap">
@@ -38,7 +39,7 @@
   <div id="towersMenu" class="buildMenu">
     <button class="buildBtn" data-type="laser">🔴 Laser Sniper <small>75</small></button>
     <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>60</small></button>
-    <button class="buildBtn" data-type="blockade">🧱 Blockade <small>22</small></button>
+    <button class="buildBtn" data-type="wall">🧱 Wall <small>length based</small></button>
   </div>
   <div id="passiveMenu" class="buildMenu">
     <button class="buildBtn" data-type="safespot">⬡ Tower Safe Spot <small>45</small></button>
@@ -60,7 +61,7 @@
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Desktop: arrow keys pan the camera; Space pauses. Mobile: drag the map. You can issue unit orders and queue buildings while paused. Trucks can record looping routes; Fire Squads can attach to a truck escort.</div>
+  <div id="hint">Desktop: arrow keys pan the camera; Space pauses. Mobile: drag the map. Wall: select Wall, click/tap the start point, then the end point, review the price, and confirm.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -71,6 +72,19 @@
   <button id="debugHeal">HEAL BASE</button>
 </div>
 
+<div id="wallConfirm" class="wall-confirm hidden">
+  <div class="wall-confirm-card">
+    <div class="wall-confirm-title">BUILD WALL?</div>
+    <div>Length: <b><span id="wallLength">0</span></b></div>
+    <div>Cost: <b><span id="wallCost">0</span> credits</b></div>
+    <div>Build time: <b><span id="wallBuildTime">0</span>s</b></div>
+    <div class="wall-confirm-actions">
+      <button id="wallCancel">CANCEL</button>
+      <button id="wallAccept">BUILD WALL</button>
+    </div>
+  </div>
+</div>
+
 <div id="cardOverlay" class="hidden">
   <div id="cardPanel">
     <div class="cardTitle">LEVEL UP</div>
@@ -79,10 +93,11 @@
   </div>
 </div>
 
-<script src="config.js?v=14"></script>
-<script src="v14a.js?v=14"></script>
-<script src="v14b.js?v=14"></script>
-<script src="v14c.js?v=14"></script>
-<script src="v14d.js?v=14"></script>
+<script src="config.js?v=15"></script>
+<script src="v14a.js?v=15"></script>
+<script src="v14b.js?v=15"></script>
+<script src="v14c.js?v=15"></script>
+<script src="v14d.js?v=15"></script>
+<script src="v15_patch.js?v=15"></script>
 </body>
 </html>
