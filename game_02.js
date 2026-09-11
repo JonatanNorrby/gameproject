@@ -15,11 +15,21 @@ function generateTerrain(){
  return result;
 }
 function findSafeSpotAt(x,y){return state.safeSpots.find(s=>!s.occupied&&Math.hypot(x-s.x,y-s.y)<=CONFIG.SAFE_SPOT.RADIUS);}
-function releaseSafeSpotForTower(t){if(!t.safeSpotId)return;const s=state.safeSpots.find(v=>v.id===t.safeSpotId);if(s)s.occupied=false;}
+function releaseSafeSpotForTower(t){if(!t.safeSpotId)return;const s=state.safeSpots.find(v=>v.id===t.safeSpotId);if(s)s.occupied=false;t.safeSpotId=null;t.protected=false;}
 function removeDeadTowers(){
  const survivors=[];
- for(const t of state.towers){if(t.hp>0)survivors.push(t);else releaseSafeSpotForTower(t);}
+ for(const t of state.towers){if(t.hp>0)survivors.push(t);else{releaseSafeSpotForTower(t);if(state.selectedSquad===t)state.selectedSquad=null;}}
  state.towers=survivors;
+}
+function squadAtWorld(x,y){
+ let best=null,bestD=34;
+ for(const t of state.towers){if(t.type!=="soldier")continue;const d=Math.hypot(t.x-x,t.y-y);if(d<bestD){best=t;bestD=d;}}
+ return best;
+}
+function moveTargetBlocked(x,y){
+ if(x<25||y<25||x>WORLD_W-25||y>WORLD_H-25)return true;
+ if(Math.hypot(x-BASE_X,y-BASE_Y)<BASE_RADIUS+28)return true;
+ return pointBlockedByTerrain(x,y,18);
 }
 
 canvas.addEventListener("click",e=>{
@@ -28,6 +38,23 @@ canvas.addEventListener("click",e=>{
  const screenX=(e.clientX-r.left)*W/r.width,screenY=(e.clientY-r.top)*H/r.height;
  const rawX=screenX+state.camera.x,rawY=screenY+state.camera.y;
  if(rawX<25||rawY<25||rawX>WORLD_W-25||rawY>WORLD_H-25)return;
+
+ // RTS selection has priority over building.
+ const clickedSquad=squadAtWorld(rawX,rawY);
+ if(clickedSquad){
+   state.selectedSquad=clickedSquad;
+   els.message.textContent="Fire Squad selected. Click the map to issue a move order, or press ✕ to cancel.";
+   updateHud();
+   return;
+ }
+ if(state.selectedSquad){
+   if(moveTargetBlocked(rawX,rawY)){els.message.textContent="That move destination is blocked by terrain or the base.";return;}
+   releaseSafeSpotForTower(state.selectedSquad);
+   state.selectedSquad.moveTarget={x:rawX,y:rawY};
+   els.message.textContent="Move order issued.";
+   return;
+ }
+
  if(Math.hypot(rawX-BASE_X,rawY-BASE_Y)<BASE_RADIUS+25){els.message.textContent="You cannot build inside the base.";return;}
 
  const def=TOWERS[selected];
@@ -37,27 +64,27 @@ canvas.addEventListener("click",e=>{
  if(selected==="safespot"){
    if(pointBlockedByTerrain(rawX,rawY,CONFIG.SAFE_SPOT.RADIUS)){els.message.textContent="Natural terrain blocks that Safe Spot location.";return}
    if(state.safeSpots.some(s=>Math.hypot(s.x-rawX,s.y-rawY)<CONFIG.SAFE_SPOT.PLACEMENT_CLEARANCE)){els.message.textContent="Safe Spots are too close together.";return}
-   if(state.towers.some(t=>Math.hypot(t.x-rawX,t.y-rawY)<40)){els.message.textContent="A tower is already too close to that location.";return}
-   state.safeSpots.push({id:crypto.randomUUID?crypto.randomUUID():String(Math.random()),x:rawX,y:rawY,occupied:false});
+   if(state.towers.some(t=>Math.hypot(t.x-rawX,t.y-rawY)<40)){els.message.textContent="A defense is already too close to that location.";return}
+   state.safeSpots.push({id:String(Date.now())+Math.random(),x:rawX,y:rawY,occupied:false});
    if(!state.debug.unlimitedCash)state.credits-=cost;updateHud();return;
  }
 
  let x=rawX,y=rawY,protectedTower=false,safeSpotId=null;
  const pad=findSafeSpotAt(rawX,rawY);
  if(pad&&selected!=="blockade"){x=pad.x;y=pad.y;protectedTower=true;safeSpotId=pad.id;}
- if(pointBlockedByTerrain(x,y,selected==="blockade"?28:20)){els.message.textContent="Natural terrain blocks tower placement there.";return;}
+ if(pointBlockedByTerrain(x,y,selected==="blockade"?28:20)){els.message.textContent="Natural terrain blocks placement there.";return;}
 
  if(selected==="blockade"){
    if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<52)){els.message.textContent="Defenses cannot overlap.";return}
    const hp=towerBaseHp("blockade");
    state.towers.push({type:"blockade",x,y,hp,maxHp:hp,w:CONFIG.BLOCKADE.WIDTH,h:CONFIG.BLOCKADE.HEIGHT,protected:false});
  }else if(selected==="soldier"){
-   if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<38)){els.message.textContent="Towers cannot overlap.";return}
+   if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<38)){els.message.textContent="Defenses cannot overlap.";return}
    const hp=towerBaseHp("soldier");
-   state.towers.push({type:"soldier",x,y,range:def.range,hp,maxHp:hp,protected:protectedTower,safeSpotId,memberCooldowns:Array(CONFIG.SOLDIER.MEMBERS).fill(0).map(()=>Math.random()*.3)});
+   state.towers.push({type:"soldier",x,y,range:def.range,hp,maxHp:hp,protected:protectedTower,safeSpotId,moveTarget:null,moveSpeed:CONFIG.SOLDIER.MOVE_SPEED,memberCooldowns:Array(CONFIG.SOLDIER.MEMBERS).fill(0).map(()=>Math.random()*.3)});
    if(pad)pad.occupied=true;
  }else{
-   if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<38)){els.message.textContent="Towers cannot overlap.";return}
+   if(state.towers.some(t=>Math.hypot(t.x-x,t.y-y)<38)){els.message.textContent="Defenses cannot overlap.";return}
    const hp=towerBaseHp(selected);
    state.towers.push({type:selected,x,y,range:def.range,cool:Math.random()*.2,hp,maxHp:hp,protected:protectedTower,safeSpotId});
    if(pad)pad.occupied=true;
@@ -65,10 +92,7 @@ canvas.addEventListener("click",e=>{
  if(!state.debug.unlimitedCash)state.credits-=cost;updateHud();
 });
 
-function stageTheme(){
- // One persistent map for the whole run. The terrain/theme only changes after Restart.
- return {ground:"#10221b",patch:"#234a37",path:"#18372d",accent:"#59d49a",sky:"#0b1512"};
-}
+function stageTheme(){return {ground:"#10221b",patch:"#234a37",path:"#18372d",accent:"#59d49a",sky:"#0b1512"};}
 
 function launchWave(waveNumber){
  const absoluteWave=waveNumber;
@@ -114,7 +138,7 @@ function showCards(){
  });
  els.overlay.classList.remove("hidden");updateHud();
 }
-function advanceIfStageComplete(){/* Stages removed: the same map persists until death/restart. */}
+function advanceIfStageComplete(){}
 function findTarget(x,y,range){
  let target=null,best=-Infinity;
  for(const e of state.enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<range){const score=-Math.hypot(e.x-BASE_X,e.y-BASE_Y)-d*.15;if(score>best){best=score;target=e}}}
