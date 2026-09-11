@@ -105,7 +105,7 @@ const CONFIG = {
 
     SHOTGUN: {
       RANGE: 155,
-      PELETS: 5,
+      PELLETS: 5,
       DAMAGE_MULTIPLIER_PER_PELLET: 0.7,
       FIRE_INTERVAL: 0.62,
       BULLET_SPEED: 680,
@@ -186,52 +186,57 @@ const CONFIG = {
   // TOWER DURABILITY / MONSTER ATTACKS
   // ==========================================================
   TOWER_DURABILITY: {
-    SOLDIER_HP: 85,
-    LASER_HP: 110,
-    FLAME_HP: 100,
-    MELEE_ATTACK_RANGE: 20,
-    MELEE_DAMAGE_MULTIPLIER: 2.0
+    SOLDIER_HP: 85,              // Hit points for a Soldier Squad
+    LASER_HP: 110,               // Hit points for a Laser Sniper
+    FLAME_HP: 100,               // Hit points for a Flamethrower
+
+    MELEE_ATTACK_RANGE: 20,      // How close a normal alien must get before attacking a tower
+    MELEE_DAMAGE_MULTIPLIER: 2.0 // Multiplies an alien's normal BASE_DAMAGE while hitting towers
   },
 
   // ==========================================================
   // TOWER SAFE SPOT
   // ==========================================================
   SAFE_SPOT: {
-    COST: 60,
-    RADIUS: 31,
-    PLACEMENT_CLEARANCE: 48
+    COST: 60,                    // Cost to place a protected tower pad
+    RADIUS: 31,                  // Tower snaps to pad center when placed inside this radius
+    PLACEMENT_CLEARANCE: 48      // Minimum separation between safe spots
+    // A tower on a Safe Spot cannot be attacked by normal melee monsters.
+    // Ranged monsters can still target and destroy it.
   },
 
   // ==========================================================
   // RANGED ALIEN ("SPITTER")
   // ==========================================================
   RANGED_ALIEN: {
-    SPAWN_CHANCE: 0.055,
+    SPAWN_CHANCE: 0.055,         // Chance each spawned alien becomes a ranged alien
     BASE_HP: 24,
     HP_PER_WAVE: 2.8,
     BASE_SPEED: 48,
     SPEED_PER_WAVE: 0.8,
     RADIUS: 10,
-    BASE_DAMAGE: 5,
+    BASE_DAMAGE: 5,              // Damage to the base if it reaches the bottom
     CREDIT_REWARD: 12,
-    ATTACK_RANGE: 210,
-    SHOT_DAMAGE: 12,
-    FIRE_INTERVAL: 1.45,
+
+    ATTACK_RANGE: 210,           // Can fire at towers inside this range
+    SHOT_DAMAGE: 12,             // Damage per ranged projectile against towers
+    FIRE_INTERVAL: 1.45,         // Seconds between shots
     PROJECTILE_SPEED: 310
+    // Ranged aliens can target ordinary towers, blockades, AND towers on Safe Spots.
   },
 
   // ==========================================================
   // NATURAL TERRAIN
   // ==========================================================
   TERRAIN: {
-    MIN_OBSTACLES: 7,
-    EXTRA_OBSTACLES_RANDOM: 5,
+    MIN_OBSTACLES: 7,            // Minimum rocks/crystals per stage
+    EXTRA_OBSTACLES_RANDOM: 5,   // Adds 0..this many additional obstacles
     MIN_RADIUS: 24,
     MAX_RADIUS: 48,
-    BUILD_CLEARANCE: 9,
-    ENEMY_STEER_STRENGTH: 250,
-    SPAWN_TOP_CLEARANCE: 75,
-    BASE_CLEARANCE: 95
+    BUILD_CLEARANCE: 9,          // Extra no-build margin around each terrain obstacle
+    ENEMY_STEER_STRENGTH: 250,   // Higher makes enemies turn around rocks more aggressively
+    SPAWN_TOP_CLEARANCE: 75,     // Keep terrain away from the very top spawn edge
+    BASE_CLEARANCE: 95           // Keep terrain away from the defended base line
   },
 
   // ==========================================================
@@ -242,5 +247,6 @@ const CONFIG = {
     UNCOMMON: 28,
     RARE: 11,
     EPIC: 3
+    // These should add up to 100 for intuitive percentages.
   }
 };
