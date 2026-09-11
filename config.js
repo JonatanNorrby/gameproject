@@ -1,7 +1,8 @@
-// Alien Planet Defense v18 - CONFIG
+// Alien Planet Defense v21 - CONFIG
 // ------------------------------------------------------------
-// v18 applies the Game backlog fixes: thinner bendable walls, truck loop handoff,
-// and enemies that prefer open routes but will break walls when detours are large.
+// v21 removes Tower Safe Spots from gameplay and adds 3-level tower upgrades.
+// Upgrade prices are tuned to reward investing in an existing tower instead of
+// simply duplicating it, especially when space and firing lanes matter.
 // ------------------------------------------------------------
 const CONFIG={
   GAME:{STARTING_CREDITS:650,STARTING_METAL:160,STARTING_BASE_HP:300},
@@ -35,7 +36,29 @@ const CONFIG={
   RAILGUN:{COST:120,RANGE:620,FIRE_INTERVAL:3.20,DAMAGE:145,PIERCE_WIDTH:18,MAX_TARGETS:3,HP:225},
   TESLA:{COST:95,RANGE:250,FIRE_INTERVAL:0.85,DAMAGE:21,CHAINS:4,CHAIN_RANGE:120,CHAIN_DAMAGE_MULTIPLIER:0.72,HP:210},
   BLOCKADE:{COST:22,HP:420,WIDTH:78,HEIGHT:22},
+
+  // Kept only so the older bootstrap scripts can initialize safely. v21 removes
+  // this building from the UI and forces findSafeSpotAt() to return null.
   SAFE_SPOT:{COST:50,RADIUS:31,PLACEMENT_CLEARANCE:50,HP:180},
+
+  TOWER_UPGRADES:{
+    laser:{
+      2:{COST:45,NAME:'Focus Optics',DESC:'+15% range, +40% damage, 10% faster fire.'},
+      3:{COST:70,NAME:'Prism Core',DESC:'+25% range, +75% damage, 18% faster fire, shots pierce 2 aliens.'}
+    },
+    flame:{
+      2:{COST:35,NAME:'Napalm Mix',DESC:'+16% range and ignites 2 aliens at once.'},
+      3:{COST:55,NAME:'Inferno Projector',DESC:'+28% range, 10% faster fire and ignites 4 aliens at once.'}
+    },
+    railgun:{
+      2:{COST:75,NAME:'Accelerator Rails',DESC:'+15% range, +45% damage and pierces up to 5 aliens.'},
+      3:{COST:115,NAME:'Hypervelocity Core',DESC:'+25% range, +85% damage, 18% faster fire and pierces up to 7 aliens.'}
+    },
+    tesla:{
+      2:{COST:60,NAME:'Arc Capacitors',DESC:'+14% range, +24% damage, stronger arcs and 5 chains.'},
+      3:{COST:90,NAME:'Storm Core',DESC:'+24% range, +52% damage, 27% faster fire and 7 chains.'}
+    }
+  },
 
   CRYSTALS:{
     DEPOT_COUNT:9,DEPOT_RADIUS:34,DEPOT_BASE_CLEARANCE:300,DEPOT_SEPARATION:250,
