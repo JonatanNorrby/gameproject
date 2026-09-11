@@ -238,6 +238,10 @@ window.addEventListener('load',()=>{document.title=V42_TITLE;},{once:true});
     state.structures=(state.structures||[]).filter(s=>s.type!=='bunker');
     if(typeof garrisonBtn!=='undefined'&&garrisonBtn)garrisonBtn.style.display='none';
     if(typeof ungarrisonBtn!=='undefined'&&ungarrisonBtn)ungarrisonBtn.style.display='none';
+    for(const box of document.querySelectorAll('#guidePanel .guide-box')){
+      const title=box.querySelector('b')?.textContent||'';
+      if(/bunker/i.test(title))box.remove();
+    }
   }
   removeBunkers();
 
@@ -266,6 +270,7 @@ window.addEventListener('load',()=>{document.title=V42_TITLE;},{once:true});
       units:state.units?.length||0,enemies:state.enemies?.length||0,structures:state.structures?.length||0,
       riflemen:(state.units||[]).filter(isRifleman).length,
       visionSources:state.v42VisionSources?.length||0,
+      renderAnchors:frameAnchors.length,
       legacyCombatError:state.v42LegacyCombatError||null,
       zoom:Number(state.camera?.zoom)||1
     };}
