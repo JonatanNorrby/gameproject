@@ -3,26 +3,27 @@ const W=canvas.width,H=canvas.height;
 const WORLD_W=CONFIG.WORLD.WIDTH,WORLD_H=CONFIG.WORLD.HEIGHT;
 const BASE_X=WORLD_W/2,BASE_Y=WORLD_H/2,BASE_RADIUS=CONFIG.WORLD.BASE_RADIUS;
 
-const SKITTER_MOVE = new Image();
-SKITTER_MOVE.src = "assets/skitter_move.png";
-const SKITTER_IDLE = new Image();
-SKITTER_IDLE.src = "assets/skitter_idle.png";
-const SKITTER_FRAME_SIZE = 128;
-const BRUTE_SPRITE = new Image();
-BRUTE_SPRITE.src = "assets/brute_topdown.png";
+const SKITTER_MOVE=new Image();
+SKITTER_MOVE.src="assets/skitter_move.png";
+const SKITTER_IDLE=new Image();
+SKITTER_IDLE.src="assets/skitter_idle.png";
+const SKITTER_FRAME_SIZE=128;
+const BRUTE_SPRITE=new Image();
+BRUTE_SPRITE.src="assets/brute_topdown.png";
 
 const els={
  baseHp:document.getElementById("baseHp"),baseMax:document.getElementById("baseMax"),
  wave:document.getElementById("wave"),active:document.getElementById("activeWaves"),credits:document.getElementById("credits"),
  aliens:document.getElementById("aliens"),multiBonus:document.getElementById("multiBonus"),message:document.getElementById("message"),
  start:document.getElementById("startBtn"),five:document.getElementById("fiveBtn"),restart:document.getElementById("restartBtn"),reach:document.getElementById("reachBtn"),
+ cancelSelection:document.getElementById("cancelSelectionBtn"),
  debugBtn:document.getElementById("debugBtn"),debugPanel:document.getElementById("debugPanel"),debugCash:document.getElementById("debugCash"),
  debugLives:document.getElementById("debugLives"),debugHeal:document.getElementById("debugHeal"),
  overlay:document.getElementById("cardOverlay"),cards:document.getElementById("cards")
 };
 
 const TOWERS={
- soldier:{cost:CONFIG.SOLDIER.COST,range:CONFIG.SOLDIER.RANGE,memberRate:CONFIG.SOLDIER.FIRE_INTERVAL,damage:CONFIG.SOLDIER.DAMAGE,bulletSpeed:CONFIG.SOLDIER.BULLET_SPEED,label:"Soldier Squad"},
+ soldier:{cost:CONFIG.SOLDIER.COST,range:CONFIG.SOLDIER.RANGE,memberRate:CONFIG.SOLDIER.FIRE_INTERVAL,damage:CONFIG.SOLDIER.DAMAGE,bulletSpeed:CONFIG.SOLDIER.BULLET_SPEED,label:"Fire Squad"},
  laser:{cost:CONFIG.LASER.COST,range:CONFIG.LASER.RANGE,rate:CONFIG.LASER.FIRE_INTERVAL,damage:CONFIG.LASER.DAMAGE,bulletSpeed:CONFIG.LASER.BULLET_SPEED,label:"Laser Sniper"},
  flame:{cost:CONFIG.FLAME.COST,range:CONFIG.FLAME.RANGE,rate:CONFIG.FLAME.FIRE_INTERVAL,label:"Flamethrower"},
  blockade:{cost:CONFIG.BLOCKADE.COST,label:"Blockade"},
@@ -30,27 +31,23 @@ const TOWERS={
 };
 const SOLDIER_OFFSETS=[[-13,-10],[0,-13],[13,-10],[-13,8],[0,11],[13,8]];
 
-const RARITIES={
- common:{weight:CONFIG.CARD_RARITY.COMMON},uncommon:{weight:CONFIG.CARD_RARITY.UNCOMMON},rare:{weight:CONFIG.CARD_RARITY.RARE},epic:{weight:CONFIG.CARD_RARITY.EPIC}
-};
+const RARITIES={common:{weight:CONFIG.CARD_RARITY.COMMON},uncommon:{weight:CONFIG.CARD_RARITY.UNCOMMON},rare:{weight:CONFIG.CARD_RARITY.RARE},epic:{weight:CONFIG.CARD_RARITY.EPIC}};
 
 const UPGRADES=[
- {name:"Rapid Training",rarity:"common",desc:"Each soldier fires 18% faster.",tag:"SOLDIERS",apply:s=>s.mods.soldierRate*=.82},
- {name:"Hotter Ammunition",rarity:"common",desc:"Soldier bullets deal 30% more damage.",tag:"SOLDIERS",apply:s=>s.mods.soldierDamage*=1.30},
+ {name:"Rapid Training",rarity:"common",desc:"Each Fire Squad soldier fires 18% faster.",tag:"FIRE SQUADS",apply:s=>s.mods.soldierRate*=.82},
+ {name:"Hotter Ammunition",rarity:"common",desc:"Fire Squad bullets deal 30% more damage.",tag:"FIRE SQUADS",apply:s=>s.mods.soldierDamage*=1.30},
+ {name:"Combat Conditioning",rarity:"common",desc:"Fire Squads move 20% faster.",tag:"FIRE SQUADS",apply:s=>s.mods.squadMove*=1.2},
  {name:"Reinforced Walls",rarity:"common",desc:"Blockades gain 60% more health.",tag:"BLOCKADES",apply:s=>s.mods.blockadeHp*=1.6},
  {name:"Scavenger Teams",rarity:"common",desc:"Gain 20% more credits from kills.",tag:"ECONOMY",apply:s=>s.mods.reward*=1.2},
  {name:"Long Nozzles",rarity:"uncommon",desc:"Flamethrower range increases by 35%.",tag:"FLAME",apply:s=>s.mods.flameRange*=1.35},
  {name:"Targeting Computer",rarity:"uncommon",desc:"Laser Snipers fire 22% faster.",tag:"LASER",apply:s=>s.mods.laserRate*=.78},
  {name:"Fortified Base",rarity:"uncommon",desc:"Increase max base health by 20 and heal 20.",tag:"BASE",apply:s=>{s.maxBaseHp+=20;s.baseHp=Math.min(s.maxBaseHp,s.baseHp+20)}},
- {name:"Expanded Squad",rarity:"uncommon",desc:"Every soldier squad gains 2 extra soldiers.",tag:"SOLDIERS",apply:s=>s.mods.extraSoldiers+=2},
+ {name:"Expanded Squad",rarity:"uncommon",desc:"Every Fire Squad gains 2 extra soldiers.",tag:"FIRE SQUADS",apply:s=>s.mods.extraSoldiers+=2},
  {name:"Heavy Laser Core",rarity:"rare",desc:"Laser Snipers deal 60% more damage.",tag:"LASER",apply:s=>s.mods.laserDamage*=1.6},
  {name:"Inferno Gel",rarity:"rare",desc:"Burn damage +75% and burn duration +50%.",tag:"FLAME",apply:s=>{s.mods.flameDamage*=1.75;s.mods.burnDuration*=1.5}},
- {name:"Rover Autoloader",rarity:"rare",desc:"Rover pistol fires 35% faster.",tag:"ROVER",apply:s=>s.mods.vehicleRate*=.65},
- {name:"Rover AP Rounds",rarity:"rare",desc:"Rover weapon damage increases by 75%.",tag:"ROVER",apply:s=>s.mods.vehicleDamage*=1.75},
- {name:"Twin Pistol Mount",rarity:"rare",desc:"The rover upgrades from pistol to twin pistols.",tag:"ROVER WEAPON",apply:s=>s.vehicle.weapon="twin"},
- {name:"Rover Scattergun",rarity:"epic",desc:"Replace the rover weapon with a short-range shotgun that fires 5 pellets.",tag:"ROVER WEAPON",apply:s=>s.vehicle.weapon="shotgun"},
- {name:"Rover Pulse Cannon",rarity:"epic",desc:"Replace the rover weapon with a powerful rapid pulse cannon.",tag:"ROVER WEAPON",apply:s=>s.vehicle.weapon="pulse"},
- {name:"Orbital Logistics",rarity:"epic",desc:"Kill rewards +60% and wave-stack bonus is stronger.",tag:"ECONOMY",apply:s=>{s.mods.reward*=1.6;s.mods.stackBonus+=.10}}
+ {name:"Field Armor",rarity:"rare",desc:"All Fire Squads gain 60% more maximum HP.",tag:"FIRE SQUADS",apply:s=>{s.mods.soldierHp*=1.6;for(const t of s.towers)if(t.type==="soldier"){const ratio=t.hp/t.maxHp;t.maxHp*=1.6;t.hp=t.maxHp*ratio}}},
+ {name:"Rapid Redeployment",rarity:"rare",desc:"Fire Squads move 50% faster.",tag:"FIRE SQUADS",apply:s=>s.mods.squadMove*=1.5},
+ {name:"Orbital Logistics",rarity:"epic",desc:"Kill rewards +60% and multi-wave bonus is stronger.",tag:"ECONOMY",apply:s=>{s.mods.reward*=1.6;s.mods.stackBonus+=.10}}
 ];
 
 let state,selected="soldier",keys={};
@@ -59,16 +56,16 @@ function reset(){
  state={
   nextWave:1,credits:CONFIG.GAME.STARTING_CREDITS,baseHp:CONFIG.GAME.STARTING_BASE_HP,maxBaseHp:CONFIG.GAME.STARTING_BASE_HP,
   enemies:[],towers:[],safeSpots:[],terrain:[],bullets:[],enemyBullets:[],particles:[],waveSpawners:[],
-  gameOver:false,choosing:false,showReach:false,last:performance.now(),cardsPending:0,
+  gameOver:false,choosing:false,showReach:false,last:performance.now(),cardsPending:0,selectedSquad:null,
   debug:{unlimitedCash:false,unlimitedLives:false},
-  mods:{soldierRate:1,soldierDamage:1,extraSoldiers:0,laserDamage:1,laserRate:1,flameDamage:1,flameRange:1,burnDuration:1,blockadeHp:1,blockadeCost:1,reward:1,vehicleDamage:1,vehicleRate:1,stackBonus:CONFIG.MULTI_WAVE.BONUS_PER_EXTRA_ACTIVE_WAVE},
-  vehicle:{x:BASE_X,y:BASE_Y+BASE_RADIUS+55,angle:-Math.PI/2,speed:CONFIG.ROVER.MOVE_SPEED,cool:0,weapon:CONFIG.ROVER.STARTING_WEAPON},
+  mods:{soldierRate:1,soldierDamage:1,soldierHp:1,squadMove:1,extraSoldiers:0,laserDamage:1,laserRate:1,flameDamage:1,flameRange:1,burnDuration:1,blockadeHp:1,blockadeCost:1,reward:1,stackBonus:CONFIG.MULTI_WAVE.BONUS_PER_EXTRA_ACTIVE_WAVE},
   camera:{x:BASE_X-W/2,y:BASE_Y-H/2,speed:CONFIG.WORLD.CAMERA_SPEED}
  };
  els.overlay.classList.add("hidden");
  els.debugCash.checked=false;els.debugLives.checked=false;
+ if(els.cancelSelection)els.cancelSelection.classList.remove("active");
  state.terrain=generateTerrain();
- els.message.textContent="Endless run started. Launch waves whenever you're ready.";
+ els.message.textContent="Endless run started. Place Fire Squads, then click them to move them RTS-style.";
  updateHud();
 }
 function totalActiveWaves(){return state.waveSpawners.length}
@@ -81,23 +78,22 @@ function updateHud(){
  els.multiBonus.textContent=`+${bonusPct}%`;
  els.credits.textContent=state.debug.unlimitedCash?"∞":state.credits;els.aliens.textContent=state.enemies.length;
  els.start.disabled=state.gameOver||state.choosing;els.five.disabled=state.gameOver||state.choosing;
- document.querySelectorAll(".towerBtn").forEach(b=>b.classList.toggle("selected",b.dataset.type===selected));
+ document.querySelectorAll(".towerBtn").forEach(b=>b.classList.toggle("selected",b.dataset.type===selected&&!state.selectedSquad));
+ if(els.cancelSelection)els.cancelSelection.classList.toggle("active",!!state.selectedSquad);
 }
 
-document.querySelectorAll(".towerBtn").forEach(b=>b.onclick=()=>{selected=b.dataset.type;els.message.textContent=`Selected ${TOWERS[selected].label}.`;updateHud()});
+document.querySelectorAll(".towerBtn").forEach(b=>b.onclick=()=>{state.selectedSquad=null;selected=b.dataset.type;els.message.textContent=`Build mode: ${TOWERS[selected].label}.`;updateHud()});
+els.cancelSelection.onclick=()=>{state.selectedSquad=null;els.message.textContent="Selection cancelled.";updateHud()};
 els.start.onclick=()=>{launchWave(state.nextWave);state.nextWave++;updateHud()};
 els.five.onclick=()=>{for(let i=0;i<5;i++){launchWave(state.nextWave);state.nextWave++;}updateHud()};
 els.restart.onclick=reset;
 els.reach.onclick=()=>{state.showReach=!state.showReach;els.reach.textContent=`SHOW REACH: ${state.showReach?"ON":"OFF"}`;};
-els.debugBtn.onclick=()=>{els.debugPanel.style.display=els.debugPanel.style.display==="none"?"block":"none";};
+els.debugBtn.onclick=()=>{els.debugPanel.classList.toggle("open");};
 els.debugCash.onchange=()=>{state.debug.unlimitedCash=els.debugCash.checked;if(state.debug.unlimitedCash)state.credits=999999;updateHud();};
 els.debugLives.onchange=()=>{state.debug.unlimitedLives=els.debugLives.checked;if(state.debug.unlimitedLives)state.baseHp=state.maxBaseHp;updateHud();};
 els.debugHeal.onclick=()=>{state.baseHp=state.maxBaseHp;updateHud();};
 
-window.addEventListener("keydown",e=>{
- const controlKeys=["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d","W","A","S","D"];
- if(controlKeys.includes(e.key)){keys[e.key]=true;e.preventDefault()}
-});
+window.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){keys[e.key]=true;e.preventDefault()}});
 window.addEventListener("keyup",e=>{keys[e.key]=false});
 
 function updateCamera(dt){
@@ -108,7 +104,7 @@ function updateCamera(dt){
 }
 
 function towerBaseHp(type){
- if(type==="soldier")return CONFIG.TOWER_DURABILITY.SOLDIER_HP;
+ if(type==="soldier")return CONFIG.TOWER_DURABILITY.SOLDIER_HP*state.mods.soldierHp;
  if(type==="laser")return CONFIG.TOWER_DURABILITY.LASER_HP;
  if(type==="flame")return CONFIG.TOWER_DURABILITY.FLAME_HP;
  if(type==="blockade")return CONFIG.BLOCKADE.HP*state.mods.blockadeHp;
