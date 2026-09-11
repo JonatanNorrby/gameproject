@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071017">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Alien Planet Defense v21</title>
-<link rel="stylesheet" href="style.css?v=21">
-<link rel="stylesheet" href="v15.css?v=21">
-<link rel="stylesheet" href="v16.css?v=21">
-<link rel="stylesheet" href="v18.css?v=21">
-<link rel="stylesheet" href="v19.css?v=21">
-<link rel="stylesheet" href="v20.css?v=21">
-<link rel="stylesheet" href="v21.css?v=21">
+<title>Alien Planet Defense v22</title>
+<link rel="stylesheet" href="style.css?v=22">
+<link rel="stylesheet" href="v15.css?v=22">
+<link rel="stylesheet" href="v16.css?v=22">
+<link rel="stylesheet" href="v18.css?v=22">
+<link rel="stylesheet" href="v19.css?v=22">
+<link rel="stylesheet" href="v20.css?v=22">
+<link rel="stylesheet" href="v21.css?v=22">
 </head>
 <body>
 <div id="mainMenu">
@@ -44,11 +44,12 @@
         <div class="guide-box"><b>Resources</b><p>Killing aliens gives Gold. Crystal Mines snap onto crystal deposits; Trucks carry crystal to Landing Pads where ships export it for Gold. Ore Mines feed Refineries, which create Metal.</p></div>
         <div class="guide-box"><b>Gold</b><p>Gold buys movable units and economy buildings such as Mines, Refineries and Landing Pads.</p></div>
         <div class="guide-box"><b>Metal</b><p>Metal builds combat Towers and Walls, and upgrades existing Towers. Establish Ore Mine → Truck → Refinery routes to sustain defensive expansion.</p></div>
-        <div class="guide-box"><b>Tower Upgrades</b><p>Tap a built combat Tower to select it. Every Tower starts at 1/3 and can be upgraded twice with Metal. Higher levels add tower-specific mechanics, so improving a good firing position can outperform simply building another basic Tower.</p></div>
+        <div class="guide-box"><b>Tower Upgrades</b><p>Tap a built combat Tower to select it. Every Tower starts at 1/3 and can be upgraded twice with Metal. Higher levels add tower-specific mechanics instead of only small stat increases.</p></div>
         <div class="guide-box"><b>Truck Routes</b><p>Select a Truck and record at least two route points. When finished, the Truck drives to the first point and automatically begins repeating the route.</p></div>
         <div class="guide-box"><b>Walls</b><p>Select Wall, then click bend points or drag to paint a path. Press ✓ to review total metal cost and build time. Press ✕ to cancel the current wall path.</p></div>
         <div class="guide-box"><b>Landing Pads</b><p>Ships periodically land at Landing Pads, load deposited crystal and launch when full. A landing ship attracts nearby aliens, so protect the pad.</p></div>
-        <div class="guide-box"><b>Combat</b><p>Riflemen are general-purpose, Heavy Gunners provide sustained fire, Rocketeers deal splash damage and Medics heal friendlies. Railguns pierce enemies and Tesla Towers chain damage.</p></div>
+        <div class="guide-box"><b>Flyers</b><p>Flyers begin appearing after the run gets underway. They ignore terrain and Walls completely. Anti-Air Cannons are the most metal-efficient answer, although several other weapons can still hit them.</p></div>
+        <div class="guide-box"><b>Specialized Towers</b><p>Cryo controls crowds, Mortars bombard groups at long range, Miniguns shred single targets, Missiles deliver heavy splash damage and Drone Bays create autonomous local defense. Anti-Air Cannons specialize against Flyers.</p></div>
       </div>
       <button id="guideBackBtn" class="menu-back">BACK</button>
     </div>
@@ -92,6 +93,12 @@
     <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>55 metal</small></button>
     <button class="buildBtn" data-type="railgun">⚡ Railgun Tower <small>120 metal</small></button>
     <button class="buildBtn" data-type="tesla">🟣 Tesla Tower <small>95 metal</small></button>
+    <button class="buildBtn" data-type="antiair">🎯 Anti-Air <small>65 metal</small></button>
+    <button class="buildBtn" data-type="cryo">❄️ Cryo Tower <small>80 metal</small></button>
+    <button class="buildBtn" data-type="mortar">💥 Mortar <small>105 metal</small></button>
+    <button class="buildBtn" data-type="minigun">⚙️ Minigun <small>85 metal</small></button>
+    <button class="buildBtn" data-type="missile">🚀 Missile Tower <small>125 metal</small></button>
+    <button class="buildBtn" data-type="dronebay">🛸 Drone Bay <small>110 metal</small></button>
     <button class="buildBtn" data-type="wall">🧱 Wall <small>metal / length</small></button>
     <button id="wallCancelModeBtn" class="wall-inline-action" title="Cancel wall placement" aria-label="Cancel wall placement">✕</button>
     <button id="wallConfirmPathBtn" class="wall-inline-action" title="Review and build wall path" aria-label="Confirm wall path">✓</button>
@@ -132,7 +139,7 @@
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Tap a Tower to see its 1/3–3/3 Metal upgrades. Mobile: drag to pan and tap to select/place. Wall: tap bends or drag to paint, then ✓ to review cost.</div>
+  <div id="hint">Flyers ignore terrain and Walls. Anti-Air specializes against them. Tap any Tower for its 1/3–3/3 upgrades. Mobile: swipe the Tower row sideways to browse all defenses.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -158,20 +165,21 @@
 
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=21"></script>
-<script src="v14a.js?v=21"></script>
-<script src="v14b.js?v=21"></script>
-<script src="v14c.js?v=21"></script>
-<script src="v14d.js?v=21"></script>
-<script src="v15_patch.js?v=21"></script>
-<script src="v16a.js?v=21"></script>
-<script src="v16b.js?v=21"></script>
-<script src="v16c.js?v=21"></script>
-<script src="v17.js?v=21"></script>
-<script src="v18.js?v=21"></script>
-<script src="v18_hotfix.js?v=21"></script>
-<script src="v19.js?v=21"></script>
-<script src="v20.js?v=21"></script>
-<script src="v21.js?v=21"></script>
+<script src="config.js?v=22"></script>
+<script src="v14a.js?v=22"></script>
+<script src="v14b.js?v=22"></script>
+<script src="v14c.js?v=22"></script>
+<script src="v14d.js?v=22"></script>
+<script src="v15_patch.js?v=22"></script>
+<script src="v16a.js?v=22"></script>
+<script src="v16b.js?v=22"></script>
+<script src="v16c.js?v=22"></script>
+<script src="v17.js?v=22"></script>
+<script src="v18.js?v=22"></script>
+<script src="v18_hotfix.js?v=22"></script>
+<script src="v19.js?v=22"></script>
+<script src="v20.js?v=22"></script>
+<script src="v21.js?v=22"></script>
+<script src="v22.js?v=22"></script>
 </body>
 </html>
