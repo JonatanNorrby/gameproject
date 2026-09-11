@@ -1,0 +1,7 @@
+/* v18 wall path controls */
+.wall-inline-action{display:none;min-width:42px;min-height:42px;padding:7px 10px;border-radius:6px;font-size:18px;font-weight:950;align-items:center;justify-content:center}
+.wall-inline-action.visible{display:inline-flex}
+#wallCancelModeBtn{background:#3a2025;border-color:#b85d68;color:#ffd7dc}
+#wallConfirmPathBtn{background:#1f422a;border-color:#65c77b;color:#ddffe5}
+#wallConfirmPathBtn:not(.visible),#wallCancelModeBtn:not(.visible){display:none!important}
+@media(max-width:760px){.wall-inline-action{min-width:48px;min-height:46px;font-size:20px;flex:0 0 auto}}
