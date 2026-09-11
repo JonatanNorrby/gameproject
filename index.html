@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alien Planet Defense v10</title>
+<title>Alien Planet Defense v11</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,28 +22,29 @@
   <div id="message">Defend the central base.</div>
 
   <div id="buildbar">
-    <button class="towerBtn selected" data-type="soldier">🪖 Soldier Squad <small>30</small></button>
+    <button class="towerBtn selected" data-type="soldier">🪖 Fire Squad <small>30</small></button>
     <button class="towerBtn" data-type="laser">🔴 Laser Sniper <small>70</small></button>
     <button class="towerBtn" data-type="flame">🔥 Flamethrower <small>55</small></button>
     <button class="towerBtn" data-type="blockade">🧱 Blockade <small>20</small></button>
     <button class="towerBtn" data-type="safespot">⬡ Tower Safe Spot <small>40</small></button>
+    <button id="cancelSelectionBtn" title="Cancel current squad selection">✕</button>
     <button id="startBtn">START WAVE</button>
     <button id="fiveBtn">START 5 WAVES</button>
     <button id="restartBtn">RESTART</button>
     <button id="reachBtn">SHOW REACH: OFF</button>
-    <button id="debugBtn">DEBUG MENU</button>
-  </div>
-
-  <div id="debugPanel" style="display:none;padding:10px;background:#101923;border:1px solid #49657a;text-align:center;">
-    <b>DEBUG</b>
-    <label style="margin-left:18px"><input id="debugCash" type="checkbox"> Unlimited cash</label>
-    <label style="margin-left:18px"><input id="debugLives" type="checkbox"> Unlimited lives</label>
-    <button id="debugHeal" style="margin-left:18px">HEAL BASE</button>
   </div>
 
   <div id="hint">
-    Arrow keys move the camera. WASD drives the rover. Press START WAVE as many times as you want to stack waves on the same map.
+    Arrow keys move the camera. Click a Fire Squad to select it, then click the map to move it. Press ✕ to cancel the current squad selection.
   </div>
+</div>
+
+<button id="debugBtn">DEBUG</button>
+<div id="debugPanel" class="debug-panel">
+  <div class="debug-title">DEBUG MENU</div>
+  <label><input id="debugCash" type="checkbox"> Unlimited cash</label>
+  <label><input id="debugLives" type="checkbox"> Unlimited lives</label>
+  <button id="debugHeal">HEAL BASE</button>
 </div>
 
 <div id="cardOverlay" class="hidden">
@@ -55,9 +56,6 @@
 </div>
 
 <script src="config.js"></script>
-<script src="game_01.js"></script>
-<script src="game_02.js"></script>
-<script src="game_03.js"></script>
-<script src="game_04.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
