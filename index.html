@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071017">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Alien Planet Defense v23</title>
-<link rel="stylesheet" href="style.css?v=23">
-<link rel="stylesheet" href="v15.css?v=23">
-<link rel="stylesheet" href="v16.css?v=23">
-<link rel="stylesheet" href="v18.css?v=23">
-<link rel="stylesheet" href="v19.css?v=23">
-<link rel="stylesheet" href="v20.css?v=23">
-<link rel="stylesheet" href="v21.css?v=23">
-<link rel="stylesheet" href="v23.css?v=23">
+<title>Alien Planet Defense v24</title>
+<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="v15.css?v=24">
+<link rel="stylesheet" href="v16.css?v=24">
+<link rel="stylesheet" href="v18.css?v=24">
+<link rel="stylesheet" href="v19.css?v=24">
+<link rel="stylesheet" href="v20.css?v=24">
+<link rel="stylesheet" href="v21.css?v=24">
+<link rel="stylesheet" href="v23.css?v=24">
 </head>
 <body>
 <div id="mainMenu">
@@ -44,12 +44,14 @@
         <div class="guide-box"><b>Camera & Pause</b><p>Arrow keys pan the battlefield. On mobile, drag the map. Pause is inside the Command Menu. You can still issue orders and plan construction while paused.</p></div>
         <div class="guide-box"><b>Movable Units</b><p>Click/tap a squad or truck to select it, then click/tap a destination. Units path around terrain and buildings. The ✕ beside a selected unit clears the selection.</p></div>
         <div class="guide-box"><b>Resources</b><p>Killing aliens gives Gold. Crystal Mines snap onto crystal deposits; Trucks carry crystal to Landing Pads where ships export it for Gold. Ore Mines feed Refineries, which create Metal.</p></div>
-        <div class="guide-box"><b>Gold</b><p>Gold buys movable units and economy buildings such as Mines, Refineries and Landing Pads.</p></div>
-        <div class="guide-box"><b>Metal</b><p>Metal builds combat Towers and Walls, and upgrades existing Towers. Establish Ore Mine → Truck → Refinery routes to sustain defensive expansion.</p></div>
-        <div class="guide-box"><b>Tower Upgrades</b><p>Tap a built combat Tower to select it, then open ☰ MENU. Every Tower starts at 1/3 and can be upgraded twice with Metal.</p></div>
-        <div class="guide-box"><b>Truck Routes</b><p>Select a Truck, open ☰ MENU and record at least two route points. When finished, the Truck drives to the first point and automatically begins repeating the route.</p></div>
+        <div class="guide-box"><b>Gold & Metal</b><p>Gold buys movable units and economy buildings. Metal builds and upgrades combat Towers and Walls.</p></div>
+        <div class="guide-box"><b>Tower Upgrades</b><p>Tap a built combat Tower, then open ☰ MENU. Every Tower starts at 1/3 and can be upgraded twice with Metal.</p></div>
+        <div class="guide-box"><b>Truck Routes</b><p>Select a Truck, open ☰ MENU and record at least two route points. The Truck drives to the first point and automatically repeats the route.</p></div>
         <div class="guide-box"><b>Walls</b><p>Choose Wall from the Command Menu, then click bend points or drag to paint a path. Press ✓ to review total metal cost and build time.</p></div>
         <div class="guide-box"><b>Flyers</b><p>Flyers ignore terrain and Walls completely. Anti-Air Cannons are the most metal-efficient answer, although several other weapons can still hit them.</p></div>
+        <div class="guide-box"><b>Wall Threats</b><p>Siege Beasts deliberately attack Walls. Burrowers can cross one defensive line on cooldown. Climbers scale Walls slowly and take extra damage while climbing. Crushers visibly wind up before charging into a Wall.</p></div>
+        <div class="guide-box"><b>Logistics Threats</b><p>Harvester Hunters prioritize Trucks and economy infrastructure. Saboteurs target Mines, Refineries and Landing Pads while remaining cloaked until they get close to your assets.</p></div>
+        <div class="guide-box"><b>Acid Lobbers</b><p>Acid Lobbers bombard structures from range. Corroded structures take increased damage for several seconds, making combined attacks substantially more dangerous.</p></div>
         <div class="guide-box"><b>Specialized Towers</b><p>Cryo controls crowds, Mortars bombard groups, Miniguns shred single targets, Missiles deliver heavy splash damage and Drone Bays provide autonomous local defense.</p></div>
       </div>
       <button id="guideBackBtn" class="menu-back">BACK</button>
@@ -154,7 +156,7 @@
       <button id="centerBtn">CENTER BASE</button>
       <button id="restartBtn">RESTART</button>
     </div>
-    <div id="hint">Choose an action, close the Command Menu, then interact directly with the battlefield. Selected-unit ✕ remains beside the unit.</div>
+    <div id="hint">Special enemies now pressure Walls and logistics differently. Use the Guide from Main Menu for enemy intel.</div>
 
     <div class="debug-wrap">
       <button id="debugBtn">DEBUG</button>
@@ -183,23 +185,24 @@
 
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=23"></script>
-<script src="v14a.js?v=23"></script>
-<script src="v14b.js?v=23"></script>
-<script src="v14c.js?v=23"></script>
-<script src="v14d.js?v=23"></script>
-<script src="v15_patch.js?v=23"></script>
-<script src="v16a.js?v=23"></script>
-<script src="v16b.js?v=23"></script>
-<script src="v16c.js?v=23"></script>
-<script src="v17.js?v=23"></script>
-<script src="v18.js?v=23"></script>
-<script src="v18_hotfix.js?v=23"></script>
-<script src="v19.js?v=23"></script>
-<script src="v20.js?v=23"></script>
-<script src="v21.js?v=23"></script>
-<script src="v22.js?v=23"></script>
-<script src="v22_hotfix.js?v=23"></script>
-<script src="v23.js?v=23"></script>
+<script src="config.js?v=24"></script>
+<script src="v14a.js?v=24"></script>
+<script src="v14b.js?v=24"></script>
+<script src="v14c.js?v=24"></script>
+<script src="v14d.js?v=24"></script>
+<script src="v15_patch.js?v=24"></script>
+<script src="v16a.js?v=24"></script>
+<script src="v16b.js?v=24"></script>
+<script src="v16c.js?v=24"></script>
+<script src="v17.js?v=24"></script>
+<script src="v18.js?v=24"></script>
+<script src="v18_hotfix.js?v=24"></script>
+<script src="v19.js?v=24"></script>
+<script src="v20.js?v=24"></script>
+<script src="v21.js?v=24"></script>
+<script src="v22.js?v=24"></script>
+<script src="v22_hotfix.js?v=24"></script>
+<script src="v23.js?v=24"></script>
+<script src="v24.js?v=24"></script>
 </body>
 </html>
