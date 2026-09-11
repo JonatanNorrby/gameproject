@@ -30,6 +30,13 @@ function ensureRtsState(){
 }
 ensureRtsState();
 
+// Field Armor also applies to Fire Squads built after taking the card.
+const originalTowerBaseHp=towerBaseHp;
+towerBaseHp=function(type){
+  if(type==='soldier')return CONFIG.TOWER_DURABILITY.SOLDIER_HP*(state.mods.soldierHp||1);
+  return originalTowerBaseHp(type);
+};
+
 // Keep RTS fields present after every restart.
 const baseReset=reset;
 reset=function(){baseReset();ensureRtsState();};
@@ -177,9 +184,15 @@ function drawOffscreenSquadIndicators(){
 }
 
 const baseDraw=draw;
-draw=function(){baseDraw();drawOffscreenSquadIndicators();};
+draw=function(){
+  baseDraw();
+  drawOffscreenSquadIndicators();
+  // Cover the legacy rover help text from the underlying renderer.
+  ctx.fillStyle='rgba(7,13,20,.92)';ctx.fillRect(W-430,H-30,420,22);
+  ctx.fillStyle='rgba(225,240,250,.72)';ctx.font='12px Arial';ctx.textAlign='right';
+  ctx.fillText('Arrow keys: camera   Click Fire Squad → click destination: move',W-16,H-16);
+};
 
-// The old help text mentions WASD/rover; overwrite it each load.
 const hint=document.getElementById('hint');
 if(hint)hint.textContent='Arrow keys move the camera. Click a Fire Squad to select it, then click the map to move it. Press ✕ to cancel the current squad selection.';
 els.message.textContent='Rover removed. Fire Squads are now mobile RTS units.';
