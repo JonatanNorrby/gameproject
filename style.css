@@ -12,7 +12,17 @@ button:hover{background:#203c54}
 button.selected{border-color:#72ddff;box-shadow:0 0 10px rgba(114,221,255,.3)}
 button:disabled{opacity:.4;cursor:not-allowed}
 .towerBtn small{color:#7fe6ff;margin-left:5px}
+#cancelSelectionBtn{font-size:17px;line-height:16px;min-width:38px;border-color:#8b5360;color:#ffd8df}
+#cancelSelectionBtn.active{background:#552936;border-color:#ff7c91;box-shadow:0 0 10px rgba(255,90,120,.25)}
 #hint{text-align:center;padding:7px;font-size:12px;color:#829bb2;background:#070d14}
+
+#debugBtn{position:fixed;left:12px;bottom:12px;z-index:30;background:#101923;border-color:#49657a;font-size:11px;padding:7px 10px;opacity:.86}
+.debug-panel{display:none;position:fixed;left:12px;bottom:52px;z-index:30;width:205px;padding:12px;background:rgba(8,14,22,.96);border:1px solid #49657a;border-radius:6px;box-shadow:0 8px 25px rgba(0,0,0,.55)}
+.debug-panel.open{display:flex;flex-direction:column;gap:9px}
+.debug-title{font-size:12px;font-weight:900;letter-spacing:1px;color:#79e6ff;border-bottom:1px solid #26394d;padding-bottom:7px}
+.debug-panel label{font-size:12px;color:#c7d7e3;display:flex;align-items:center;gap:7px}
+.debug-panel button{font-size:11px;padding:7px}
+
 #cardOverlay{position:fixed;inset:0;background:rgba(1,4,8,.84);display:flex;align-items:center;justify-content:center;z-index:10}
 #cardOverlay.hidden{display:none}
 #cardPanel{width:min(930px,94vw);padding:26px;background:#0a1320;border:2px solid #466a87;box-shadow:0 0 60px #000;text-align:center}
@@ -29,4 +39,4 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .upgradeCard.uncommon{background:#11251b;border-color:#52bd70}.upgradeCard.uncommon h3,.upgradeCard.uncommon .rarity{color:#7ee996}
 .upgradeCard.rare{background:#10233a;border-color:#4d9df4}.upgradeCard.rare h3,.upgradeCard.rare .rarity{color:#79b9ff}
 .upgradeCard.epic{background:#25153a;border-color:#af6cff}.upgradeCard.epic h3,.upgradeCard.epic .rarity{color:#ca91ff}
-@media(max-width:720px){#cards{flex-direction:column}.upgradeCard{min-height:140px}}
+@media(max-width:720px){#cards{flex-direction:column}.upgradeCard{min-height:140px}.debug-panel{width:180px}}
