@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Alien Planet Defense v16</title>
-<link rel="stylesheet" href="style.css?v=16">
-<link rel="stylesheet" href="v15.css?v=16">
-<link rel="stylesheet" href="v16.css?v=16">
+<title>Alien Planet Defense v17</title>
+<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="v15.css?v=17">
+<link rel="stylesheet" href="v16.css?v=17">
 </head>
 <body>
 <div id="gameWrap">
@@ -34,12 +34,17 @@
   </div>
 
   <div id="unitsMenu" class="buildMenu active">
-    <button class="buildBtn selected" data-type="soldier">🪖 Fire Squad <small>35 gold</small></button>
+    <button class="buildBtn selected" data-type="soldier">🪖 Rifleman Squad <small>40 gold</small></button>
+    <button class="buildBtn" data-type="heavygunner">🔶 Heavy Gunner <small>75 gold</small></button>
+    <button class="buildBtn" data-type="rocketeer">🚀 Rocketeer Squad <small>105 gold</small></button>
+    <button class="buildBtn" data-type="medic">✚ Medic Squad <small>80 gold</small></button>
     <button class="buildBtn" data-type="truck">🚚 Logistics Truck <small>70 gold</small></button>
   </div>
   <div id="towersMenu" class="buildMenu">
     <button class="buildBtn" data-type="laser">🔴 Laser Sniper <small>70 metal</small></button>
     <button class="buildBtn" data-type="flame">🔥 Flamethrower <small>55 metal</small></button>
+    <button class="buildBtn" data-type="railgun">⚡ Railgun Tower <small>120 metal</small></button>
+    <button class="buildBtn" data-type="tesla">🟣 Tesla Tower <small>95 metal</small></button>
     <button class="buildBtn" data-type="wall">🧱 Wall <small>metal / length</small></button>
   </div>
   <div id="passiveMenu" class="buildMenu">
@@ -65,7 +70,7 @@
     <button id="restartBtn">RESTART</button>
   </div>
 
-  <div id="hint">Crystal/Ore Mines snap directly onto matching depots. Trucks automatically load nearby mines: take crystal to Landing Pads and ore to Refineries. Landing ships sell crystal when full and attract nearby aliens. Towers and Walls cost metal.</div>
+  <div id="hint">Riflemen are general-purpose; Heavy Gunners trade range for sustained fire; Rocketeers deal splash damage; Medics heal damaged friendlies. Railguns pierce lines of aliens and Tesla Towers chain between nearby targets.</div>
 </div>
 
 <button id="debugBtn">DEBUG</button>
@@ -89,17 +94,18 @@
   </div>
 </div>
 
-<!-- Kept for compatibility with the v14 core; v16 never displays it. -->
+<!-- Kept for compatibility with the older core; v16+ never displays it. -->
 <div id="cardOverlay" class="hidden legacyOverlay"><div id="cardPanel"><div id="cards"></div></div></div>
 
-<script src="config.js?v=16"></script>
-<script src="v14a.js?v=16"></script>
-<script src="v14b.js?v=16"></script>
-<script src="v14c.js?v=16"></script>
-<script src="v14d.js?v=16"></script>
-<script src="v15_patch.js?v=16"></script>
-<script src="v16a.js?v=16"></script>
-<script src="v16b.js?v=16"></script>
-<script src="v16c.js?v=16"></script>
+<script src="config.js?v=17"></script>
+<script src="v14a.js?v=17"></script>
+<script src="v14b.js?v=17"></script>
+<script src="v14c.js?v=17"></script>
+<script src="v14d.js?v=17"></script>
+<script src="v15_patch.js?v=17"></script>
+<script src="v16a.js?v=17"></script>
+<script src="v16b.js?v=17"></script>
+<script src="v16c.js?v=17"></script>
+<script src="v17.js?v=17"></script>
 </body>
 </html>
