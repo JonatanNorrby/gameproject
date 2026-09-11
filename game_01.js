@@ -1,22 +1,22 @@
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-const W=canvas.width,H=canvas.height,BASE_Y=700,STAGE_WAVES=CONFIG.GAME.WAVES_PER_STAGE;
+const W=canvas.width,H=canvas.height,STAGE_WAVES=CONFIG.GAME.WAVES_PER_STAGE;
+const WORLD_W=CONFIG.WORLD.WIDTH,WORLD_H=CONFIG.WORLD.HEIGHT;
+const BASE_X=WORLD_W/2,BASE_Y=WORLD_H/2,BASE_RADIUS=CONFIG.WORLD.BASE_RADIUS;
 
 // =============================================================
 // SKITTER SPRITES — extracted from the artwork supplied by you.
 // Each horizontal strip contains transparent 128×128 frames.
 // =============================================================
 const SKITTER_MOVE = new Image();
-SKITTER_MOVE.src = window.SKITTER_DATA;
+SKITTER_MOVE.src = "assets/skitter_move.png";
 const SKITTER_IDLE = new Image();
-SKITTER_IDLE.src = window.SKITTER_DATA;
+SKITTER_IDLE.src = "assets/skitter_idle.png";
 const SKITTER_FRAME_SIZE = 128;
 
 // Brute art — extracted directly from the top-down in-game preview in the
 // Brute concept sheet supplied for this project.
 const BRUTE_SPRITE = new Image();
-BRUTE_SPRITE.src = window.BRUTE_DATA;
-
-
+BRUTE_SPRITE.src = "assets/brute_topdown.png";
 
 const els={
  baseHp:document.getElementById("baseHp"),baseMax:document.getElementById("baseMax"),
@@ -73,7 +73,8 @@ function reset(){
   mods:{soldierRate:1,soldierDamage:1,extraSoldiers:0,laserDamage:1,laserRate:1,
         flameDamage:1,flameRange:1,burnDuration:1,blockadeHp:1,blockadeCost:1,
         reward:1,vehicleDamage:1,vehicleRate:1,stackBonus:CONFIG.MULTI_WAVE.BONUS_PER_EXTRA_ACTIVE_WAVE},
-  vehicle:{x:W/2,y:BASE_Y-65,angle:-Math.PI/2,speed:CONFIG.ROVER.MOVE_SPEED,cool:0,weapon:CONFIG.ROVER.STARTING_WEAPON}
+  vehicle:{x:BASE_X,y:BASE_Y+BASE_RADIUS+55,angle:-Math.PI/2,speed:CONFIG.ROVER.MOVE_SPEED,cool:0,weapon:CONFIG.ROVER.STARTING_WEAPON},
+  camera:{x:BASE_X-W/2,y:BASE_Y-H/2,speed:CONFIG.WORLD.CAMERA_SPEED}
  };
  els.overlay.classList.add("hidden");
  state.terrain=generateTerrain(state.stage);
@@ -107,10 +108,22 @@ els.money.onclick=()=>{state.credits=999999;els.message.textContent="TEST MODE: 
 els.reach.onclick=()=>{state.showReach=!state.showReach;els.reach.textContent=`SHOW REACH: ${state.showReach?"ON":"OFF"}`;};
 
 window.addEventListener("keydown",e=>{
- if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){keys[e.key]=true;e.preventDefault()}
+ const controlKeys=["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","w","a","s","d","W","A","S","D"];
+ if(controlKeys.includes(e.key)){keys[e.key]=true;e.preventDefault()}
 });
 window.addEventListener("keyup",e=>{keys[e.key]=false});
 
+function updateCamera(dt){
+ const c=state.camera;
+ let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);
+ let dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+ if(dx||dy){
+   const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+   c.x+=dx*c.speed*dt;c.y+=dy*c.speed*dt;
+ }
+ c.x=Math.max(0,Math.min(WORLD_W-W,c.x));
+ c.y=Math.max(0,Math.min(WORLD_H-H,c.y));
+}
 
 function towerBaseHp(type){
  if(type==="soldier")return CONFIG.TOWER_DURABILITY.SOLDIER_HP;
