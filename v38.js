@@ -186,3 +186,14 @@ document.title='Alien Planet Defense v38';
     guide.appendChild(d);
   }
 })();
+
+// v39 is the next patch in the existing patch-chain architecture. Load it here so
+// current index.html deployments pick it up even before their cache-busted script
+// list refreshes.
+if(!document.querySelector('script[data-v39-threat]')){
+  const v39Script=document.createElement('script');
+  v39Script.src='v39.js?v=39';
+  v39Script.async=false;
+  v39Script.dataset.v39Threat='1';
+  document.head.appendChild(v39Script);
+}
