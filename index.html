@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Alien Planet Defense v9</title>
+<title>Alien Planet Defense v10</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,32 +11,38 @@
   <canvas id="game" width="1280" height="800"></canvas>
 
   <div id="hud">
-    <div><b>BASE</b> <span id="baseHp">100</span>/<span id="baseMax">100</span></div>
-    <div><b>STAGE</b> <span id="stage">1</span></div>
-    <div><b>WAVE</b> <span id="wave">1</span>/3</div>
+    <div><b>BASE</b> <span id="baseHp">250</span>/<span id="baseMax">250</span></div>
+    <div><b>NEXT WAVE</b> <span id="wave">1</span></div>
     <div><b>ACTIVE</b> <span id="activeWaves">0</span></div>
     <div><b>MULTI-WAVE BONUS</b> <span id="multiBonus">+0%</span></div>
-    <div><b>CREDITS</b> <span id="credits">180</span></div>
+    <div><b>CREDITS</b> <span id="credits">350</span></div>
     <div><b>ALIENS</b> <span id="aliens">0</span></div>
   </div>
 
   <div id="message">Defend the central base.</div>
 
   <div id="buildbar">
-    <button class="towerBtn selected" data-type="soldier">🪖 Soldier Squad <small>40</small></button>
-    <button class="towerBtn" data-type="laser">🔴 Laser Sniper <small>90</small></button>
-    <button class="towerBtn" data-type="flame">🔥 Flamethrower <small>70</small></button>
-    <button class="towerBtn" data-type="blockade">🧱 Blockade <small>30</small></button>
-    <button class="towerBtn" data-type="safespot">⬡ Tower Safe Spot <small>60</small></button>
-    <button id="startBtn">START NEXT WAVE</button>
-    <button id="allBtn">LAUNCH ALL STAGE WAVES</button>
+    <button class="towerBtn selected" data-type="soldier">🪖 Soldier Squad <small>30</small></button>
+    <button class="towerBtn" data-type="laser">🔴 Laser Sniper <small>70</small></button>
+    <button class="towerBtn" data-type="flame">🔥 Flamethrower <small>55</small></button>
+    <button class="towerBtn" data-type="blockade">🧱 Blockade <small>20</small></button>
+    <button class="towerBtn" data-type="safespot">⬡ Tower Safe Spot <small>40</small></button>
+    <button id="startBtn">START WAVE</button>
+    <button id="fiveBtn">START 5 WAVES</button>
     <button id="restartBtn">RESTART</button>
-    <button id="moneyBtn">∞ TEST MONEY</button>
     <button id="reachBtn">SHOW REACH: OFF</button>
+    <button id="debugBtn">DEBUG MENU</button>
+  </div>
+
+  <div id="debugPanel" style="display:none;padding:10px;background:#101923;border:1px solid #49657a;text-align:center;">
+    <b>DEBUG</b>
+    <label style="margin-left:18px"><input id="debugCash" type="checkbox"> Unlimited cash</label>
+    <label style="margin-left:18px"><input id="debugLives" type="checkbox"> Unlimited lives</label>
+    <button id="debugHeal" style="margin-left:18px">HEAL BASE</button>
   </div>
 
   <div id="hint">
-    Arrow keys move the camera around the larger map. WASD drives the rover. The base is in the center and enemies can approach it from every side.
+    Arrow keys move the camera. WASD drives the rover. Press START WAVE as many times as you want to stack waves on the same map.
   </div>
 </div>
 
@@ -48,7 +54,6 @@
   </div>
 </div>
 
-<script>window.SKITTER_DATA="";window.BRUTE_DATA="";</script>
 <script src="config.js"></script>
 <script src="game_01.js"></script>
 <script src="game_02.js"></script>
