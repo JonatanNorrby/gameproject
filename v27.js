@@ -27,6 +27,14 @@ setCommandMenu=function(open){
 const v26OpenMainMenuV27=openMainMenu;
 openMainMenu=function(){pointer=null;if(typeof wallPainting!=='undefined')wallPainting=false;v26OpenMainMenuV27();state.paused=true;state.last=performance.now();};
 
+// v26 adds these buttons after v21/v23 registered their generic build listeners.
+// Explicitly clear Tower selection so the next battlefield tap actually deploys
+// the chosen vehicle instead of merely dismissing an old Tower selection.
+for(const type of ['tank','mobileartillery','repairvehicle']){
+ const btn=document.querySelector(`.buildBtn[data-type="${type}"]`);
+ if(btn)btn.addEventListener('click',()=>{state.selectedTower=null;if(typeof updateTowerPanel==='function')updateTowerPanel();});
+}
+
 // -----------------------------------------------------------------------------
 // ZOOM-AWARE SELECTION. v15/v21 used CSS scaling but did not account for the
 // v26 world zoom, making units/towers unnecessarily hard to select when zoomed out.
