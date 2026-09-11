@@ -1,0 +1,73 @@
+/* Alien Planet Defense v27 - landscape-first mobile polish */
+#game{touch-action:none;-webkit-user-select:none;user-select:none}
+body{overscroll-behavior:none}
+#guidePanel{overscroll-behavior:contain}
+#guidePanel .guide-grid{align-items:start}
+#zoomLabel{border:1px solid #29485b;border-radius:5px;background:#0b1b26}
+
+@media (hover:none) and (pointer:coarse){
+ #mobileMenuBtn,#commandDrawer button,.menu-actions button,.menu-back{min-height:44px}
+ #commandDrawer .buildBtn{min-height:48px}
+ #commandDrawer{overscroll-behavior:contain}
+ #commandDrawer .command-body{padding-bottom:max(10px,var(--safe-bottom,0px))}
+}
+
+@media (orientation:landscape) and (max-height:650px),
+       (orientation:landscape) and (hover:none) and (pointer:coarse){
+ html,body{width:100%;height:100%;min-height:100dvh;overflow:hidden;background:#020609}
+ #gameWrap,#canvasShell{width:100vw!important;height:100dvh!important;min-height:100dvh!important}
+ #canvasShell{align-items:center;justify-content:center}
+ #game{height:100dvh!important;width:auto!important;max-height:100dvh!important;max-width:100vw!important;object-fit:contain}
+
+ #mobileMenuBtn{left:max(8px,var(--safe-left,0px))!important;top:max(8px,var(--safe-top,0px))!important;min-width:82px!important;min-height:44px!important;padding:7px 10px!important;font-size:11px!important;border-radius:7px}
+
+ #commandBackdrop{background:rgba(0,0,0,.28)}
+ #commandDrawer{left:auto!important;right:0!important;top:0!important;bottom:0!important;width:min(46vw,430px)!important;max-width:430px!important;height:100dvh!important;max-height:100dvh!important;border-left:2px solid #35566d!important;border-top:0!important;border-radius:12px 0 0 12px!important;transform:translateX(103%)!important;padding-left:0!important;padding-right:max(0px,var(--safe-right,0px))!important;padding-top:var(--safe-top,0px)!important;padding-bottom:var(--safe-bottom,0px)!important}
+ #commandDrawer.open{transform:translateX(0)!important}
+ .command-header{grid-template-columns:minmax(0,1fr) auto auto auto!important;gap:5px!important;padding:6px 7px!important}
+ .command-title b{font-size:12px!important}.command-title span{display:none!important}
+ #commandDrawer #pauseBtn,#commandMainMenuBtn,#commandCloseBtn{min-height:40px!important;padding:6px 8px!important;font-size:9px!important}
+ #commandCloseBtn{min-width:40px!important;font-size:16px!important}
+ .command-body{padding-bottom:6px!important}
+ .command-section-label{padding:6px 8px 3px!important;font-size:8px!important}
+ #commandDrawer #hud{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;padding:5px!important;font-size:9px!important}
+ #commandDrawer #hud>div{padding:4px 3px!important}
+ #commandDrawer #message{margin:5px 6px!important;padding:6px 7px!important;font-size:9px!important}
+ #commandDrawer #menuTabs{padding:5px 6px!important;gap:4px!important}
+ #commandDrawer .menuTab{min-height:38px!important;font-size:9px!important;padding:5px 3px!important}
+ #commandDrawer .buildMenu.active{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;padding:6px!important}
+ #commandDrawer .buildBtn{min-height:43px!important;padding:6px 7px!important;font-size:9.5px!important}
+ #commandDrawer .buildBtn small{font-size:8px!important;margin-top:2px!important}
+ #commandDrawer #unitActions.active{gap:5px!important;padding:6px!important}
+ #commandDrawer #unitActions button{min-height:40px!important;font-size:9px!important;padding:5px!important}
+ #commandDrawer #towerActions{padding:6px!important;gap:5px!important}
+ #commandDrawer #towerUpgradeBtn,#commandDrawer #towerUpgradeCloseBtn{min-height:42px!important}
+ #commandDrawer #utilityBar{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;padding:6px!important}
+ #commandDrawer #utilityBar button{min-height:40px!important;font-size:9px!important;padding:5px!important}
+ #zoomLabel{min-height:40px!important;min-width:0!important;font-size:9px!important;padding:0 3px!important}
+ #commandDrawer #hint{padding:6px 8px!important;font-size:8.5px!important}
+ #commandDrawer .debug-wrap{padding:5px 6px 7px!important}
+
+ #mainMenu{padding:max(7px,var(--safe-top,0px)) max(8px,var(--safe-right,0px)) max(7px,var(--safe-bottom,0px)) max(8px,var(--safe-left,0px))!important}
+ .menu-card{width:min(94vw,820px)!important;max-height:calc(100dvh - var(--safe-top,0px) - var(--safe-bottom,0px) - 14px)!important;padding:12px!important}
+ #mainMenuHome .menu-logo{font-size:clamp(24px,5.5vw,34px)!important}
+ .menu-subtitle{margin:3px 0 12px!important}
+ .menu-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+ .menu-actions button{min-height:44px!important}
+ .menu-panel{padding:8px!important}
+ .menu-panel h2{margin:2px 0 8px!important;font-size:18px!important}
+ .guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+ .guide-box{padding:7px 8px!important}.guide-box b{font-size:10px!important}.guide-box p{font-size:9.5px!important;line-height:1.28!important;margin:3px 0 0!important}
+ .menu-back{min-height:42px!important;margin-top:7px!important}
+ .wall-confirm-card{max-height:88dvh!important;overflow:auto!important}
+}
+
+@media (orientation:landscape) and (max-height:430px){
+ #commandDrawer{width:min(49vw,400px)!important}
+ .command-title{display:none!important}
+ .command-header{grid-template-columns:1fr 1fr 40px!important}
+ #commandDrawer #hud{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ #commandDrawer .buildBtn{min-height:40px!important}
+ .guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .guide-box p{font-size:9px!important}
+}
