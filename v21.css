@@ -1,0 +1,24 @@
+/* v21 tower upgrade panel */
+#towerActions{display:none;align-items:stretch;gap:8px;padding:8px;background:#0a1620;border-top:1px solid #334c5e;border-bottom:1px solid #334c5e}
+#towerActions.active{display:flex}
+.tower-action-main{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+#towerActionName{font-weight:950;color:#e8f8ff;white-space:nowrap}
+#towerActionLevel{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:28px;padding:0 8px;border:1px solid #6cc8e6;border-radius:5px;background:#102936;color:#dff7ff;font-weight:950}
+#towerActionStats{font-size:11px;color:#9eb7c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tower-upgrade-info{display:flex;flex-direction:column;justify-content:center;min-width:250px;max-width:440px;line-height:1.25}
+#towerUpgradeName{font-size:12px;font-weight:950;color:#f0cf76}
+#towerUpgradeDesc{font-size:11px;color:#bfd0db;margin-top:3px}
+#towerUpgradeBtn{min-width:205px;border-color:#8fa3b5;background:#1c3444;color:#eefaff}
+#towerUpgradeBtn:not(:disabled){border-color:#d5ad55;background:#3b321d;color:#fff0b5;box-shadow:0 0 11px rgba(213,173,85,.12)}
+#towerUpgradeCloseBtn{min-width:46px;padding:7px 11px;background:#3b2028;border-color:#9f5361;color:#ffdfe4}
+
+@media(max-width:760px){
+ #towerActions.active{display:flex;overflow-x:auto;align-items:center;gap:7px;padding:7px max(8px,var(--safe-left));-webkit-overflow-scrolling:touch;scrollbar-width:none}
+ #towerActions::-webkit-scrollbar{display:none}
+ .tower-action-main{flex:0 0 auto;min-width:225px;flex-wrap:wrap;gap:5px 8px}
+ #towerActionName{font-size:12px}
+ #towerActionStats{width:100%;max-width:260px;font-size:10px}
+ .tower-upgrade-info{flex:0 0 250px;min-width:250px}
+ #towerUpgradeBtn{flex:0 0 auto;min-width:205px;min-height:50px;white-space:nowrap}
+ #towerUpgradeCloseBtn{flex:0 0 auto;min-width:50px;min-height:50px;font-size:18px}
+}
