@@ -1,102 +1,55 @@
-// Alien Planet Defense - CONFIG
+// Alien Planet Defense v13 - CONFIG
 // ------------------------------------------------------------
-// Main balance variables. Edit these values by hand to tune the game.
-// Lower enemy values and higher defense values generally make the game easier.
+// Edit these values to rebalance the game. The new v13 loop has no waves:
+// aliens spawn continuously, kills grant XP, and Crystal Mines + Trucks create money.
 // ------------------------------------------------------------
+const CONFIG={
+  GAME:{STARTING_CREDITS:450,STARTING_BASE_HP:300},
+  WORLD:{WIDTH:3200,HEIGHT:2400,BASE_RADIUS:68,CAMERA_SPEED:760},
 
-const CONFIG = {
-
-  // ==========================================================
-  // GENERAL RUN
-  // ==========================================================
-  GAME: {
-    STARTING_CREDITS: 350,
-    STARTING_BASE_HP: 250
+  // Continuous enemy director. Difficulty rises with elapsed survival time.
+  DIRECTOR:{
+    START_INTERVAL:3.2,      // seconds between spawn bursts at the beginning
+    MIN_INTERVAL:0.55,      // fastest the director may become
+    INTERVAL_DROP_PER_MIN:0.22,
+    BASE_CLUSTER:3,
+    EXTRA_CLUSTER_PER_MIN:1,
+    MAX_EXTRA_CLUSTER:8
   },
 
-  // ==========================================================
-  // LARGE WORLD / CAMERA
-  // ==========================================================
-  WORLD: {
-    WIDTH: 3200,
-    HEIGHT: 2400,
-    BASE_RADIUS: 68,
-    CAMERA_SPEED: 760
+  // XP thresholds for roguelite cards.
+  XP:{START_TO_LEVEL:90,GROWTH:1.32},
+
+  // Movable units.
+  SOLDIER:{COST:35,RANGE:215,MEMBERS:6,FIRE_INTERVAL:0.48,DAMAGE:1.45,BULLET_SPEED:740,MOVE_SPEED:165,HP:155},
+  TRUCK:{COST:65,MOVE_SPEED:185,HP:130,CAPACITY:35,PICKUP_RANGE:52,UNLOAD_RANGE:120},
+
+  // Defensive towers.
+  LASER:{COST:75,RANGE:400,FIRE_INTERVAL:1.42,DAMAGE:72,BULLET_SPEED:1050,HP:190},
+  FLAME:{COST:60,RANGE:160,FIRE_INTERVAL:0.11,BURN_TICK_DAMAGE:4.2,BURN_TICK_INTERVAL:0.28,BURN_DURATION:3.1,HP:170},
+  BLOCKADE:{COST:22,HP:420,WIDTH:78,HEIGHT:22,ENEMY_DAMAGE_MULTIPLIER:0.45,COLLISION_SPEED_MULTIPLIER:0.12},
+  SAFE_SPOT:{COST:45,RADIUS:31,PLACEMENT_CLEARANCE:50},
+
+  // Crystal economy. Mines must be placed near a depot. Trucks carry output to base.
+  CRYSTALS:{
+    DEPOT_COUNT:12,
+    DEPOT_RADIUS:30,
+    DEPOT_BASE_STOCK:500,
+    MINE_COST:85,
+    MINE_HP:150,
+    MINE_PLACEMENT_RANGE:72,
+    MINE_RATE:3.0,         // crystals produced per second
+    MINE_STORAGE:80,
+    MONEY_PER_CRYSTAL:2
   },
 
-  // ==========================================================
-  // MULTI-WAVE RISK / REWARD
-  // ==========================================================
-  MULTI_WAVE: {
-    BONUS_PER_EXTRA_ACTIVE_WAVE: 0.35
-  },
+  // Enemy baseline values; time level is added gradually.
+  SWARM:{BASE_HP:3.5,HP_PER_LEVEL:0.35,BASE_SPEED:78,SPEED_PER_LEVEL:1.0,RADIUS:4.7,BASE_DAMAGE:1,XP:4},
+  RUNNER:{BASE_HP:5.5,HP_PER_LEVEL:0.5,BASE_SPEED:108,SPEED_PER_LEVEL:1.3,RADIUS:6.2,BASE_DAMAGE:2,XP:6},
+  BRUTE:{BASE_HP:34,HP_PER_LEVEL:3.2,BASE_SPEED:36,SPEED_PER_LEVEL:0.5,RADIUS:14,BASE_DAMAGE:8,XP:18},
+  RANGED_ALIEN:{SPAWN_CHANCE:0.03,BASE_HP:18,HP_PER_LEVEL:1.5,BASE_SPEED:40,SPEED_PER_LEVEL:0.4,RADIUS:10,BASE_DAMAGE:3,XP:11,ATTACK_RANGE:195,SHOT_DAMAGE:7,FIRE_INTERVAL:1.8,PROJECTILE_SPEED:285},
 
-  // ==========================================================
-  // FIRE SQUADS
-  // ==========================================================
-  SOLDIER: {
-    COST: 30,
-    RANGE: 205,
-    MEMBERS: 6,
-    FIRE_INTERVAL: 0.48,
-    DAMAGE: 1.35,
-    BULLET_SPEED: 740,
-    MOVE_SPEED: 155
-  },
-
-  LASER: { COST:70, RANGE:390, FIRE_INTERVAL:1.45, DAMAGE:68, BULLET_SPEED:1050 },
-  FLAME: { COST:55, RANGE:155, FIRE_INTERVAL:0.11, BURN_TICK_DAMAGE:4.1, BURN_TICK_INTERVAL:0.28, BURN_DURATION:3.0 },
-  BLOCKADE: { COST:20, HP:380, WIDTH:78, HEIGHT:22, ENEMY_DAMAGE_MULTIPLIER:0.48, COLLISION_SPEED_MULTIPLIER:0.12 },
-
-  // Compatibility only: the rover is disabled by rts_patch.js. These values
-  // remain so the older split engine can initialize before the RTS patch loads.
-  ROVER: {
-    MOVE_SPEED: 1,
-    STARTING_WEAPON: "pistol",
-    PISTOL:{ RANGE:1, DAMAGE:0, FIRE_INTERVAL:99, BULLET_SPEED:1 },
-    TWIN:{ RANGE:1, DAMAGE_MULTIPLIER:0, FIRE_INTERVAL:99, BULLET_SPEED:1 },
-    SHOTGUN:{ RANGE:1, PELLETS:1, DAMAGE_MULTIPLIER_PER_PELLET:0, FIRE_INTERVAL:99, BULLET_SPEED:1, SPREAD_RADIANS:0 },
-    PULSE:{ RANGE:1, DAMAGE_MULTIPLIER:0, FIRE_INTERVAL:99, BULLET_SPEED:1 }
-  },
-
-  // ==========================================================
-  // WAVE SIZE / SPAWNING
-  // ==========================================================
-  SPAWN: {
-    BASE_ENEMIES_PER_WAVE:18,
-    EXTRA_ENEMIES_PER_ABSOLUTE_WAVE:5,
-    BASE_CLUSTER_SIZE:5,
-    RANDOM_CLUSTER_SIZE:7,
-    EXTRA_CLUSTER_SIZE_PER_TWO_WAVES:1,
-    BASE_CLUSTER_DELAY:0.78,
-    CLUSTER_DELAY_REDUCTION_PER_WAVE:0.006,
-    MIN_CLUSTER_DELAY:0.34,
-    SWARM_CHANCE:0.64,
-    RUNNER_CHANCE_CUTOFF:0.94
-  },
-
-  SWARM:{ BASE_HP:3.5, HP_PER_WAVE:0.32, BASE_SPEED:78, SPEED_PER_WAVE:0.9, RADIUS:4.7, BASE_DAMAGE:1, CREDIT_REWARD:4 },
-  RUNNER:{ BASE_HP:5.5, HP_PER_WAVE:0.48, BASE_SPEED:108, SPEED_PER_WAVE:1.2, RADIUS:6.2, BASE_DAMAGE:2, CREDIT_REWARD:6 },
-  BRUTE:{ BASE_HP:34, HP_PER_WAVE:3.0, BASE_SPEED:36, SPEED_PER_WAVE:0.45, RADIUS:14, BASE_DAMAGE:8, CREDIT_REWARD:22 },
-
-  TOWER_DURABILITY:{ SOLDIER_HP:145, LASER_HP:180, FLAME_HP:165, MELEE_ATTACK_RANGE:20, MELEE_DAMAGE_MULTIPLIER:1.1 },
-  SAFE_SPOT:{ COST:40, RADIUS:31, PLACEMENT_CLEARANCE:48 },
-
-  RANGED_ALIEN:{
-    SPAWN_CHANCE:0.025,
-    BASE_HP:18,
-    HP_PER_WAVE:1.4,
-    BASE_SPEED:40,
-    SPEED_PER_WAVE:0.35,
-    RADIUS:10,
-    BASE_DAMAGE:3,
-    CREDIT_REWARD:15,
-    ATTACK_RANGE:190,
-    SHOT_DAMAGE:7,
-    FIRE_INTERVAL:1.8,
-    PROJECTILE_SPEED:285
-  },
-
-  TERRAIN:{ MIN_OBSTACLES:7, EXTRA_OBSTACLES_RANDOM:5, MIN_RADIUS:24, MAX_RADIUS:48, BUILD_CLEARANCE:9, ENEMY_STEER_STRENGTH:250, SPAWN_TOP_CLEARANCE:75, BASE_CLEARANCE:95 },
-  CARD_RARITY:{ COMMON:58, UNCOMMON:28, RARE:11, EPIC:3 }
+  TOWER_DURABILITY:{MELEE_ATTACK_RANGE:20,MELEE_DAMAGE_MULTIPLIER:1.0},
+  TERRAIN:{MIN_OBSTACLES:38,EXTRA_OBSTACLES_RANDOM:16,MIN_RADIUS:24,MAX_RADIUS:50,BUILD_CLEARANCE:10,ENEMY_STEER_STRENGTH:250},
+  CARD_RARITY:{COMMON:58,UNCOMMON:28,RARE:11,EPIC:3}
 };
