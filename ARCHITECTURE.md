@@ -4,9 +4,9 @@
 
 The clean ES-module runtime under `js/` is still not the main production runtime. The production page continues to load the legacy `config.js` + versioned script stack and does not import `js/main.js`.
 
-Prompt 3 completed the safe foundational data layer. Prompt 4 extracted the basic unit destination/pathfinding primitive into `js/movement/` + `js/navigation/`. Prompt 5 now extracts only the command routing above that primitive: normal manual moves, Platoon move routing, Medic manual detach + move, and APC support manual detach + move.
+Prompt 3 completed the safe foundational data layer. Prompt 4 extracted basic unit destination/pathfinding. Prompt 5 extracted the narrow manual move/Platoon/support command seam. Prompt 6 now adds a **dormant shared combat foundation only**: damage/alive semantics, target eligibility, air/ground rules, range geometry and basic cooldown helpers. Attack loops and combat lifecycle remain legacy-owned.
 
-A temporary bridge under `js/migration/` activates this narrow Prompt 5 command path after the legacy runtime has finished loading. Full input, rendering, combat, enemy AI, economy, Truck logistics, UI and the main loop remain legacy-owned.
+The temporary Prompt 5 bridge under `js/migration/` is unchanged. Prompt 6 adds no production combat wrapper and does not patch `hitEnemy`, `damageTarget`, tower attacks, projectiles or enemy AI.
 
 ## Canonical ownership
 
@@ -32,7 +32,8 @@ A temporary bridge under `js/migration/` activates this narrow Prompt 5 command 
 | Platoon movement routing | `js/units/platoons.js` | MIGRATED FOR MOVE ORDERS ONLY |
 | Medic/APC manual detach helpers | `js/units/support.js` | MIGRATED FOR MANUAL MOVE ONLY |
 | Remaining unit lifecycle/support/platoon runtime | `js/units/units.js` | PARTIALLY MIGRATED |
-| Combat runtime | `js/combat/combat.js` | SKELETON CREATED |
+| Shared combat foundation | `js/combat/damage.js`, `targeting.js`, `range.js`, `cooldowns.js` | MIGRATED FOR FOUNDATION ONLY |
+| Combat attack loops/projectiles/support/lifecycle | `js/combat/combat.js` + legacy runtime | NOT MIGRATED |
 | Enemy director/AI runtime | `js/enemies/enemies.js` | SKELETON CREATED |
 | Tower combat runtime | `js/towers/towers.js` | SKELETON CREATED |
 | Building placement/runtime | `js/buildings/buildings.js` | SKELETON CREATED |
@@ -74,84 +75,94 @@ Building IDs:
 
 ## Traits/classification
 
-Static relationships live on canonical registry traits. `js/core/entities.js` derives helpers such as:
+Static relationships live on canonical registry traits. `js/core/entities.js` derives flying/ground, infantry/mechanical/vehicle, repairable/healable, support/combat, transport/logistics, Platoon eligibility, enemy movement class, tower/building identity and canonical radii.
 
-- flying / ground
-- infantry / mechanical / vehicle
-- repairable / healable
-- support / combat
-- transport / logistics
-- Platoon eligibility
-- ground/flying enemies
-- tower/building identity
-- unit/enemy/tower/building/entity radius
-
-This replaces future parallel hard-coded sets. Dynamic restrictions still belong to their eventual runtime system; for example, `canJoinPlatoon()` also checks transported/garrisoned/attached state without reading global state.
+Dynamic restrictions still belong to their runtime system. Prompt 6 uses these traits for shared target eligibility but does not migrate target priority, detection AI or visibility ownership.
 
 ## Prompt 4 movement primitive
 
-`js/movement/movement.js` owns individual destination assignment and the basic path follower. Ground units delegate path creation to `js/navigation/pathfinding.js`; player aircraft retain direct one-waypoint movement. Prompt 5 does not calculate paths and does not alter this primitive.
+`js/movement/movement.js` owns individual destination assignment and the basic path follower. Ground units delegate path creation to `js/navigation/pathfinding.js`; player aircraft retain direct one-waypoint movement.
 
 ## Prompt 5 manual move command routing
 
-`js/units/commands.js` is the authoritative clean command seam for this prompt. `issueManualMove(game, unit, x, y)` decides whether a player command is individual or Platoon-wide, clears the current Medic/APC automatic support relationship when appropriate, preserves the established manual Truck route-cancel side effect, and then delegates destinations to Prompt 4.
+`js/units/commands.js` is the authoritative clean command seam for manual unit moves. `issueManualMove(game, unit, x, y)` decides whether a player command is individual or Platoon-wide, clears current Medic/APC automatic support when appropriate, preserves established manual Truck route cancellation and delegates destinations to Prompt 4.
 
-`issueMove(..., { source: 'support-ai' })` exists only to make command intent explicit: internal support movement does **not** detach its own relationship and does not expand into a Platoon move.
+`issueMove(..., { source: 'support-ai' })` makes command intent explicit so internal support movement does not detach itself or expand into a Platoon order.
 
-`js/units/platoons.js` ports only the movement helpers required from v29. Formation behavior is intentionally unchanged: the first member uses the clicked point, later members use the existing 54px ring spacing and `2.399963229728653` golden-angle placement, destinations are world-clamped by each unit radius, and a failed offset destination falls back to the clicked center. The legacy movement-speed wrappers remain active in production, so the current slowest-member Platoon speed behavior is unchanged.
+`js/units/platoons.js` ports movement-only helpers from v29. Formation behavior remains unchanged: first member at the clicked point, later members on 54px rings using angle `index * 2.399963229728653`, radius-based world clamping and center fallback for an invalid offset. Legacy slowest-member speed behavior remains active.
 
-`js/units/support.js` owns the Prompt 5 detach operations only. Medic detach clears `v47FollowId`, `v47FollowTimer`, and the attach-mode command flag. APC detach clears `v47SupportUnitId`, `v47SupportPlatoonId`, `v47SupportTimer`, and the attach-mode command flag. APC passenger/transport state is not touched.
+`js/units/support.js` owns Prompt-5 detach operations only. Medic detach clears its v47 follow ID/timer; APC detach clears its v47 support unit/Platoon IDs and timer. Transport/passenger state is not changed.
 
 ## Temporary production bridge
 
-`js/migration/manualMoveLegacyBridge.js` is the only new `handleTap` wrapper added by Prompt 5, and it is explicitly temporary. It is loaded after the full legacy stack by the small loader in `v18_hotfix.js`.
+`js/migration/manualMoveLegacyBridge.js` remains the only migration `handleTap` bridge. It is loaded after the full legacy stack by the small loader in `v18_hotfix.js`, intercepts only the normal empty-terrain manual-move case and delegates every other click to the prior legacy handler.
 
-The bridge intercepts only when all of these are true: a movable unit is already selected, the player clicked empty terrain, no tower/unit was clicked, and no attach/route/wall/Platoon/Medic/APC special mode is active. Every other click delegates unchanged to the prior final `handleTap` chain.
+Remove the bridge files and loader when clean input becomes the real click owner. Do not expand this bridge into combat, UI, building placement, logistics or other systems.
 
-The bridge calls `js/migration/manualMoveBridge.js`, which adapts the legacy arrays/state into the clean game shape and invokes `issueManualMove()`. Remove the bridge files and the loader as soon as the clean input runtime becomes the real click owner. Do not expand this bridge into combat, UI, building placement, logistics or other systems.
+## Prompt 6 shared combat foundation
+
+`js/combat/damage.js` defines the future base HP contract. `isAlive(entity)` means finite numeric `hp > 0`; zero and negative HP are dead. `applyDamage(game, target, amount, context)` validates target/damage, subtracts damage once, intentionally permits overkill below zero to match the live runtime, and returns whether the hit was lethal. Repeated damage against an already-dead target is rejected and cannot revive it or re-fire the destruction notification.
+
+`applyDamage()` accepts an optional `context.onDestroyed` callback but does **not** implement lifecycle consequences. Enemy rewards/removal, structure cleanup, selected-unit cleanup, Base game-over, transport destruction, Landing Pad export-ship cargo loss/cooldown and other destruction behavior remain with their current owners until those systems migrate.
+
+`js/combat/targeting.js` owns generic eligibility only, not priority/search. It requires a live active-world target by default, rejects transported/garrisoned units, preserves the current Sneaky Spotter no-target rule through its canonical stealth trait, rejects burrowed enemies, and requires an explicit reveal callback for a cloaked target. Fog visibility can be supplied as an `isVisible` callback rather than importing fog ownership into combat.
+
+Air/ground compatibility uses canonical classifications and the existing `targeting` values: `ground`, `air`, or `any`. Current examples remain unchanged: Mobile Artillery/Mortar are ground-only, Anti-Air is air-only, and Rifleman/Laser/general-purpose weapons can hit both. Enemy AI target intent is not guessed by this module; later enemy migration must pass its intended targeting mode explicitly.
+
+`js/combat/range.js` preserves both live distance styles. Default `center` mode is center-to-center for ordinary targets; Walls use point-to-segment distance. `footprint` mode subtracts attacker/target radii and uses half Wall thickness, matching current enemy melee reach geometry. `isInAttackRange()` supports min range and an `inclusive` option because legacy `findTarget()` uses strict `< range` while `findTargetWhere()`/melee paths use `<= range`.
+
+`js/combat/cooldowns.js` preserves the basic timer convention: decrement by `dt`, allow the value to pass below zero, ready when `<= 0`, and reset to the exact duration supplied by the caller. Weapon-specific random jitter and rate modifiers remain in the later attack-loop migration so Prompt 6 does not alter effective fire rates.
+
+### Dead-unit normalization review
+
+Prompt 6 rechecked active normalization/rendering. v53 already repairs HP only when HP is non-numeric and explicitly preserves zero/negative HP; its normalization runs at construction/reset boundaries, not inside `drawUnit()`. The targeted active renderer review found no HP-restoring draw mutation, so no legacy renderer change was necessary.
 
 ## Enemy base values vs horde values
 
-Enemy registries preserve base growth values and the current v47 horde multipliers separately. Current normal horde enemies are created from the base formula, then v47 applies per-type HP/contact-damage multipliers. Global enemy movement is then multiplied by 0.30. Do not pre-bake these multipliers into base values during later AI/spawn migration or they will be applied twice.
+Enemy registries preserve base growth values and current v47 horde multipliers separately. Normal horde enemies are created from the base formula, then v47 applies per-type HP/contact-damage multipliers. Global movement is multiplied by 0.30. Do not pre-bake these multipliers into base values during later AI/spawn migration or they will be applied twice.
 
 Special direct attacks that v47 mutates globally are already stored at their current effective values: Acid Lobber shot 6.3 and Crusher charge 104.4.
 
 ## Tower upgrades
 
-`js/towers/towerConfig.js` owns both upgrade presentation data (cost/name/description) and the exact current numeric modifiers from the active v21/v22 stat logic. `getTowerLevelStats()` is pure derived-data logic only; tower firing remains legacy-owned.
+`js/towers/towerConfig.js` owns upgrade presentation data and exact current numeric modifiers from active v21/v22 stat logic. `getTowerLevelStats()` is pure derived-data logic only; tower firing remains legacy-owned.
 
 ## State ownership
 
-`js/core/state.js` remains the only clean state creator/reset owner. The temporary Prompt 5 adapter does not replace the legacy state object; it exposes the existing unit/world arrays through the clean shape only for the duration of a move command.
+`js/core/state.js` remains the only clean state creator/reset owner. The temporary Prompt 5 adapter does not replace the legacy state object; it exposes current unit/world arrays through the clean shape only for a move command. Prompt 6 does not add combat state or mutate the legacy global state.
 
 ## Pure helpers
 
 `js/utils/math.js`: clamp, lerp, distance/squared distance, angle-between, angle normalization, numeric comparison.
 
-`js/utils/geometry.js`: circle/radius checks, nearest point to segment, point-to-segment distance, segment intersection/distance, world-bound tests/clamping. Geometry edge behavior intentionally preserves the legacy helper tolerances where it affects collision calculations.
+`js/utils/geometry.js`: circle/radius checks, nearest point to segment, point-to-segment distance, segment intersection/distance, world-bound tests/clamping.
 
 `js/utils/helpers.js`: deep freeze, finite-number checks, explicit registry lookup failure, deterministic-injectable ID factory.
 
 ## Validation and parity
 
-`validateGameConfig()` performs an on-demand structural/numeric validation. It is not executed every frame or by the live game.
+`validateGameConfig()` performs on-demand structural/numeric validation and is not executed every frame.
 
-`compareConfigParity()` compares required key values and tower upgrade stats against a Prompt-3 snapshot traced from the current legacy load order. The snapshot exists only for migration verification.
+`compareConfigParity()` compares required key values and tower upgrade stats against the Prompt-3 snapshot traced from the current legacy load order.
 
 Prompt 3 validation result: **0 errors** across 19 units, 13 enemies, 10 towers, and 9 building records.
 
-Prompt 3 parity result: **0 mismatches** for the compared current effective values.
+Prompt 3 parity result: **0 mismatches** for compared current effective values.
 
-Prompt 5 isolated command regression result: **16/16 passed** for manual individual reroutes, whole-Platoon routing, formation parity, blocked-slot fallback, Medic/APC detach semantics, support-AI non-detach, Truck manual route cancellation, attachment rejection and inactive-unit rejection.
+Prompt 5 isolated command regression result: **16/16 passed**.
+
+Prompt 6 isolated combat-foundation regression result: **16/16 passed** for damage/death thresholds, invalid damage, no revival, air/ground/dual target eligibility, Spotter/cloak/burrow/transport restrictions, center/footprint/Wall range semantics and cooldown timing/reset behavior.
 
 ## Legacy runtime / migration rules
 
-`index.html` still does not import `js/main.js`, and no new `vXX.js` file is added. The legacy runtime remains authoritative for every system outside the narrow Prompt 4/5 movement seam.
+`index.html` still does not import `js/main.js`, and no new `vXX.js` file is added. Prompt 6 installs no production combat adapter or wrapper. The legacy runtime remains authoritative for all attack execution and destruction lifecycle behavior.
 
-The Prompt 5 bridge is the documented temporary exception to the previous no-wrapper rule. Future migration must remove it rather than stack another wrapper on top. All later work should continue by system ownership.
+The Prompt 5 movement bridge is the documented temporary exception to the no-wrapper migration rule. Future work must remove it rather than stack new wrapper generations on top.
 
 ## Next-phase caution
 
-Combat migration must not absorb movement command ownership or add another movement/pathfinding path. Enemy AI, support-follow updates, Platoon creation/management UI and Truck logistics remain legacy. If Prompt 6 touches any of them, it must call the existing movement seam rather than reassign destinations through another `handleTap`/`setUnitDestination` wrapper.
+Prompt 7 may start moving concrete attack loops onto this foundation, but it must preserve caller-specific behavior instead of folding it into `damage.js`: mark multipliers, Climber vulnerability, Burrower damage behavior, Acid corrosion, splash/falloff, projectile timing, weapon jitter, rewards and death cleanup are still legacy semantics.
 
-The current v47 director dynamically tunes spawned horde enemies while cache guards use untuned base enemy HP/damage with the same global 0.30 speed multiplier. Any future spawning/AI migration must preserve that distinction and must not apply horde multipliers twice.
+Export ships remain a special Landing Pad lifecycle with `shipHp`, not a generic `.hp` combat entity. Base damage/game-over remains a separate lifecycle. Do not silently force either into `applyDamage()` until their owning systems migrate.
+
+The current v47 director dynamically tunes spawned horde enemies while cache guards use untuned base enemy HP/damage with the same global 0.30 speed multiplier. Future enemy migration must preserve that distinction and must not apply horde multipliers twice.
