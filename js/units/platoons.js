@@ -67,6 +67,7 @@ function cancelTruckManualRoute(unit) {
   unit.routeLoop = false;
   unit.routeActive = false;
   unit.routePendingStart = false;
+  unit.routeInTransit = false;
 }
 
 export function issuePlatoonMove(game, platoonId, x, y) {
