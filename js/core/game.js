@@ -13,8 +13,7 @@ import { updateFog } from '../fog/fog.js';
 
 export const CLEAN_RUNTIME_STATUS = MIGRATION_STATUS.SKELETON_CREATED;
 
-// Coarse future update ownership. Exact legacy-equivalent sub-order will be locked
-// as each system is migrated and regression-tested; Prompt 2 does not execute it.
+// Coarse future ownership only. Prompt 3 still does not execute this pipeline.
 export const FUTURE_UPDATE_PIPELINE = Object.freeze([
   Object.freeze({ id: 'input', run: applyInputCommands }),
   Object.freeze({ id: 'navigation', run: updateNavigation }),
@@ -31,7 +30,7 @@ export function createGame({ canvas = null, ctx = null, now = () => 0 } = {}) {
   const config = createGameConfig();
   const viewport = canvas
     ? { width: canvas.width, height: canvas.height }
-    : { width: config.world.viewportWidth, height: config.world.viewportHeight };
+    : { width: config.viewport.width, height: config.viewport.height };
   const services = Object.freeze({ now });
   const state = createInitialState({ config, viewport, now });
 

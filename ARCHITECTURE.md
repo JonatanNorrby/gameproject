@@ -2,84 +2,124 @@
 
 ## Status
 
-Prompt 2 creates a **dormant** ES-module runtime alongside the existing game. `index.html` still loads the legacy `config.js` + versioned script stack and does not import `js/main.js`. No legacy file is deleted or replaced.
+The clean ES-module runtime under `js/` is still **dormant**. The production page continues to load the legacy `config.js` + versioned script stack and does not import `js/main.js`.
 
-The current live tail verified before this scaffold was added is `v35.js -> v47.js -> v48.js -> v51.js -> v53.js`, after the older scripts loaded earlier by `index.html`. Prompt 1 found overlapping ownership/wrapper chains for movement, combat, enemy AI, fog, rendering, reset, spawning, UI and other globals; the clean tree exists to end that pattern rather than reproduce it.
+Prompt 3 completed the safe foundational data layer: current effective configuration, canonical entity registries, traits/classification, ID normalization, pure math/geometry helpers, validation, and a legacy-parity fixture. No movement, combat, input, pathfinding, rendering, fog runtime, economy runtime, UI, or main-loop behavior has been switched over.
 
-## Ownership
+## Canonical ownership
 
-| Area | Future authoritative owner | Prompt 2 status |
+| Area | Future authoritative owner | Status |
 | --- | --- | --- |
 | Boot/context | `js/main.js`, `js/core/game.js` | SKELETON CREATED |
-| Core config | `js/core/config.js` | PARTIALLY MIGRATED (core constants only) |
-| State/reset | `js/core/state.js` | SKELETON CREATED |
-| Entity roles/classification | `js/core/entities.js` | PARTIALLY MIGRATED |
-| Input/selection/camera commands | `js/input/input.js` | SKELETON CREATED |
-| Units/movement/platoons/support | `js/units/units.js` | SKELETON CREATED |
-| Combat/targeting/damage/heal/repair/projectiles | `js/combat/combat.js` | SKELETON CREATED |
-| Enemies/director/AI | `js/enemies/enemies.js` | SKELETON CREATED |
-| Towers/upgrades | `js/towers/towers.js` | SKELETON CREATED |
-| Buildings/placement lifecycle | `js/buildings/buildings.js` | SKELETON CREATED |
-| Mining/logistics/storage/export | `js/economy/economy.js` | SKELETON CREATED |
-| Collision/pathfinding | `js/navigation/navigation.js` | SKELETON CREATED |
-| Fog/vision data | `js/fog/fog.js` | SKELETON CREATED |
-| Single world renderer | `js/rendering/renderer.js` | SKELETON CREATED |
-| HUD/menus/selected panels | `js/ui/ui.js` | SKELETON CREATED |
-| Asset registry/loading | `js/assets/assets.js` | SKELETON CREATED |
-| Pure math/geometry | `js/utils/*` | PARTIALLY MIGRATED |
+| Game-wide config | `js/core/config.js` | MIGRATED |
+| Economy/resource config | `js/economy/economyConfig.js` | MIGRATED |
+| Unit definitions | `js/units/unitConfig.js` | MIGRATED |
+| Enemy definitions | `js/enemies/enemyConfig.js` | MIGRATED |
+| Tower definitions/upgrades | `js/towers/towerConfig.js` | MIGRATED |
+| Building definitions | `js/buildings/buildingConfig.js` | MIGRATED |
+| Entity classification/radii | `js/core/entities.js` | MIGRATED |
+| Entity ID helpers | `js/core/ids.js` | MIGRATED |
+| Math/geometry/helpers | `js/utils/*` | MIGRATED |
+| Config validation | `js/core/validation.js` | MIGRATED |
+| Legacy parity check | `js/core/parity.js` | MIGRATED (verification only) |
+| State/reset | `js/core/state.js` | PARTIALLY MIGRATED |
+| Input/selection/camera runtime | `js/input/input.js` | SKELETON CREATED |
+| Unit movement/platoons/support runtime | `js/units/units.js` | SKELETON CREATED |
+| Combat runtime | `js/combat/combat.js` | SKELETON CREATED |
+| Enemy director/AI runtime | `js/enemies/enemies.js` | SKELETON CREATED |
+| Tower combat runtime | `js/towers/towers.js` | SKELETON CREATED |
+| Building placement/runtime | `js/buildings/buildings.js` | SKELETON CREATED |
+| Economy/logistics runtime | `js/economy/economy.js` | SKELETON CREATED |
+| Navigation/A* runtime | `js/navigation/navigation.js` | SKELETON CREATED |
+| Fog/vision runtime | `js/fog/fog.js` | SKELETON CREATED |
+| World rendering | `js/rendering/renderer.js` | SKELETON CREATED |
+| HUD/menus/UI runtime | `js/ui/ui.js` | SKELETON CREATED |
+
+## Config rule
+
+The clean data uses the **final effective values after the current legacy load order**, not the first declaration found in `config.js`. Important traced overrides include:
+
+- v30: starting economy becomes 125 Gold / 0 Metal; Crystal Mine 45 Metal; Ore Mine 20 Gold; Refinery 35 Gold; storage tiers become current.
+- v32: exported Crystal value becomes 4 Gold and current kill bounties replace old `GOLD_REWARD` values.
+- v33: default camera zoom becomes 0.65.
+- v47/v51: minimum zoom becomes 0.18; fog grid becomes 96; enemy speed multiplier becomes 0.30; the horde director replaces the old interval director.
+- v47: Acid Lobber shot damage is tuned from 9 to 6.3 and Crusher charge damage from 145 to 104.4 once during install.
+- v47/v53: Mech/Drone/Ship radii are 29/16/27, superseding earlier 28/15/26 helpers.
+
+`js/core/parity.js` records these as a **verification fixture**, not as a second runtime config source.
+
+## Canonical IDs and aliases
+
+Player unit IDs:
+`rifleman`, `heavygunner`, `rocketeer`, `medic`, `engineer`, `scout`, `sniper`, `flametrooper`, `spotter`, `minelayer`, `mech`, `combatdrone`, `combatship`, `tank`, `mobileartillery`, `repairvehicle`, `apc`, `mgcar`, `truck`.
+
+The only retained unit alias is `soldier -> rifleman` because `soldier` is still a real legacy build/runtime identifier. The former purchased `platoon` entity is **not** an alias or unit: v29 removed it and Platoons are control groups.
+
+Enemy IDs:
+`ravager`, `swarm`, `runner`, `brute`, `spitter`, `flyer`, `siegebeast`, `burrower`, `climber`, `acidlobber`, `crusher`, `harvesterhunter`, `saboteur`.
+
+`spitter` is the canonical runtime ID even though its old config object was named `RANGED_ALIEN`. `swarm` remains defined for compatibility/balance references but is marked non-spawnable because current v24 spawning does not select it.
+
+Tower IDs:
+`laser`, `flame`, `railgun`, `tesla`, `antiair`, `cryo`, `mortar`, `minigun`, `missile`, `dronebay`.
+
+Building IDs:
+`base`, `mine`, `oremine`, `refinery`, `landingpad`, `wall`. Historical `bunker`, `safespot`, and `blockade` definitions remain explicitly disabled: Bunker is removed by v47, Safe Spot by v21, and Blockade was replaced by Wall in v15.
+
+## Traits/classification
+
+Static relationships live on canonical registry traits. `js/core/entities.js` derives helpers such as:
+
+- flying / ground
+- infantry / mechanical / vehicle
+- repairable / healable
+- support / combat
+- transport / logistics
+- Platoon eligibility
+- ground/flying enemies
+- tower/building identity
+- unit/enemy/tower/building/entity radius
+
+This replaces future parallel hard-coded sets. Dynamic restrictions still belong to their eventual runtime system; for example, `canJoinPlatoon()` also checks transported/garrisoned/attached state without reading global state.
+
+## Enemy base values vs horde values
+
+Enemy registries preserve base growth values and the current v47 horde multipliers separately. Current normal horde enemies are created from the base formula, then v47 applies per-type HP/contact-damage multipliers. Global enemy movement is then multiplied by 0.30. Do not pre-bake these multipliers into base values during later AI/spawn migration or they will be applied twice.
+
+Special direct attacks that v47 mutates globally are already stored at their current effective values: Acid Lobber shot 6.3 and Crusher charge 104.4.
+
+## Tower upgrades
+
+`js/towers/towerConfig.js` owns both upgrade presentation data (cost/name/description) and the exact current numeric modifiers from the active v21/v22 stat logic. `getTowerLevelStats()` is pure derived-data logic only; tower firing remains legacy-owned.
 
 ## State ownership
 
-`js/core/state.js` is the only clean-runtime state creator/reset owner. It uses nested categories for session/time, director, resources, base, entities, selection, commands, view/camera, fog, debug and current gameplay modifiers. Selection stores IDs rather than object references. No module reads or writes legacy `window.state`.
+`js/core/state.js` remains the only clean state creator/reset owner. Prompt 3 aligned its dormant defaults with current foundational config (125/0 opening economy, 0.65 camera zoom, current horde first-delay data) but did not migrate the main loop or director behavior.
 
-The clean state intentionally does not carry removed roguelite/card/XP behavior. Additional fields are admitted only when a migrated active system proves it needs them.
+## Pure helpers
 
-## Config ownership
+`js/utils/math.js`: clamp, lerp, distance/squared distance, angle-between, angle normalization, numeric comparison.
 
-`js/core/config.js` owns clean configuration composition. Prompt 2 ports only current core values that were straightforward to verify (starting economy/base, world/camera and pathfinding). Unit, enemy, tower, building and economy **balance tables remain legacy-authoritative** until their migration prompt so values are not copied from stale version layers.
+`js/utils/geometry.js`: circle/radius checks, nearest point to segment, point-to-segment distance, segment intersection/distance, world-bound tests/clamping. Geometry edge behavior intentionally preserves the legacy helper tolerances where it affects collision calculations.
 
-Stable entity IDs and classification metadata live in `js/core/entities.js`; they are not balance tuning.
+`js/utils/helpers.js`: deep freeze, finite-number checks, explicit registry lookup failure, deterministic-injectable ID factory.
 
-## Entity identity
+## Validation and parity
 
-The clean runtime treats `unit.role` as the authoritative gameplay identity. Classification helpers centralize flying, ground, infantry, mechanical, repairable and support checks. Only two explicit legacy-shape fallbacks exist for incremental data migration: old `type: "truck"` maps to `truck`, and role-less old `type: "soldier"` maps to `rifleman`.
+`validateGameConfig()` performs an on-demand structural/numeric validation. It is not executed every frame or by the live game.
 
-## Data/update flow
+`compareConfigParity()` compares required key values and tower upgrade stats against a Prompt-3 snapshot traced from the current legacy load order. The snapshot exists only for migration verification.
 
-The future coarse update ownership is declared in `js/core/game.js`:
+Prompt 3 validation result: **0 errors** across 19 units, 13 enemies, 10 towers, and 9 building records.
 
-1. apply queued input commands
-2. navigation/destination work
-3. unit movement/support/platoon work
-4. enemy movement/AI
-5. tower behavior
-6. combat/projectile resolution
-7. building lifecycle
-8. economy/logistics
-9. fog/vision data
-10. render world once, then render UI
+Prompt 3 parity result: **0 mismatches** for the compared current effective values.
 
-Prompt 2 does **not execute this pipeline**. Exact sub-order is locked only when each legacy system is migrated and regression-tested, preventing accidental behavior changes from an assumed order.
+## Legacy runtime / migration rules
 
-## Rendering flow
+No clean module is imported by `index.html`. No clean module patches `window.CONFIG`, `BUILD`, `state`, event listeners, rendering, or legacy functions. No new `vXX.js` file should be added during the migration.
 
-The future renderer has one owner: `js/rendering/renderer.js`. It must render world primitives exactly once and must not wrap the legacy `draw()` chain. Fog provides visibility data; the renderer owns painting that data. UI rendering remains separate from world rendering.
+Future migration must continue by system ownership rather than wrappers. If an adapter ever becomes unavoidable, isolate it under `js/migration/`, document its deletion condition, and do not let it become a permanent version layer.
 
-## Migration rules/status
+## Next-phase caution
 
-No compatibility wrapper is installed around the legacy runtime. The only compatibility logic in clean source is pure entity-shape interpretation in `getUnitRole`, which has no globals or side effects and is removable after entity data migration.
-
-Planned migration sequence after Prompt 2:
-
-1. verify/port remaining pure config, helpers and entity factories
-2. migrate assets + single renderer while keeping simulation legacy-owned for comparison
-3. migrate navigation and unit destination/movement ownership
-4. migrate units, support and platoons together with combat contracts
-5. migrate enemies/director/cache guards
-6. migrate buildings/economy/logistics/export ships
-7. migrate fog/vision into the single renderer contract
-8. migrate UI/input/camera listeners last so there is one event owner
-9. activate `js/main.js` only after parity checks
-10. remove legacy script loading only in the final cleanup phase
-
-Do not add new `vXX.js` files during this migration. If a temporary adapter ever becomes unavoidable, isolate it under `js/migration/` and document its deletion condition before use.
+The current v47 director dynamically tunes spawned horde enemies while cache guards use untuned base enemy HP/damage with the same global 0.30 speed multiplier. Any future spawning/AI migration must preserve that distinction and must not apply horde multipliers twice.

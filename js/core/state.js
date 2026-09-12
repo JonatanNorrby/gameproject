@@ -1,8 +1,7 @@
 import { GAME_CONFIG } from './config.js';
 
 function createModifierState() {
-  // These multipliers exist in the current runtime and are preserved as explicit
-  // state because migrated systems still need a stable home for them.
+  // These multipliers exist in the current runtime and remain explicit state.
   return {
     soldierRate: 1,
     soldierDamage: 1,
@@ -23,14 +22,14 @@ function createModifierState() {
 export function createInitialState({
   config = GAME_CONFIG,
   viewport = {
-    width: config.world.viewportWidth,
-    height: config.world.viewportHeight,
+    width: config.viewport.width,
+    height: config.viewport.height,
   },
   now = () => 0,
 } = {}) {
-  const world = config.world;
-  const baseX = world.width / 2;
-  const baseY = world.height / 2;
+  const baseX = config.world.width / 2;
+  const baseY = config.world.height / 2;
+  const zoom = config.camera.defaultZoom;
 
   return {
     session: {
@@ -39,12 +38,11 @@ export function createInitialState({
       gameOver: false,
       lastFrameTime: now(),
     },
-    time: {
-      elapsed: 0,
-    },
+    time: { elapsed: 0 },
     director: {
-      // Current legacy director START_GRACE is 5 seconds.
-      spawnTimer: 5,
+      hordeNumber: 0,
+      queuedEnemies: 0,
+      nextHordeIn: config.director.horde.firstDelay,
     },
     resources: {
       gold: config.game.startingGold,
@@ -53,7 +51,7 @@ export function createInitialState({
     base: {
       x: baseX,
       y: baseY,
-      radius: world.baseRadius,
+      radius: config.world.baseRadius,
       hp: config.game.startingBaseHp,
       maxHp: config.game.startingBaseHp,
     },
@@ -86,10 +84,10 @@ export function createInitialState({
     view: {
       showReach: false,
       camera: {
-        x: baseX - viewport.width / 2,
-        y: baseY - viewport.height / 2,
-        zoom: 1,
-        speed: world.cameraSpeed,
+        x: baseX - viewport.width / (2 * zoom),
+        y: baseY - viewport.height / (2 * zoom),
+        zoom,
+        speed: config.camera.speed,
       },
     },
     fog: {

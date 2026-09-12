@@ -1,13 +1,10 @@
 import { MIGRATION_STATUS } from '../core/config.js';
+export { TOWER_CONFIG, TOWER_TYPES, getTowerConfig, getTowerLevelStats, normalizeTowerType } from './towerConfig.js';
 
 export const TOWER_SYSTEM_STATUS = MIGRATION_STATUS.SKELETON_CREATED;
 
-export const TOWER_TYPES = Object.freeze([
-  'laser', 'flame', 'railgun', 'tesla', 'antiair', 'cryo',
-  'mortar', 'minigun', 'missile', 'dronebay',
-]);
-
-// Future owner: tower lifecycle, combat behavior and the existing 1/3 upgrade model.
+// Future owner: tower lifecycle and combat. Static tower/upgrades data is migrated;
+// active tower combat behavior remains legacy-owned.
 export function updateTowers(_game, _dt) {
-  // Prompt 2 interface only.
+  // Prompt 3 still provides interface only.
 }
