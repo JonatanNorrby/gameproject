@@ -235,6 +235,6 @@ Global Base game-over, full structure destruction cleanup, workers/placement inp
 - disabled Bunker status;
 - Engineer-assisted economic construction.
 
-The committed suite was executed on Node 22 in GitHub Actions against commit `e7e3e974ba3f273f9184b0e74be5a514962dd678` and passed **20/20** with zero failures, skips or cancellations. The only later staging commit before merge removes the temporary validation workflow and updates this verification paragraph; no subsystem source or test file changed after the passing run.
+The committed suite was executed on Node 22 in GitHub Actions against commit `e7e3e974ba3f273f9184b0e74be5a514962dd678` and passed **20/20** with zero failures, skips or cancellations. The only later staging commits before merge remove the temporary validation workflow and update this verification paragraph; no subsystem source or test file changed after the passing run.
 
 Production activation is intentionally not part of this verification.
