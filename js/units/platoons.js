@@ -44,6 +44,16 @@ function assignPlatoonSlots(game, platoonId) {
   getPlatoonMembers(game, platoonId).forEach((unit, index) => { unit.platoonSlot = index; });
 }
 
+export function removeUnitFromPlatoon(game, unit) {
+  const platoonId = unit?.platoonId;
+  if (!platoonId) return false;
+  unit.platoonId = null;
+  unit.platoonSlot = 0;
+  normalizeSmallPlatoon(game, platoonId);
+  assignPlatoonSlots(game, platoonId);
+  return true;
+}
+
 export function formationOffset(index) {
   if (index === 0) return { x: 0, y: 0 };
   const ring = Math.ceil(Math.sqrt(index));
