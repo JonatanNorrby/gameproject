@@ -4,9 +4,11 @@
 
 The clean ES-module runtime under `js/` is still not the main production runtime. The production page continues to load the legacy `config.js` + versioned script stack and does not import `js/main.js`.
 
-Prompt 3 completed the safe foundational data layer. Prompt 4 extracted basic unit destination/pathfinding. Prompt 5 extracted the narrow manual move/Platoon/support command seam. Prompt 6 now adds a **dormant shared combat foundation only**: damage/alive semantics, target eligibility, air/ground rules, range geometry and basic cooldown helpers. Attack loops and combat lifecycle remain legacy-owned.
+Prompt 3 completed the safe foundational data layer. Prompt 4 extracted basic unit destination/pathfinding. Prompt 5 extracted the narrow manual move/Platoon/support command seam. Prompt 6 added the shared combat foundation. Prompt 7 now gives the clean runtime **one authoritative player-unit combat/support update** in `js/combat/unitCombat.js`.
 
-The temporary Prompt 5 bridge under `js/migration/` is unchanged. Prompt 6 adds no production combat wrapper and does not patch `hitEnemy`, `damageTarget`, tower attacks, projectiles or enemy AI.
+Prompt 7 does not activate a new production combat bridge. The currently loaded legacy game still executes its old unit-combat wrapper chain until a later activation step. The clean runtime itself no longer needs that chain: target acquisition, player attack decisions, Medic healing, Engineer/Repair Vehicle repair, Spotter marking, direct splash attacks and player-mine detonation are represented directly by role strategies.
+
+The temporary Prompt 5 movement bridge under `js/migration/` is unchanged. Prompt 7 adds no `handleTap`, `hitEnemy`, `damageTarget`, tower-combat, enemy-AI, wave, fog, economy, UI or rendering wrapper.
 
 ## Canonical ownership
 
@@ -32,10 +34,17 @@ The temporary Prompt 5 bridge under `js/migration/` is unchanged. Prompt 6 adds 
 | Platoon movement routing | `js/units/platoons.js` | MIGRATED FOR MOVE ORDERS ONLY |
 | Medic/APC manual detach helpers | `js/units/support.js` | MIGRATED FOR MANUAL MOVE ONLY |
 | Remaining unit lifecycle/support/platoon runtime | `js/units/units.js` | PARTIALLY MIGRATED |
-| Shared combat foundation | `js/combat/damage.js`, `targeting.js`, `range.js`, `cooldowns.js` | MIGRATED FOR FOUNDATION ONLY |
-| Combat attack loops/projectiles/support/lifecycle | `js/combat/combat.js` + legacy runtime | NOT MIGRATED |
+| Shared combat foundation | `js/combat/damage.js`, `targeting.js`, `range.js`, `cooldowns.js` | MIGRATED |
+| Player damage modifiers / marks | `js/combat/playerDamage.js` | MIGRATED FOR PLAYER-UNIT DAMAGE |
+| Player target acquisition | `js/combat/unitTargeting.js` | MIGRATED FOR PLAYER UNITS |
+| Medic healing | `js/combat/healing.js` | MIGRATED |
+| Engineer / Repair Vehicle repair | `js/combat/repair.js` | MIGRATED |
+| Player mine trigger/detonation | `js/combat/unitMines.js` | MIGRATED; placement remains legacy/UI-owned |
+| Player-unit combat/update flow | `js/combat/unitCombat.js`, `js/combat/combat.js` | MIGRATED FOR PROMPT 7 SCOPE |
+| Projectile travel/collision/impact | legacy `state.bullets` / `updateProjectiles` | NOT MIGRATED |
+| Enemy death rewards/removal lifecycle | legacy combat lifecycle | NOT MIGRATED |
 | Enemy director/AI runtime | `js/enemies/enemies.js` | SKELETON CREATED |
-| Tower combat runtime | `js/towers/towers.js` | SKELETON CREATED |
+| Tower combat runtime | `js/towers/towers.js` + legacy runtime | NOT MIGRATED |
 | Building placement/runtime | `js/buildings/buildings.js` | SKELETON CREATED |
 | Economy/logistics runtime | `js/economy/economy.js` | SKELETON CREATED |
 | Fog/vision runtime | `js/fog/fog.js` | SKELETON CREATED |
@@ -53,14 +62,14 @@ The clean data uses the **final effective values after the current legacy load o
 - v47: Acid Lobber shot damage is tuned from 9 to 6.3 and Crusher charge damage from 145 to 104.4 once during install.
 - v47/v53: Mech/Drone/Ship radii are 29/16/27, superseding earlier 28/15/26 helpers.
 
-`js/core/parity.js` records these as a **verification fixture**, not as a second runtime config source.
+`js/core/parity.js` records these as a verification fixture, not as a second runtime config source.
 
 ## Canonical IDs and aliases
 
 Player unit IDs:
 `rifleman`, `heavygunner`, `rocketeer`, `medic`, `engineer`, `scout`, `sniper`, `flametrooper`, `spotter`, `minelayer`, `mech`, `combatdrone`, `combatship`, `tank`, `mobileartillery`, `repairvehicle`, `apc`, `mgcar`, `truck`.
 
-The only retained unit alias is `soldier -> rifleman` because `soldier` is still a real legacy build/runtime identifier. The former purchased `platoon` entity is **not** an alias or unit: v29 removed it and Platoons are control groups.
+The only retained unit alias is `soldier -> rifleman` because `soldier` is still a real legacy build/runtime identifier. The former purchased `platoon` entity is not an alias or unit: v29 removed it and Platoons are control groups.
 
 Enemy IDs:
 `ravager`, `swarm`, `runner`, `brute`, `spitter`, `flyer`, `siegebeast`, `burrower`, `climber`, `acidlobber`, `crusher`, `harvesterhunter`, `saboteur`.
@@ -77,7 +86,7 @@ Building IDs:
 
 Static relationships live on canonical registry traits. `js/core/entities.js` derives flying/ground, infantry/mechanical/vehicle, repairable/healable, support/combat, transport/logistics, Platoon eligibility, enemy movement class, tower/building identity and canonical radii.
 
-Dynamic restrictions still belong to their runtime system. Prompt 6 uses these traits for shared target eligibility but does not migrate target priority, detection AI or visibility ownership.
+Prompt 7 uses `isHealableUnit()` for Medic targets and `isRepairableUnit()` for mechanical repair instead of another hard-coded role list. Dynamic world restrictions still remain system-owned.
 
 ## Prompt 4 movement primitive
 
@@ -101,21 +110,95 @@ Remove the bridge files and loader when clean input becomes the real click owner
 
 ## Prompt 6 shared combat foundation
 
-`js/combat/damage.js` defines the future base HP contract. `isAlive(entity)` means finite numeric `hp > 0`; zero and negative HP are dead. `applyDamage(game, target, amount, context)` validates target/damage, subtracts damage once, intentionally permits overkill below zero to match the live runtime, and returns whether the hit was lethal. Repeated damage against an already-dead target is rejected and cannot revive it or re-fire the destruction notification.
+`js/combat/damage.js` defines the base HP contract. `isAlive(entity)` means finite numeric `hp > 0`; zero and negative HP are dead. `applyDamage(game, target, amount, context)` validates target/damage, subtracts damage once, intentionally permits overkill below zero to match the live runtime, and returns whether the hit was lethal. Repeated damage against an already-dead target is rejected and cannot revive it or re-fire the destruction notification.
 
-`applyDamage()` accepts an optional `context.onDestroyed` callback but does **not** implement lifecycle consequences. Enemy rewards/removal, structure cleanup, selected-unit cleanup, Base game-over, transport destruction, Landing Pad export-ship cargo loss/cooldown and other destruction behavior remain with their current owners until those systems migrate.
+`applyDamage()` accepts an optional `context.onDestroyed` callback but does not implement lifecycle consequences. Enemy rewards/removal, structure cleanup, selected-unit cleanup, Base game-over, transport destruction, Landing Pad export-ship cargo loss/cooldown and other destruction behavior remain with their current owners until those systems migrate.
 
-`js/combat/targeting.js` owns generic eligibility only, not priority/search. It requires a live active-world target by default, rejects transported/garrisoned units, preserves the current Sneaky Spotter no-target rule through its canonical stealth trait, rejects burrowed enemies, and requires an explicit reveal callback for a cloaked target. Fog visibility can be supplied as an `isVisible` callback rather than importing fog ownership into combat.
+`js/combat/targeting.js` owns generic eligibility only, not priority/search. It rejects dead, transported/garrisoned, burrowed and unrevealed cloaked targets as appropriate and uses canonical air/ground classification. Fog visibility is callback-driven rather than imported into combat.
 
-Air/ground compatibility uses canonical classifications and the existing `targeting` values: `ground`, `air`, or `any`. Current examples remain unchanged: Mobile Artillery/Mortar are ground-only, Anti-Air is air-only, and Rifleman/Laser/general-purpose weapons can hit both. Enemy AI target intent is not guessed by this module; later enemy migration must pass its intended targeting mode explicitly.
+`js/combat/range.js` preserves both live distance styles. Default `center` mode is center-to-center for ordinary targets; Walls use point-to-segment distance. `footprint` mode subtracts attacker/target radii and uses half Wall thickness. `isInAttackRange()` supports min range and strict/inclusive maximum boundaries.
 
-`js/combat/range.js` preserves both live distance styles. Default `center` mode is center-to-center for ordinary targets; Walls use point-to-segment distance. `footprint` mode subtracts attacker/target radii and uses half Wall thickness, matching current enemy melee reach geometry. `isInAttackRange()` supports min range and an `inclusive` option because legacy `findTarget()` uses strict `< range` while `findTargetWhere()`/melee paths use `<= range`.
-
-`js/combat/cooldowns.js` preserves the basic timer convention: decrement by `dt`, allow the value to pass below zero, ready when `<= 0`, and reset to the exact duration supplied by the caller. Weapon-specific random jitter and rate modifiers remain in the later attack-loop migration so Prompt 6 does not alter effective fire rates.
+`js/combat/cooldowns.js` preserves the basic timer convention: decrement by `dt`, allow the value to pass below zero, ready when `<= 0`, and reset to the exact caller-provided duration.
 
 ### Dead-unit normalization review
 
-Prompt 6 rechecked active normalization/rendering. v53 already repairs HP only when HP is non-numeric and explicitly preserves zero/negative HP; its normalization runs at construction/reset boundaries, not inside `drawUnit()`. The targeted active renderer review found no HP-restoring draw mutation, so no legacy renderer change was necessary.
+v53 repairs HP only when HP is non-numeric and explicitly preserves zero/negative HP; its normalization runs at construction/reset boundaries, not inside `drawUnit()`. No legacy renderer change was necessary.
+
+## Prompt 7 player-unit combat
+
+### One update owner
+
+`updatePlayerUnitCombat(game, dt)` in `js/combat/unitCombat.js` is the clean future owner for player-unit combat/support updates. It uses small behavior strategies rather than chaining old wrapper generations or temporarily removing units from `state.units`.
+
+The clean order intentionally preserves the effective final wrapper order without reproducing its implementation:
+
+1. v25-era player roles in current state order: Heavy Gunner, Rocketeer, Engineer, Scout, Sniper, Flamethrower Trooper, Spotter, Mine Layer, Combat Mech, Combat Drone, Combat Ship.
+2. Player mine trigger/detonation.
+3. v26 special vehicles: Tank, Mobile Artillery, Repair Vehicle.
+4. APC.
+5. Machinegun Car.
+6. Medic (v47 final owner).
+7. Rifleman (v47 final owner).
+
+This ordering matters for same-frame mark effects. Spotter marking therefore still affects later Tank/APC/Machinegun Car/Rifleman attacks exactly as the active wrapper ordering allows.
+
+### Target acquisition
+
+`js/combat/unitTargeting.js` owns ordinary nearest-enemy acquisition and nearest-N acquisition for player units. It uses Prompt 6 `canAttackTarget()` + range checks and canonical movement classification.
+
+Normal `findTarget` parity remains strict `< max range`. Mobile Artillery uses the current inclusive `<= max` / `>= min` `findTargetWhere` semantics. Flamethrower Trooper nearest-N selection is inclusive at its range boundary.
+
+Fog is not migrated. If a future activation needs current fog-gated firing, the clean target helper consumes `game.services.playerCombat.isEnemyVisible` or `game.services.fog.isVisible` rather than importing fog state directly.
+
+### Damage and marks
+
+`js/combat/playerDamage.js` applies player-unit direct damage through Prompt 6 `applyDamage()`. It preserves the active `hitEnemy` damage modifiers that matter to these attacks: Scout/Spotter mark multiplier, Climber climbing vulnerability, and the current 20% Burrower damage behavior for splash paths that can still touch a burrowed enemy.
+
+Scout marks its chosen target when firing for 2.2 seconds at 1.15x damage. Spotter marks every currently eligible enemy within 375 for 0.32 seconds at 1.20x damage. Mark expiry is ticked once per player-combat update before role execution.
+
+The legacy tower path still reads the same `markTime` / `markMult` fields through `hitEnemy`, so Prompt 7 does not disconnect Spotter/Scout support from legacy towers.
+
+### Projectile dependency
+
+Prompt 7 migrates projectile **firing ownership**, not projectile simulation. Rifleman, Heavy Gunner, Scout, Sniper, Combat Mech, Combat Drone, APC and Machinegun Car now emit the current projectile data (muzzle point, jitter, speed, damage, 2.2s life and projectile type) through `game.services.playerCombat.fireProjectile` when supplied, otherwise into clean `state.entities.projectiles`.
+
+Projectile travel, collision and impact remain legacy-owned for now. This avoids building a second projectile engine. A later activation adapter must route these emitted projectile records into the existing projectile simulation or replace that simulation once, centrally.
+
+Rocketeer, Combat Ship, Tank and Mobile Artillery are **not** converted into fake projectiles because their current final implementations resolve splash damage immediately and use effects only for presentation.
+
+### Flamethrower Trooper
+
+The current Flamethrower Trooper remains a nearest-three direct attack: 130 range, 1.5 immediate damage per target, 0.18 fire interval and 2.4 burn duration. It can target both ground and flying enemies because its canonical targeting mode is `any`.
+
+Prompt 7 sets the existing `burn` / `burnTick` status fields exactly as the current unit attack does. Burn ticking itself remains in the legacy enemy update until status processing gets its own owner; it is not duplicated here.
+
+### Mine Layer
+
+Mine placement remains manual/UI/economy-owned: Prompt 7 does not move the button, Gold spending, placement limit or placement checks. `js/combat/unitMines.js` migrates the existing automatic trigger/detonation pass because that pass was embedded inside old `updateUnitCombat`.
+
+Current mine values remain: ground-only trigger, Burrowers excluded while underground, 25 trigger radius plus enemy radius, 95 primary damage, 58 splash radius and 72% secondary splash damage.
+
+### Medic healing
+
+`js/combat/healing.js` owns healing only. Medic uses the current 165 range and 11 HP/second, chooses the lowest HP-ratio active healable infantry target, breaks equal-ratio ties by nearest distance, caps at `maxHp`, and never heals dead, transported, garrisoned or mechanical units.
+
+Medic follow/attach/detach/manual movement stays outside combat. Prompt 7 never writes a destination or path for Medic support movement.
+
+### Engineer repair
+
+`js/combat/repair.js` uses canonical `isRepairableUnit()` for unit eligibility and preserves built structures as valid repair targets. Engineer remains 120 range / 18 HP per second and keeps lowest-HP-ratio priority.
+
+Prompt 7 intentionally fixes the old wrapper interaction that defeated v53's intended Engineer classification: v26 temporarily removed Tank, Mobile Artillery and Repair Vehicle from `state.units` before v25 Engineer targeting ran. The clean update does not filter state, so Engineer now consistently repairs all nine intended mechanical roles: Truck, Combat Mech, Tank, Mobile Artillery, Repair Vehicle, APC, Machinegun Car, Combat Drone and Combat Ship. Dead units are never revived.
+
+### Repair Vehicle
+
+Repair Vehicle shares the same canonical repairability source but keeps its current 150 range / 34 HP per second and its legacy scan/priority behavior. It can repair the same mechanical role set plus built structures and cannot repair itself or dead units.
+
+### Rifleman migration continuity
+
+Rifleman preserves v47's separate per-member cooldown state when migrating an existing object: `v47RifleCooldowns` is accepted as a one-time state fallback before the clean `combatCooldowns` field becomes authoritative. Other roles accept their current `cooldowns` array similarly. No version wrapper is created.
+
+Rifleman retains current `extraSoldiers`, `soldierDamage`, `soldierRate`, ±0.009 aim jitter, 2.2s projectile life and 170ms firing-state timestamp behavior.
 
 ## Enemy base values vs horde values
 
@@ -129,7 +212,7 @@ Special direct attacks that v47 mutates globally are already stored at their cur
 
 ## State ownership
 
-`js/core/state.js` remains the only clean state creator/reset owner. The temporary Prompt 5 adapter does not replace the legacy state object; it exposes current unit/world arrays through the clean shape only for a move command. Prompt 6 does not add combat state or mutate the legacy global state.
+`js/core/state.js` remains the only clean state creator/reset owner. The Prompt 5 movement adapter still exposes current unit/world arrays only for move commands. Prompt 7 introduces no replacement global state object and does not require temporary removal or type-masquerading of units.
 
 ## Pure helpers
 
@@ -151,18 +234,28 @@ Prompt 3 parity result: **0 mismatches** for compared current effective values.
 
 Prompt 5 isolated command regression result: **16/16 passed**.
 
-Prompt 6 isolated combat-foundation regression result: **16/16 passed** for damage/death thresholds, invalid damage, no revival, air/ground/dual target eligibility, Spotter/cloak/burrow/transport restrictions, center/footprint/Wall range semantics and cooldown timing/reset behavior.
+Prompt 6 isolated combat-foundation regression result: **16/16 passed**.
+
+Prompt 7 isolated player-unit combat/support regression result: **35/35 passed**. Coverage includes all 19 canonical unit roles, projectile emission, direct splash/falloff, artillery min/max range, Flamethrower burn application, Spotter/Scout marks, mine detonation, Medic target priority/capping/no-revival/no-movement mutation, Engineer eligibility for all nine repairable mechanical roles, Repair Vehicle behavior, Truck non-combat behavior and ground/air regressions.
 
 ## Legacy runtime / migration rules
 
-`index.html` still does not import `js/main.js`, and no new `vXX.js` file is added. Prompt 6 installs no production combat adapter or wrapper. The legacy runtime remains authoritative for all attack execution and destruction lifecycle behavior.
+`index.html` still does not import `js/main.js`, and Prompt 7 creates no new `vXX.js` file. No legacy file is deleted. No production player-combat bridge is installed in this prompt, so the currently loaded page still executes its old unit-combat wrapper chain until the later activation phase.
 
-The Prompt 5 movement bridge is the documented temporary exception to the no-wrapper migration rule. Future work must remove it rather than stack new wrapper generations on top.
+The clean runtime's `js/combat/combat.js` now delegates to `updatePlayerUnitCombat()` and therefore has one player-unit combat owner when the clean runtime is eventually activated.
+
+The Prompt 5 movement bridge remains the documented temporary exception to the no-wrapper migration rule. Do not stack a combat wrapper on top of the legacy chain merely to activate Prompt 7 early.
 
 ## Next-phase caution
 
-Prompt 7 may start moving concrete attack loops onto this foundation, but it must preserve caller-specific behavior instead of folding it into `damage.js`: mark multipliers, Climber vulnerability, Burrower damage behavior, Acid corrosion, splash/falloff, projectile timing, weapon jitter, rewards and death cleanup are still legacy semantics.
+Tower combat is still entirely legacy. A later tower migration must preserve Scout/Spotter marks because the current legacy `hitEnemy` wrapper applies those multipliers to tower damage too. Reuse the shared damage/mark semantics rather than inventing a tower-only copy.
 
-Export ships remain a special Landing Pad lifecycle with `shipHp`, not a generic `.hp` combat entity. Base damage/game-over remains a separate lifecycle. Do not silently force either into `applyDamage()` until their owning systems migrate.
+Persistent projectile travel/impact is still a shared dependency for player projectile units and several towers. Migrate it once when appropriate; do not create separate unit and tower projectile engines.
+
+Flamethrower burn ticking still lives in the legacy enemy update. When enemy/status processing migrates, move that tick ownership once and avoid double-ticking burns applied by both units and Flame Towers.
+
+Enemy death/reward/removal remains outside Prompt 7. `applyPlayerEnemyDamage()` can call `game.services.playerCombat.onEnemyDestroyed` when a later lifecycle owner is ready, but Prompt 7 does not migrate kill rewards, particles, cache behavior or wave logic.
+
+Export ships remain a special Landing Pad lifecycle with `shipHp`, not a generic `.hp` combat entity. Base damage/game-over remains a separate lifecycle.
 
 The current v47 director dynamically tunes spawned horde enemies while cache guards use untuned base enemy HP/damage with the same global 0.30 speed multiplier. Future enemy migration must preserve that distinction and must not apply horde multipliers twice.
