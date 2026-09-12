@@ -83,8 +83,10 @@ window.addEventListener('load',()=>{document.title=V53_TITLE;},{once:true});
     const s=SPECS[r],cfg=cfgFor(r)||{};
     u.type=s.kind==='air'?'airunit':'soldier';
     u.role=r;
-    if(!Number.isFinite(Number(u.hp))||u.hp<=0)u.hp=Math.max(1,Number(cfg.HP)||1);
-    if(!Number.isFinite(Number(u.maxHp))||u.maxHp<=0)u.maxHp=Math.max(u.hp,Number(cfg.HP)||u.hp);
+    // Migration may repair missing/non-numeric state, but zero/negative HP is a
+    // legitimate dead unit and must never be revived by normalization.
+    if(!Number.isFinite(Number(u.hp)))u.hp=Math.max(1,Number(cfg.HP)||1);
+    if(!Number.isFinite(Number(u.maxHp))||Number(u.maxHp)<=0)u.maxHp=Math.max(1,Number(cfg.HP)||Number(u.hp)||1);
     if(!Array.isArray(u.path))u.path=[];
     if(!('moveTarget' in u))u.moveTarget=null;
     if(!Number.isFinite(Number(u.heading)))u.heading=0;
@@ -204,6 +206,23 @@ window.addEventListener('load',()=>{document.title=V53_TITLE;},{once:true});
   let legacySpawn=null;try{if(typeof spawnUnitAtBase==='function')legacySpawn=spawnUnitAtBase;}catch{}
   try{spawnUnitAtBase=function(type){return TYPES.has(type)?purchase(type):(legacySpawn?legacySpawn(type):false);};}catch{}
 
+  // Engineer repair classification is intentionally mechanical. The historic
+  // design already allowed aircraft repair, so the current Drone/Ship stay in it.
+  const ENGINEER_REPAIRABLE_ROLES=new Set(['truck','mech','tank','mobileartillery','repairvehicle','apc','mgcar','combatdrone','combatship']);
+  function engineerRepairableUnit(u){return !!u&&ENGINEER_REPAIRABLE_ROLES.has(roleV53(u));}
+  try{repairTargetFor=function(engineer){
+    let best=null,ratio=1;
+    const structures=(state.structures||[]).filter(s=>s?.built&&Number(s.hp)>0);
+    const units=(state.units||[]).filter(u=>u!==engineer&&Number(u?.hp)>0&&engineerRepairableUnit(u));
+    for(const t of [...structures,...units]){
+      if(!Number.isFinite(Number(t.maxHp))||Number(t.maxHp)<=0||Number(t.hp)>=Number(t.maxHp))continue;
+      if(Math.hypot(t.x-engineer.x,t.y-engineer.y)>Number(CONFIG.ENGINEER.REPAIR_RANGE))continue;
+      const r=Number(t.hp)/Number(t.maxHp);if(r<ratio){best=t;ratio=r;}
+    }
+    return best;
+  };}catch{}
+  window.__apdIsEngineerRepairableUnit=engineerRepairableUnit;
+
   const drawUnitBeforeV53=drawUnit;
   const squadOffsets=[[-12,-9],[12,-9],[-12,10],[12,10],[0,-18],[0,18]];
 
@@ -288,16 +307,51 @@ window.addEventListener('load',()=>{document.title=V53_TITLE;},{once:true});
     const r=roleV53(u),fn=renderers[r];
     if(!fn)return drawUnitBeforeV53(u);
     if(u.garrisonedIn||u.transportedIn)return;
-    normalizeUnit(u);ctx.save();ctx.translate(u.x,u.y);fn(u);ctx.restore();
+    // Rendering is intentionally read-only for gameplay state. Migration happens
+    // at construction/reset boundaries, never inside drawUnit().
+    ctx.save();ctx.translate(u.x,u.y);fn(u);ctx.restore();
   };
 
   const resetBeforeV53=reset;
   reset=function(){const r=resetBeforeV53();ensureRegistry();normalizeAll();return r;};
   if(els?.restart)els.restart.onclick=reset;
 
+  const REQUIRED_CONFIG={
+    medic:['HP','MOVE_SPEED','HEAL_RANGE','HEAL_PER_SECOND'],
+    engineer:['HP','MOVE_SPEED','REPAIR_RANGE','REPAIR_PER_SECOND'],
+    scout:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DAMAGE'],
+    sniper:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DAMAGE'],
+    flametrooper:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DIRECT_DAMAGE'],
+    spotter:['HP','MOVE_SPEED','SPOT_RANGE','MARK_DAMAGE_MULTIPLIER'],
+    minelayer:['HP','MOVE_SPEED','MINE_DAMAGE','MINE_TRIGGER_RADIUS'],
+    mech:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DAMAGE'],
+    combatdrone:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DAMAGE'],
+    combatship:['HP','MOVE_SPEED','RANGE','FIRE_INTERVAL','DAMAGE','SPLASH_RADIUS']
+  };
+  function runUnitAudit(){
+    const audit={};
+    for(const type of TYPES){
+      const s=SPECS[type],u=makeUnit(type,{x:BASE_X+400,y:BASE_Y}),expected=s.kind==='air'?'airunit':'soldier',cfg=cfgFor(type)||{};
+      const dead=makeUnit(type,{x:BASE_X+420,y:BASE_Y});dead.hp=0;normalizeUnit(dead);
+      const missingConfig=(REQUIRED_CONFIG[type]||[]).filter(k=>!Number.isFinite(Number(cfg[k])));
+      const checks={
+        role:roleV53(u)===type,
+        runtimeType:u.type===expected,
+        renderer:typeof renderers[type]==='function',
+        hp:Number.isFinite(Number(u.hp))&&Number(u.hp)>0&&Number.isFinite(Number(u.maxHp))&&Number(u.maxHp)>0,
+        cooldowns:Array.isArray(u.cooldowns)&&u.cooldowns.length>0&&u.cooldowns.every(v=>Number.isFinite(Number(v))),
+        movement:typeof setUnitDestination==='function'&&typeof updateUnitMovement==='function',
+        coordinates:Number.isFinite(Number(u.x))&&Number.isFinite(Number(u.y)),
+        deathSafe:Number(dead.hp)===0,
+        config:missingConfig.length===0
+      };
+      audit[type]={role:roleV53(u),type:u.type,expectedType:expected,missingConfig,checks,ok:Object.values(checks).every(Boolean)};
+    }
+    return{version:53,allOk:Object.values(audit).every(v=>v.ok),units:audit};
+  }
+
   ensureRegistry();normalizeAll();
-  const audit={};
-  for(const type of TYPES){const s=SPECS[type],u=makeUnit(type,{x:BASE_X+400,y:BASE_Y});audit[type]={role:roleV53(u),type:u.type,expectedType:s.kind==='air'?'airunit':'soldier',renderer:!!renderers[type],ok:roleV53(u)===type&&u.type===(s.kind==='air'?'airunit':'soldier')&&!!renderers[type]};}
-  window.__apdUnitAudit={version:53,allOk:Object.values(audit).every(v=>v.ok),units:audit};
-  window.__apdAudit={...(window.__apdAudit||{}),version:53,advancedUnits:'authoritative-identity+spawn+renderer',v52Superseded:true};
+  window.__apdUnitAudit=runUnitAudit();
+  window.__apdRunUnitAudit=runUnitAudit;
+  window.__apdAudit={...(window.__apdAudit||{}),version:53,advancedUnits:'authoritative-identity+spawn+renderer',deathNormalization:'zero-hp-preserved',engineerRepair:'mechanical-role-classification',v52Superseded:true};
 })();
