@@ -157,8 +157,31 @@ window.addEventListener('load',()=>{document.title=V51_TITLE;},{once:true});
     }catch{}
   }
 
+  // Storage rendering from older layers still paints fixed legacy capacities.
+  // Cover only that text band and redraw one value from the authoritative v30
+  // storageLevel/storageCap helpers used by logistics acceptance.
+  function drawStorageOverlayV51(s){
+    if(!s?.built||(s.type!=='refinery'&&s.type!=='landingpad'))return;
+    let level=1,cap=0;
+    try{if(typeof initStorageBuilding==='function')initStorageBuilding(s);}catch{}
+    try{if(typeof storageLevel==='function')level=storageLevel(s);}catch{level=Math.max(1,Math.min(3,Number(s.storageLevel)||1));}
+    try{if(typeof storageCap==='function')cap=storageCap(s);}catch{
+      const levels=s.type==='landingpad'?CONFIG.LANDING_PAD?.STORAGE_LEVELS:CONFIG.REFINERY?.STORAGE_LEVELS;
+      cap=Array.isArray(levels)?Number(levels[level-1])||0:0;
+    }
+    const stored=s.type==='landingpad'?Number(s.crystalStored)||0:Number(s.oreStored)||0;
+    if(!(cap>0))return;
+    const y=s.type==='landingpad'?(Number(CONFIG.LANDING_PAD.RADIUS)||48)+50:50;
+    const top=s.type==='landingpad'?y-29:y-22;
+    ctx.save();ctx.translate(s.x,s.y);
+    ctx.fillStyle='rgba(5,14,20,.98)';ctx.fillRect(-61,top,122,y-top+5);
+    ctx.strokeStyle='#5d7988';ctx.lineWidth=1;ctx.strokeRect(-61,top,122,y-top+5);
+    ctx.fillStyle='#e5f4f8';ctx.font='bold 9px Arial';ctx.textAlign='center';
+    ctx.fillText(`STORAGE ${level}/3 · ${Math.floor(stored)}/${Math.floor(cap)}`,0,y);
+    ctx.restore();
+  }
+
   function drawFogV51(z,camX,camY){
-    refreshVisionV51();
     const ex=state.v47FogExplored instanceof Uint8Array?state.v47FogExplored:null,src=state.v47VisionSources||state.v32VisionSources||[],fc=fogCtxV51;
     fc.setTransform(1,0,0,1,0,0);fc.globalAlpha=1;fc.globalCompositeOperation='source-over';fc.clearRect(0,0,W,H);
     const x0=Math.max(0,camX),y0=Math.max(0,camY),x1=Math.min(WORLD_W,camX+W/z),y1=Math.min(WORLD_H,camY+H/z);
@@ -186,7 +209,7 @@ window.addEventListener('load',()=>{document.title=V51_TITLE;},{once:true});
     ctx.save();ctx.setTransform(z,0,0,z,-camX*z,-camY*z);
     try{
       drawBackdrop();drawBase();
-      for(const s of state.structures||[])drawStructure(s);
+      for(const s of state.structures||[]){drawStructure(s);drawStorageOverlayV51(s);}
       for(const u of state.units||[])drawUnit(u);
       for(const e of state.enemies||[])drawEnemy(e);
       drawProjectilesV51();drawPlayerMinesV51();drawEffectsV51();drawWallDraftV51();
@@ -225,8 +248,11 @@ window.addEventListener('load',()=>{document.title=V51_TITLE;},{once:true});
     const special=state?.attachMode||state?.platoonAttachMode||state?.routeEditing||(typeof wallModeActive==='function'&&wallModeActive())||state?.v47MedicAttachMode||state?.v47ApcAttachMode;
     if(selected&&!clicked&&!tower&&!special&&!selected.garrisonedIn&&!selected.transportedIn){
       if(selected.attachedTo){if(els?.message)els.message.textContent='Detach this squad before giving it an independent move order.';return;}
-      if(selected.type==='truck'&&!state.routeEditing){selected.routeLoop=false;selected.routeActive=false;}
-      if(setUnitDestination(selected,x,y)&&els?.message)els.message.textContent='Move order updated.';return;
+      // Delegate normal map orders to the existing v47/v29 chain. That chain owns
+      // Medic/APC detach semantics and platoon formation orders. v51 still owns
+      // setUnitDestination, so rapid reroute/path fixes remain in effect.
+      if(selected.type==='truck'&&!state.routeEditing&&!selected.platoonId){selected.routeLoop=false;selected.routeActive=false;selected.routePendingStart=false;}
+      return handleTapBeforeV51(x,y);
     }
     return handleTapBeforeV51(x,y);
   };
@@ -234,5 +260,5 @@ window.addEventListener('load',()=>{document.title=V51_TITLE;},{once:true});
   window.addEventListener('resize',()=>{clampCameraV51();refreshZoomUiV51();},{passive:true});
   window.addEventListener('orientationchange',()=>setTimeout(()=>{clampCameraV51();refreshZoomUiV51();},100),{passive:true});
   refreshZoomUiV51();clampCameraV51();
-  window.__apdAudit={...(window.__apdAudit||{}),version:51,zoom:'direct-renderer-no-legacy-draw-chain',fogOwner:'v51-single-overlay',capturedCaches:'removed',moveOrders:'rapid-reroute-preserved'};
+  window.__apdAudit={...(window.__apdAudit||{}),version:51,zoom:'direct-renderer-no-legacy-draw-chain',fogOwner:'v51-single-overlay',capturedCaches:'removed',moveOrders:'delegated-to-platoon-support-chain',fogRefresh:'once-per-render',storageDisplay:'authoritative-current-capacity'};
 })();
