@@ -33,10 +33,13 @@ export {
   assertPlayerCombatCoverage,
   updatePlayerUnitCombat,
 } from './unitCombat.js';
+export { MAX_TOWER_LEVEL, getEffectiveTowerStats, getTowerLevel } from './towerStats.js';
+export { canTowerAffectEnemy, findTowerTarget, findTowerTargets } from './towerTargeting.js';
+export { assertTowerCombatCoverage, updateTowerCombat } from './towerCombat.js';
 
-// Prompt 7 migrates player-unit combat/support ownership only. Tower combat,
-// enemy attacks/AI, projectile travel/impact, burn ticking and enemy-death
-// lifecycle remain outside this update.
+// Player-unit combat remains the clean combat-system update here. Tower combat
+// has its own single owner and is invoked through js/towers/towers.js so a future
+// loop cannot accidentally execute it twice. Enemy AI/attacks remain unmigrated.
 export function updateCombat(game, dt) {
   return updatePlayerUnitCombat(game, dt);
 }
