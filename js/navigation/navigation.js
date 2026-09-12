@@ -8,6 +8,7 @@ export {
   isNavigationPointBlocked,
   isNavigationSegmentOpen,
 } from './pathfinding.js';
+export { isNavigationTerrainBlocked } from './terrain.js';
 
 // Pathfinding is request-driven. This update hook remains intentionally empty
 // until a later prompt migrates higher-level movement-command orchestration.
