@@ -6,6 +6,7 @@ import { detachManualMoveSupport } from './support.js';
 export const MOVE_COMMAND_SOURCES = Object.freeze({
   PLAYER: 'player',
   SUPPORT_AI: 'support-ai',
+  LOGISTICS: 'logistics',
 });
 
 export function isManuallyMovableUnit(game, unit) {
@@ -26,6 +27,9 @@ function cancelManualTruckRoute(unit) {
   unit.routeLoop = false;
   unit.routeActive = false;
   unit.routePendingStart = false;
+  // Clean logistics tracks whether the current route leg owns movement. This has
+  // no legacy balance meaning, but must be cleared when the player takes control.
+  unit.routeInTransit = false;
 }
 
 export function issueMove(game, unit, x, y, { source = MOVE_COMMAND_SOURCES.PLAYER } = {}) {
@@ -40,9 +44,9 @@ export function issueMove(game, unit, x, y, { source = MOVE_COMMAND_SOURCES.PLAY
   }
 
   const ok = setUnitDestination(game, unit, x, y, {
-    // Truck route orchestration remains legacy-owned; only the established manual
-    // cancellation above is preserved here. Prompt 4's primitive must not add a
-    // second route-state policy while this command layer is active.
+    // Route/service orchestration now has one owner in economy/truckLogistics.js.
+    // Logistics and support movement preserve that state; a player order cancels
+    // it above before using the same Prompt-4 destination primitive.
     preserveRoute: unit.type === 'truck' || source !== MOVE_COMMAND_SOURCES.PLAYER,
   });
   return { ok, kind: 'individual', unitId: unit.id, role: getUnitRole(unit), source };
