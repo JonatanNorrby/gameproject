@@ -26,12 +26,16 @@ export const FUTURE_UPDATE_PIPELINE = Object.freeze([
   Object.freeze({ id: 'fog', run: updateFog }),
 ]);
 
-export function createGame({ canvas = null, ctx = null, now = () => 0 } = {}) {
+export function createGame({ canvas = null, ctx = null, now = () => 0, services: externalServices = {} } = {}) {
   const config = createGameConfig();
   const viewport = canvas
     ? { width: canvas.width, height: canvas.height }
     : { width: config.viewport.width, height: config.viewport.height };
-  const services = Object.freeze({ now });
+  // Prompt 9 only opens an explicit injection seam. The registry is shallowly
+  // frozen so subsystems cannot replace service namespaces at random, while a
+  // later integration step can provide enemyCombat/enemyLifecycle/enemyAI/
+  // resourceCaches adapters without importing legacy globals into enemy code.
+  const services = Object.freeze({ ...externalServices, now });
   const state = createInitialState({ config, viewport, now });
 
   const game = {
