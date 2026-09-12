@@ -1,0 +1,17 @@
+name: Economy Logistics Check
+
+on:
+  push:
+    branches:
+      - migration/economy-logistics
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run economy/logistics suite
+        run: node --test tests/economy-logistics.test.mjs
