@@ -3,8 +3,11 @@ const W=canvas.width,H=canvas.height;
 const WORLD_W=CONFIG.WORLD.WIDTH,WORLD_H=CONFIG.WORLD.HEIGHT;
 const BASE_X=WORLD_W/2,BASE_Y=WORLD_H/2,BASE_RADIUS=CONFIG.WORLD.BASE_RADIUS;
 
-const SKITTER_MOVE=new Image();SKITTER_MOVE.src='assets/skitter_move.png';
-const BRUTE_SPRITE=new Image();BRUTE_SPRITE.src='assets/brute_topdown.png';
+// These optional enemy sprites are not present in the tracked repository. Keep
+// the Image objects for legacy renderer compatibility and let the existing
+// procedural fallback renderers run without issuing broken network requests.
+const SKITTER_MOVE=new Image();
+const BRUTE_SPRITE=new Image();
 const SKITTER_FRAME_SIZE=128;
 
 const els={
