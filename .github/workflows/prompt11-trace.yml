@@ -10,23 +10,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Trace legacy projectile/status/lifecycle owners
+      - name: Trace final projectile and lifecycle semantics
         shell: bash
         run: |
           node <<'NODE'
-          const fs=require('fs');
-          const files=fs.readdirSync('.').filter(f=>/^v\d.*\.js$/.test(f));
-          const terms=['bullets','enemyBullets','burnTick','slowTime','acidTime','damageTarget','hitEnemy','shipHp','passengerId','gameOver','baseHp'];
-          for (const f of files){
-            const s=fs.readFileSync(f,'utf8');
-            let printed=false;
-            for(const term of terms){
-              let start=0, n=0;
-              while((start=s.indexOf(term,start))>=0 && n<10){
-                if(!printed){ console.log(`\n===== ${f} =====`); printed=true; }
-                const a=Math.max(0,start-320), b=Math.min(s.length,start+900);
-                console.log(`\n--- ${term} @ ${start} ---\n${s.slice(a,b).replace(/\n/g,' ')}`);
-                start+=term.length; n++;
+          const fs = require('fs');
+          const files = ['v14a.js','v14b.js','v16a.js','v24.js','v25.js','v28.js','v29.js','v47.js','v48.js','v51.js','v53.js'];
+          const terms = [
+            'updateProjectiles','enemyBullets','bullets.push','hitEnemy','damageTarget',
+            'burnTick','slowTime','acidTime','markTime','passengerId','transportedIn',
+            'gameOver','baseHp','filter(u=>u.hp','filter(e=>e.hp','hp<=0','hp <= 0'
+          ];
+          for (const f of files) {
+            if (!fs.existsSync(f)) continue;
+            const s = fs.readFileSync(f,'utf8');
+            let header = false;
+            for (const term of terms) {
+              let pos = 0, count = 0;
+              while ((pos = s.indexOf(term, pos)) >= 0 && count < 4) {
+                if (!header) { console.log(`\n===== ${f} =====`); header = true; }
+                const a = Math.max(0, pos - 450), b = Math.min(s.length, pos + 1250);
+                console.log(`\n--- ${term} @ ${pos} ---\n${s.slice(a,b)}`);
+                pos += term.length; count++;
               }
             }
           }
