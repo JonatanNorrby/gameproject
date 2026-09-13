@@ -1,23 +1,30 @@
-name: Prompt13 Trace
+name: Prompt13 Validation
 on:
   push:
     branches: [migration/input-ui-camera-placement]
 jobs:
-  trace:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trace final input camera placement UI ownership
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check Prompt 13 modules
         run: |
-          echo '=== EVENT OWNERS ==='
-          grep -nEH "pointerdown|pointermove|pointerup|touchstart|touchmove|touchend|wheel|keydown|keyup|handleTap|handlePointer|pinch|gesture" v*.js | tail -n 500 || true
-          echo '=== CAMERA ==='
-          grep -nEH "camX|camY|camera|zoom|screenToWorld|worldToScreen|pan" v*.js | tail -n 500 || true
-          echo '=== PLACEMENT / MODES ==='
-          grep -nEH "buildMode|wallMode|placing|placement|selectedBuild|mineLayer|routeMode|routeRecording|attach|garrison|transport" v*.js | tail -n 700 || true
-          echo '=== UI / MENU / UPGRADES ==='
-          grep -nEH "start game|Start Game|Options|Guide|mainMenu|updateHud|upgrade|tower.*level|menu|panel|button|selectedUnit|selectedTower" v*.js | tail -n 700 || true
-          echo '=== CURRENT CLEAN ENTRY POINTS ==='
-          sed -n '1,240p' js/main.js
-          sed -n '1,260p' js/core/game.js
-          sed -n '1,260p' js/core/state.js
+          node --check js/input/camera.js
+          node --check js/input/interaction.js
+          node --check js/input/input.js
+          node --check js/ui/domSetup.js
+          node --check js/ui/ui.js
+          node --check js/units/deployment.js
+          node --check js/units/transport.js
+          node --check js/units/platoons.js
+          node --check js/units/support.js
+          node --check js/buildings/placement.js
+          node --check js/buildings/construction.js
+          node --check js/buildings/buildings.js
+          node --check js/core/state.js
+          node --check js/main.js
+      - name: Run all clean-runtime regression suites
+        run: node --test tests/*.test.mjs
