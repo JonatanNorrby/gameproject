@@ -82,6 +82,8 @@ test('runtime initialization generates the complete final world before the pause
 test('authoritative runtime advances a unit path and elapsed time only while running', () => {
   const { g } = game();
   initializeRuntime(g);
+  // This test isolates scheduler movement; river slowdown has dedicated coverage.
+  g.state.entities.rivers = [];
   const rifle = addUnit(g, 'rifleman', 2000, 2000);
   rifle.path = [{ x: 2400, y: 2000 }];
   rifle.moveTarget = { x: 2400, y: 2000 };
@@ -223,8 +225,8 @@ test('runtime reset rebuilds world/state while preserving an already-started ses
   g.state.selection.unitId = g.state.entities.units[0].id;
 
   resetRuntime(g, { preserveSession: true });
-  assert.equal(g.state.resources.gold, g.config.economy.start.gold);
-  assert.equal(g.state.resources.metal, g.config.economy.start.metal);
+  assert.equal(g.state.resources.gold, g.config.game.startingGold);
+  assert.equal(g.state.resources.metal, g.config.game.startingMetal);
   assert.equal(g.state.entities.units.length, 0);
   assert.equal(g.state.selection.unitId, null);
   assert.equal(g.state.entities.terrain.length, g.config.terrain.featureCount);
