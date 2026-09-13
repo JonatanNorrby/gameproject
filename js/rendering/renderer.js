@@ -87,16 +87,38 @@ function edgePoint(game, dx, dy, margin) {
   return {x:cx+dx*scale,y:cy+dy*scale};
 }
 
+function drawArrow(ctx, point, angle, fill, { stroke = null, size = 12 } = {}) {
+  ctx.save(); ctx.translate(point.x,point.y); ctx.rotate(angle); ctx.fillStyle=fill;
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;}
+  ctx.beginPath(); ctx.moveTo(size,0); ctx.lineTo(-size*.58,-size*.58); ctx.lineTo(-size*.58,size*.58); ctx.closePath(); ctx.fill(); if(stroke)ctx.stroke(); ctx.restore();
+}
+
 function drawIndicators(game, ctx) {
   if (hook(game, 'drawIndicators', ctx) !== undefined) return;
-  const v=viewport(game), sectors=Array.from({length:12},()=>({count:0,dx:0,dy:0,dist:Infinity}));
+  const options=game.state.ui?.options||{},v=viewport(game);
+  if(options.unitArrows!==false){
+    for(const u of game.state.entities.units||[]){
+      if(Number(u.hp)<=0||u.transportedIn||u.garrisonedIn)continue;
+      const p=worldToScreen(game,u.x,u.y);if(isScreenPointVisible(game,p.x,p.y))continue;
+      const dx=p.x-v.width/2,dy=p.y-v.height/2,edge=edgePoint(game,dx,dy,28),a=Math.atan2(dy,dx);
+      const selected=game.state.selection?.unitId===u.id,fill=selected?'#ffe47b':u.type==='truck'?'#d2a8ff':u.type==='airunit'?'#9fe8ff':'#7fe6ff';
+      drawArrow(ctx,edge,a,fill,{size:12});
+    }
+  }
+  if(options.enemyArrows===false)return;
+  const sectors=Array.from({length:12},()=>({count:0,dx:0,dy:0,dist:Infinity}));
   for (const e of game.state.entities.enemies || []) {
     if (Number(e.hp)<=0 || !isPointVisible(game,e.x,e.y)) continue;
     const p=worldToScreen(game,e.x,e.y); if (isScreenPointVisible(game,p.x,p.y)) continue;
     const dx=p.x-v.width/2,dy=p.y-v.height/2,a=Math.atan2(dy,dx),idx=(Math.floor(((a+Math.PI)/(Math.PI*2))*12)+12)%12,d=dx*dx+dy*dy,s=sectors[idx];
     s.count++; if(d<s.dist){s.dist=d;s.dx=dx;s.dy=dy;}
   }
-  for (const s of sectors) { if(!s.count)continue; const p=edgePoint(game,s.dx,s.dy,36); ctx.fillStyle='#ff4f55'; ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill(); }
+  for(const s of sectors){
+    if(!s.count)continue;
+    const p=edgePoint(game,s.dx,s.dy,36),a=Math.atan2(s.dy,s.dx);
+    drawArrow(ctx,p,a,'#ff4f55',{stroke:'#450b0d',size:16});
+    ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText?.(s.count,p.x,p.y+4);
+  }
 }
 
 function createFogSurface(game) {
