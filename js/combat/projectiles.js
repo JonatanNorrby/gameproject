@@ -19,8 +19,10 @@ function finite(value, fallback = 0) {
 export function emitProjectile(game, spec = {}) {
   const projectile = {
     team: spec.team === PROJECTILE_TEAM.ENEMY ? PROJECTILE_TEAM.ENEMY : PROJECTILE_TEAM.PLAYER,
-    x: finite(spec.x), y: finite(spec.y),
-    vx: finite(spec.vx), vy: finite(spec.vy),
+    // Do not sanitize invalid coordinates into a valid origin: final v47 drops
+    // non-finite projectiles during simulation instead of teleporting them.
+    x: Number(spec.x), y: Number(spec.y),
+    vx: Number(spec.vx), vy: Number(spec.vy),
     dmg: Math.max(0, finite(spec.dmg ?? spec.damage)),
     life: Math.max(0, finite(spec.life, spec.team === PROJECTILE_TEAM.ENEMY ? 3 : 2.2)),
     type: spec.type || 'projectile',
@@ -55,8 +57,6 @@ function playerProjectileImpact(game, projectile) {
     const radius = enemyRadius(enemy) + 5;
     const dx = projectile.x - enemy.x, dy = projectile.y - enemy.y;
     if (dx * dx + dy * dy >= radius * radius) continue;
-    // Final v47 behavior is physical collision, not targetability/visibility
-    // filtering. Mark/climber/burrow multipliers are evaluated here at impact.
     applyPlayerEnemyDamage(game, enemy, projectile.dmg, {
       sourceId: projectile.sourceId,
       attackKind: projectile.type,
@@ -75,15 +75,12 @@ function enemyTargetStillValid(game, target) {
 function enemyProjectileImpact(game, projectile) {
   const target = projectile.target;
   if (!enemyTargetStillValid(game, target)) return { consumed: true, hit: null };
-  // v47 deliberately makes an in-flight shot lose a Sneaky Spotter target.
   if (getUnitRole(target) === 'spotter') return { consumed: true, hit: null };
   if (!Number.isFinite(target.x) || !Number.isFinite(target.y)) return { consumed: false, hit: null };
   const radius = targetRadius(target) + 5;
   const dx = projectile.x - target.x, dy = projectile.y - target.y;
   if (dx * dx + dy * dy >= radius * radius) return { consumed: false, hit: null };
 
-  // Final v47 Spitter-projectile impact subtracts raw projectile damage rather
-  // than routing through Acid-corrosion amplification. Preserve that distinction.
   if (target.type === 'landingpad') {
     damageLandingPadOrShip(game, target, projectile.dmg, { attackKind: projectile.type, sourceId: projectile.sourceId });
   } else {
