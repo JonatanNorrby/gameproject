@@ -61,7 +61,7 @@ export function structureVisionRadius(game, structure) {
   const config = game?.config?.fog?.structureVision || {};
   if (structure.type === 'wall' || structure.type === 'bunker') return 0;
   if (isTower(structure)) {
-    const stats = getEffectiveTowerStats(game, structure);
+    const stats = getEffectiveTowerStats(structure);
     return Math.max(
       finite(config.towerMinimum, 265),
       finite(stats?.range) + finite(config.towerRangePadding, 55),
