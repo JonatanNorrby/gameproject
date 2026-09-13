@@ -12,7 +12,9 @@ import { updateBuildings } from '../buildings/buildings.js';
 import { updateEconomy } from '../economy/economy.js';
 import { updateFog, isPointVisible } from '../fog/fog.js';
 
-export const CLEAN_RUNTIME_STATUS = MIGRATION_STATUS.MIGRATED;
+// The integrated clean scheduler is complete, but the application-level runtime
+// remains PARTIAL until final visual parity + production HTML cutover are done.
+export const CLEAN_RUNTIME_STATUS = MIGRATION_STATUS.PARTIALLY_MIGRATED;
 
 // Historical extraction registry retained for compatibility/documentation. The
 // authoritative integrated scheduler is js/core/runtime.js; this list must not be
