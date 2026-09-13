@@ -1,6 +1,9 @@
 import { applyDamage, isAlive } from '../combat/damage.js';
 import { isInAttackRange, RANGE_MODES } from '../combat/range.js';
 import { TARGETING_MODES } from '../combat/targeting.js';
+import { emitEnemyProjectile as emitSharedEnemyProjectile } from '../combat/projectiles.js';
+import { applyCorrosion } from '../combat/statusEffects.js';
+import { applyBaseDamage } from '../combat/lifecycle.js';
 import { getEnemyConfig } from './enemyConfig.js';
 import { canEnemyTargetStructure, canEnemyTargetUnit, targetDistance } from './enemyTargeting.js';
 
@@ -25,23 +28,16 @@ export function canEnemyMeleeTarget(game, enemy, target) {
 export function applyEnemyDamage(game, enemy, target, amount, context = {}) {
   const value = Number(amount);
   if (!target || !Number.isFinite(value) || value <= 0) return { applied: false, destroyed: false };
-
   const isStructure = (game?.state?.entities?.structures || []).includes(target);
   const corrosionMultiplier = isStructure && (Number(target.acidTime) || 0) > 0
     ? Number(getEnemyConfig('acidlobber').acidAttack?.armorDamageMultiplier) || 1.4
     : 1;
   const effectiveAmount = value * corrosionMultiplier;
-
-  // Landing Pad export-ship interception and other still-legacy ownership can be
-  // supplied here without importing economy/logistics into enemy combat. Pass the
-  // already-corroded amount because legacy damageTarget applies Acid before the
-  // Landing Pad ship-HP interception too.
   const external = game?.services?.enemyCombat?.damageTarget;
   if (typeof external === 'function') {
     const result = external(target, effectiveAmount, { game, enemy, corrosionMultiplier, ...context });
     if (result !== undefined) return result;
   }
-
   return applyDamage(game, target, effectiveAmount, {
     source: enemy,
     attackKind: context.attackKind || enemy?.type,
@@ -58,19 +54,12 @@ export function applyEnemyMeleeDamage(game, enemy, target, dt, multiplier = 1) {
   return applyEnemyDamage(game, enemy, target, amount, { attackKind: 'melee' });
 }
 
-export function emitEnemyProjectile(game, enemy, target, {
-  damage,
-  speed,
-  life = 3,
-  type = 'enemy',
-} = {}) {
+export function emitEnemyProjectile(game, enemy, target, { damage, speed, life = 3, type = 'enemy' } = {}) {
   if (!enemy || !target || !Number.isFinite(enemy.x) || !Number.isFinite(target.x)) return null;
-  const dx = target.x - enemy.x;
-  const dy = target.y - enemy.y;
+  const dx = target.x - enemy.x, dy = target.y - enemy.y;
   const distance = Math.hypot(dx, dy) || 1;
   const projectile = {
-    x: enemy.x,
-    y: enemy.y,
+    x: enemy.x, y: enemy.y,
     vx: dx / distance * (Number(speed) || 0),
     vy: dy / distance * (Number(speed) || 0),
     dmg: Number(damage) || 0,
@@ -80,9 +69,11 @@ export function emitEnemyProjectile(game, enemy, target, {
     sourceId: enemy.id ?? null,
   };
   const adapter = game?.services?.enemyCombat?.fireProjectile;
-  if (typeof adapter === 'function') adapter(game, projectile, { enemy, target });
-  else if (Array.isArray(game?.state?.entities?.enemyProjectiles)) game.state.entities.enemyProjectiles.push(projectile);
-  return projectile;
+  if (typeof adapter === 'function') {
+    const result = adapter(game, projectile, { enemy, target });
+    if (result !== undefined) return result;
+  }
+  return emitSharedEnemyProjectile(game, projectile);
 }
 
 export function fireSpitter(game, enemy, target) {
@@ -99,7 +90,7 @@ export function applyAcidAttack(game, enemy, target) {
   const attack = getEnemyConfig('acidlobber').acidAttack;
   const result = applyEnemyDamage(game, enemy, target, attack.damage, { attackKind: 'acid' });
   if ((game?.state?.entities?.structures || []).includes(target) && Number(target.hp) > 0) {
-    target.acidTime = Math.max(Number(target.acidTime) || 0, attack.acidDuration);
+    applyCorrosion(target, attack.acidDuration);
   }
   return result;
 }
@@ -117,12 +108,6 @@ export function damageBaseAndConsumeEnemy(game, enemy) {
   const index = enemies.indexOf(enemy);
   if (index >= 0) enemies.splice(index, 1);
   enemy.removedWithoutReward = true;
-  if (!game?.state?.debug?.unlimitedLives) {
-    applyDamage(game, base, Number(enemy.damage) || 0, {
-      source: enemy,
-      attackKind: 'base-impact',
-      onDestroyed: game?.services?.enemyCombat?.onBaseDestroyed,
-    });
-  }
+  applyBaseDamage(game, Number(enemy.damage) || 0, { source: enemy, attackKind: 'base-impact' });
   return true;
 }
