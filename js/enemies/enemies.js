@@ -70,12 +70,12 @@ export function initializeEnemyRuntime(game, { forceCaches = false } = {}) {
 // Split from the director only so the final runtime can preserve the effective
 // legacy frame order: spawn/director first, then construction/economy/movement,
 // then player/tower attacks, then enemy actor decisions, then projectiles.
-export function updateEnemyActors(game, dt) {
+export function updateEnemyActors(game, dt, { tickMarks = true } = {}) {
   const step = Math.max(0, Number(dt) || 0);
   if (!game?.state?.entities || step <= 0) return { actors: 0, guards: 0, removed: 0, cachesCompleted: 0 };
   if (!game.state.enemyRuntime?.initialized) initializeEnemyRuntime(game);
 
-  updateStatusEffects(game, step);
+  updateStatusEffects(game, step, { tickMarks });
   let actors = 0;
   for (const enemy of [...game.state.entities.enemies]) {
     if (isCacheGuard(enemy) || Number(enemy?.hp) <= 0) continue;
