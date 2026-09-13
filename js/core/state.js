@@ -19,6 +19,38 @@ function createModifierState() {
   };
 }
 
+function createCommandState() {
+  return {
+    buildType: null,
+    routeEditing: false,
+    attachMode: false,
+    platoonAttachMode: false,
+    medicFollowAttachMode: false,
+    apcSupportAttachMode: false,
+    wall: {
+      painting: false,
+      path: [],
+      cursor: null,
+      reviewOpen: false,
+    },
+  };
+}
+
+function createUiState() {
+  return {
+    gameStarted: false,
+    titleMenuOpen: true,
+    titlePanel: null,
+    commandMenuOpen: false,
+    activeBuildTab: 'unitsMenu',
+    message: 'Start with Gold, build Ore logistics for Metal, then use Metal for Crystal Mines and defenses.',
+    options: {
+      enemyArrows: true,
+      unitArrows: true,
+    },
+  };
+}
+
 export function createInitialState({
   config = GAME_CONFIG,
   viewport = {
@@ -33,7 +65,7 @@ export function createInitialState({
 
   return {
     session: {
-      paused: false,
+      paused: true,
       choosing: false,
       gameOver: false,
       lastFrameTime: now(),
@@ -74,13 +106,7 @@ export function createInitialState({
       towerId: null,
       storageBuildingId: null,
     },
-    commands: {
-      routeEditing: false,
-      attachMode: false,
-      platoonAttachMode: false,
-      medicFollowAttachMode: false,
-      apcSupportAttachMode: false,
-    },
+    commands: createCommandState(),
     view: {
       showReach: false,
       camera: {
@@ -90,6 +116,7 @@ export function createInitialState({
         speed: config.camera.speed,
       },
     },
+    ui: createUiState(),
     fog: {
       explored: null,
       visionSources: [],
