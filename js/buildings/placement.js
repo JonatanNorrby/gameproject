@@ -45,13 +45,18 @@ export function findResourceDepotForPlacement(game, x, y, resourceType) {
   return best;
 }
 
-export function placementBlocked(game, x, y, radius, type, { ignoreId = null, ignoreDepotId = null } = {}) {
+export function placementBlocked(game, x, y, radius, type, { ignoreId = null, ignoreDepotId = null, sameDepotId = null } = {}) {
   const r = Math.max(1, Number(radius) || 20);
   if (!insideWorld(game, x, y, r)) return true;
   if (Math.hypot(x - game.state.base.x, y - game.state.base.y) < game.state.base.radius + r + game.config.world.baseBuildClearance) return true;
   if (isNavigationTerrainBlocked(game, x, y, r, { allTerrainKinds: true })) return true;
   for (const structure of game.state.entities.structures || []) {
     if (!structure || structure.id === ignoreId || Number(structure.hp) <= 0) continue;
+    // v26 deliberately allows the three Mine slots on one depot to overlap each
+    // other's broad placement footprints. Other structures remain blockers.
+    if ((type === 'mine' || type === 'oremine') && sameDepotId
+      && (structure.type === 'mine' || structure.type === 'oremine')
+      && structure.depotId === sameDepotId) continue;
     if (structure.type === 'wall' && Number.isFinite(structure.x1)) {
       const thickness = Number(structure.thickness) || game.config.buildings.wall.wall.thickness;
       if (pointSegmentDistance(x, y, structure.x1, structure.y1, structure.x2, structure.y2) < r + thickness / 2 + 3) return true;
@@ -89,7 +94,7 @@ export function validatePlacement(game, type, x, y) {
     const resourceType = type === 'mine' ? 'crystal' : 'ore';
     const depot = findResourceDepotForPlacement(game, x, y, resourceType);
     if (!depot) return { ok: false, reason: 'no-matching-depot' };
-    if (placementBlocked(game, depot.x, depot.y, 24, type, { ignoreDepotId: depot.id })) return { ok: false, reason: 'blocked', depot };
+    if (placementBlocked(game, depot.x, depot.y, 24, type, { ignoreDepotId: depot.id, sameDepotId: depot.id })) return { ok: false, reason: 'blocked', depot };
     return { ok: true, definition, depot, x: depot.x, y: depot.y };
   }
   if (placementBlocked(game, x, y, definition.radius, type)) return { ok: false, reason: 'blocked' };
