@@ -1,15 +1,8 @@
 import { getTowerConfig } from '../towers/towerConfig.js';
-import { applyPlayerEnemyDamage } from './playerDamage.js';
+import { applyPlayerEnemyDamage, markEnemy } from './playerDamage.js';
 import { isAlive } from './damage.js';
 
-export function markEnemy(target, multiplier, duration) {
-  if (!isAlive(target)) return false;
-  const mult = Number(multiplier), time = Number(duration);
-  if (!Number.isFinite(mult) || mult < 1 || !Number.isFinite(time) || time <= 0) return false;
-  target.markMult = Math.max(Number(target.markMult) || 1, mult);
-  target.markTime = Math.max(Number(target.markTime) || 0, time);
-  return true;
-}
+export { markEnemy } from './playerDamage.js';
 
 export function applyBurn(target, duration) {
   if (!isAlive(target)) return false;
@@ -57,8 +50,6 @@ function tickBurn(game, enemy, step) {
   if (enemy.burnTick > 0) return;
   const flame = getTowerConfig('flame').burn;
   const modifier = Number(game?.state?.modifiers?.flameDamage ?? game?.state?.mods?.flameDamage) || 1;
-  // Legacy executes at most one burn tick per simulation frame and resets the
-  // interval; it does not catch up multiple ticks after a long frame.
   applyPlayerEnemyDamage(game, enemy, flame.tickDamage * modifier, { attackKind: 'burn' });
   enemy.burnTick = flame.tickInterval;
 }
