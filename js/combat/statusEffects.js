@@ -59,7 +59,7 @@ function tickSlow(enemy, step) {
   else enemy.slowFactor = 1;
 }
 
-export function updateStatusEffects(game, dt) {
+export function updateStatusEffects(game, dt, { tickMarks = true } = {}) {
   const step = Math.max(0, Number(dt) || 0);
   let enemiesUpdated = 0, structuresUpdated = 0;
   for (const structure of game?.state?.entities?.structures || []) {
@@ -70,7 +70,7 @@ export function updateStatusEffects(game, dt) {
   }
   for (const enemy of game?.state?.entities?.enemies || []) {
     if (!isAlive(enemy)) continue;
-    tickMark(enemy, step);
+    if (tickMarks) tickMark(enemy, step);
     tickBurn(game, enemy, step);
     if (!isAlive(enemy)) { enemiesUpdated++; continue; }
     tickSlow(enemy, step);
