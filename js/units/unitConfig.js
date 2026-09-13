@@ -64,6 +64,7 @@ export const UNIT_CONFIG = deepFreeze({
     runtimeType: 'soldier', radius: 22,
     cost: { gold: 80 }, maxHp: 140, moveSpeed: 160, members: 3,
     healing: { range: 165, perSecond: 11 },
+    supportFollow: { distance: 58, repathDistance: 78, settleDistance: 34, repathInterval: 0.42 },
     traits: [...infantry, 'support', 'healer'],
   }),
   engineer: unit('engineer', 'Engineer Squad', {
@@ -144,6 +145,15 @@ export const UNIT_CONFIG = deepFreeze({
     cost: { gold: 190 }, maxHp: 520, moveSpeed: 172,
     combat: { range: 185, fireInterval: 0.23, damage: 3.2, bulletSpeed: 820, targeting: 'any' },
     transport: { loadRange: 105, unloadDistance: 56, capacity: 1 },
+    supportFollow: {
+      distance: 110,
+      repathDistance: 145,
+      settleDistance: 58,
+      repathInterval: 0.48,
+      boostRadius: 360,
+      boostMultiplier: 1.28,
+      boostSpeedCapFraction: 0.94,
+    },
     traits: [...vehicle, 'combat', 'support', 'transport'],
   }),
   mgcar: unit('mgcar', 'Machinegun Car', {
