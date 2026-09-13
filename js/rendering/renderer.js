@@ -57,6 +57,30 @@ function drawProjectiles(game, ctx) {
   }
 }
 
+function drawInteractionPreview(game, ctx) {
+  if (hook(game, 'drawInteractionPreview', ctx) !== undefined) return;
+  const commands = game.state.commands;
+  if (commands?.buildType !== 'wall') return;
+  const points = commands.wall?.path || [];
+  if (!points.length) return;
+  ctx.save();
+  ctx.strokeStyle = commands.wall.reviewOpen ? '#ffd66b' : '#72e3ff';
+  ctx.lineWidth = 4;
+  ctx.setLineDash?.([14, 8]);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (const point of points.slice(1)) ctx.lineTo(point.x, point.y);
+  const cursor = commands.wall?.cursor;
+  if (cursor && !commands.wall.reviewOpen) ctx.lineTo(cursor.x, cursor.y);
+  ctx.stroke();
+  ctx.setLineDash?.([]);
+  for (const point of points) {
+    ctx.fillStyle = '#d9f8ff';
+    ctx.beginPath(); ctx.arc(point.x, point.y, 5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
 function edgePoint(game, dx, dy, margin) {
   const v=viewport(game), cx=v.width/2, cy=v.height/2;
   const scale=Math.min((v.width/2-margin)/Math.max(1,Math.abs(dx)),(v.height/2-margin)/Math.max(1,Math.abs(dy)));
@@ -108,6 +132,7 @@ export function renderWorld(game, ctx = game?.ctx) {
   for(const u of entities.units||[]){let r=20;try{r=getUnitRadius(u);}catch{}if(circleNearView(game,u.x,u.y,r,250))drawUnit(game,ctx,u);}
   for(const e of entities.enemies||[]){let r=Number(e.r)||8;if(circleNearView(game,e.x,e.y,r,150))drawEnemy(game,ctx,e);}
   drawProjectiles(game,ctx);if(hook(game,'drawParticles',ctx)===undefined){for(const p of entities.particles||[]){if(!pointNearView(game,p.x,p.y,40))continue;ctx.fillStyle='#b9ff8a';ctx.fillRect(p.x,p.y,3,3);}}
+  drawInteractionPreview(game,ctx);
   ctx.restore();drawIndicators(game,ctx);drawFogOverlay(game,ctx);hook(game,'drawScreen',ctx);return {rendered:true,order:RENDER_ORDER};
 }
 
