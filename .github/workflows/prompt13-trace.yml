@@ -1,0 +1,23 @@
+name: Prompt13 Trace
+on:
+  push:
+    branches: [migration/input-ui-camera-placement]
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trace final input camera placement UI ownership
+        run: |
+          echo '=== EVENT OWNERS ==='
+          grep -nEH "pointerdown|pointermove|pointerup|touchstart|touchmove|touchend|wheel|keydown|keyup|handleTap|handlePointer|pinch|gesture" v*.js | tail -n 500 || true
+          echo '=== CAMERA ==='
+          grep -nEH "camX|camY|camera|zoom|screenToWorld|worldToScreen|pan" v*.js | tail -n 500 || true
+          echo '=== PLACEMENT / MODES ==='
+          grep -nEH "buildMode|wallMode|placing|placement|selectedBuild|mineLayer|routeMode|routeRecording|attach|garrison|transport" v*.js | tail -n 700 || true
+          echo '=== UI / MENU / UPGRADES ==='
+          grep -nEH "start game|Start Game|Options|Guide|mainMenu|updateHud|upgrade|tower.*level|menu|panel|button|selectedUnit|selectedTower" v*.js | tail -n 700 || true
+          echo '=== CURRENT CLEAN ENTRY POINTS ==='
+          sed -n '1,240p' js/main.js
+          sed -n '1,260p' js/core/game.js
+          sed -n '1,260p' js/core/state.js
