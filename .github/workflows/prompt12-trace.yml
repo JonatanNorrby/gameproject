@@ -1,39 +1,21 @@
-name: Prompt12 Trace
+name: Prompt12 Validation
 on:
   push:
     branches: [migration/fog-rendering-assets]
 jobs:
-  trace:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trace final fog/render/assets ownership
-        shell: bash
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check Prompt 12 modules
         run: |
-          node <<'NODE'
-          const fs=require('fs');
-          const html=fs.readFileSync('index.html','utf8');
-          const scripts=[...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(m=>m[1]).filter(p=>/\.js(?:\?|$)/.test(p));
-          console.log('LOAD ORDER\n'+scripts.join('\n'));
-          const terms=[
-            'pointVisibleV32','refreshFogSourcesV32','drawFogOverlayV32','FOG_CELL',
-            'draw=function','draw = function','function draw(','drawBackdrop','drawEnemy','drawUnit','drawStructure',
-            'drawIncomingEnemyArrows','drawImage','new Image','Image()','\.png','sprite','SPRITE','cull','camera.zoom'
-          ];
-          for(const file of scripts){
-            const clean=file.split('?')[0]; if(!fs.existsSync(clean)) continue;
-            const s=fs.readFileSync(clean,'utf8'); let printed=false;
-            for(const raw of terms){
-              const re=raw==='\\.png'?/\.png/g:new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');
-              let m,count=0;
-              while((m=re.exec(s))&&count<5){
-                if(!printed){console.log(`\n===== ${clean} =====`);printed=true;}
-                const pos=m.index,a=Math.max(0,pos-650),b=Math.min(s.length,pos+1800);
-                console.log(`\n--- ${raw} @ ${pos} ---\n${s.slice(a,b)}`);
-                if(re.lastIndex===m.index)re.lastIndex++; count++;
-              }
-            }
-          }
-          console.log('\nIMAGE FILES');
-          for(const name of fs.readdirSync('.')) if(/\.(png|jpg|jpeg|webp)$/i.test(name)) console.log(name);
-          NODE
+          node --check js/fog/fog.js
+          node --check js/rendering/culling.js
+          node --check js/rendering/renderer.js
+          node --check js/assets/assets.js
+          node --check js/core/game.js
+      - name: Run all clean-runtime regression suites
+        run: node --test tests/*.test.mjs
