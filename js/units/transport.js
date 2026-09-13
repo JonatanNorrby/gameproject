@@ -1,5 +1,5 @@
-import { getUnitRole, isInfantryUnit } from '../core/entities.js';
-import { getUnitConfig } from './unitConfig.js';
+import { getUnitRole } from '../core/entities.js';
+import { getUnitConfig, hasUnitTrait } from './unitConfig.js';
 import { removeUnitFromPlatoon } from './platoons.js';
 import { findNearestOpenDestination } from '../navigation/pathfinding.js';
 
@@ -9,7 +9,8 @@ export function getApcPassenger(game, apc) {
 }
 
 export function canBoardApc(unit) {
-  return Boolean(unit && Number(unit.hp) > 0 && isInfantryUnit(unit) && getUnitRole(unit) !== 'medic'
+  const role = getUnitRole(unit);
+  return Boolean(unit && role && Number(unit.hp) > 0 && hasUnitTrait(role, 'boardable')
     && !unit.transportedIn && !unit.garrisonedIn);
 }
 
