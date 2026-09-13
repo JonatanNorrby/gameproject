@@ -7,13 +7,13 @@ import { updateUnits } from '../units/units.js';
 import { updateEnemies } from '../enemies/enemies.js';
 import { updateTowers } from '../towers/towers.js';
 import { updateCombat } from '../combat/combat.js';
+import { emitPlayerProjectile } from '../combat/projectiles.js';
 import { updateBuildings } from '../buildings/buildings.js';
 import { updateEconomy } from '../economy/economy.js';
 import { updateFog } from '../fog/fog.js';
 
 export const CLEAN_RUNTIME_STATUS = MIGRATION_STATUS.SKELETON_CREATED;
 
-// Coarse future ownership only. Prompt 3 still does not execute this pipeline.
 export const FUTURE_UPDATE_PIPELINE = Object.freeze([
   Object.freeze({ id: 'input', run: applyInputCommands }),
   Object.freeze({ id: 'navigation', run: updateNavigation }),
@@ -26,16 +26,27 @@ export const FUTURE_UPDATE_PIPELINE = Object.freeze([
   Object.freeze({ id: 'fog', run: updateFog }),
 ]);
 
+function projectileServices(externalServices) {
+  const defaultFirePlayerProjectile = (game, projectile) => emitPlayerProjectile(game, projectile);
+  return {
+    ...externalServices,
+    playerCombat: Object.freeze({
+      fireProjectile: defaultFirePlayerProjectile,
+      ...(externalServices.playerCombat || {}),
+    }),
+    towerCombat: Object.freeze({
+      fireProjectile: defaultFirePlayerProjectile,
+      ...(externalServices.towerCombat || {}),
+    }),
+  };
+}
+
 export function createGame({ canvas = null, ctx = null, now = () => 0, services: externalServices = {} } = {}) {
   const config = createGameConfig();
   const viewport = canvas
     ? { width: canvas.width, height: canvas.height }
     : { width: config.viewport.width, height: config.viewport.height };
-  // Prompt 9 only opens an explicit injection seam. The registry is shallowly
-  // frozen so subsystems cannot replace service namespaces at random, while a
-  // later integration step can provide enemyCombat/enemyLifecycle/enemyAI/
-  // resourceCaches adapters without importing legacy globals into enemy code.
-  const services = Object.freeze({ ...externalServices, now });
+  const services = Object.freeze({ ...projectileServices(externalServices), now });
   const state = createInitialState({ config, viewport, now });
 
   const game = {
