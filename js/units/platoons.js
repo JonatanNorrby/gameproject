@@ -8,6 +8,14 @@ function units(game) {
   return game?.state?.entities?.units || [];
 }
 
+function platoonId(game) {
+  const create = game?.services?.units?.createPlatoonId;
+  if (typeof create === 'function') return create(game);
+  const now = typeof game?.services?.now === 'function' ? game.services.now() : Date.now();
+  const random = typeof game?.services?.random === 'function' ? game.services.random() : Math.random();
+  return `p${now}-${String(random).replace('.', '')}`;
+}
+
 export function canUsePlatoonMember(game, unit) {
   return Boolean(
     unit
@@ -31,8 +39,8 @@ export function getPlatoonForUnit(game, unit) {
   return { id: unit.platoonId, members: getPlatoonMembers(game, unit.platoonId) };
 }
 
-function normalizeSmallPlatoon(game, platoonId) {
-  const members = getPlatoonMembers(game, platoonId);
+function normalizeSmallPlatoon(game, id) {
+  const members = getPlatoonMembers(game, id);
   if (members.length >= 2) return;
   for (const unit of members) {
     unit.platoonId = null;
@@ -40,18 +48,46 @@ function normalizeSmallPlatoon(game, platoonId) {
   }
 }
 
-function assignPlatoonSlots(game, platoonId) {
-  getPlatoonMembers(game, platoonId).forEach((unit, index) => { unit.platoonSlot = index; });
+function assignPlatoonSlots(game, id) {
+  getPlatoonMembers(game, id).forEach((unit, index) => { unit.platoonSlot = index; });
 }
 
 export function removeUnitFromPlatoon(game, unit) {
-  const platoonId = unit?.platoonId;
-  if (!platoonId) return false;
+  const id = unit?.platoonId;
+  if (!id) return false;
   unit.platoonId = null;
   unit.platoonSlot = 0;
-  normalizeSmallPlatoon(game, platoonId);
-  assignPlatoonSlots(game, platoonId);
+  normalizeSmallPlatoon(game, id);
+  assignPlatoonSlots(game, id);
   return true;
+}
+
+export function createOrMergePlatoon(game, first, second) {
+  if (!canUsePlatoonMember(game, first) || !canUsePlatoonMember(game, second) || first === second) return { ok: false, reason: 'invalid-member' };
+  let id = first.platoonId || second.platoonId || platoonId(game);
+  const firstOld = first.platoonId, secondOld = second.platoonId;
+  if (firstOld && secondOld && firstOld !== secondOld) {
+    const destination = firstOld;
+    for (const member of getPlatoonMembers(game, secondOld)) member.platoonId = destination;
+    id = destination;
+  } else {
+    first.platoonId = id;
+    second.platoonId = id;
+  }
+  if (!first.platoonId) first.platoonId = id;
+  if (!second.platoonId) second.platoonId = id;
+  assignPlatoonSlots(game, id);
+  if (firstOld && firstOld !== id) normalizeSmallPlatoon(game, firstOld);
+  if (secondOld && secondOld !== id) normalizeSmallPlatoon(game, secondOld);
+  return { ok: true, platoonId: id, members: getPlatoonMembers(game, id) };
+}
+
+export function disbandPlatoon(game, idOrUnit) {
+  const id = typeof idOrUnit === 'string' ? idOrUnit : idOrUnit?.platoonId;
+  if (!id) return 0;
+  const members = getPlatoonMembers(game, id);
+  for (const unit of members) { unit.platoonId = null; unit.platoonSlot = 0; }
+  return members.length;
 }
 
 export function formationOffset(index) {
@@ -70,15 +106,15 @@ function cancelTruckManualRoute(unit) {
   unit.routeInTransit = false;
 }
 
-export function issuePlatoonMove(game, platoonId, x, y) {
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return { ok: false, reason: 'invalid-destination', platoonId, ordered: 0, total: 0 };
-  const members = getPlatoonMembers(game, platoonId, { activeOnly: true });
+export function issuePlatoonMove(game, id, x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return { ok: false, reason: 'invalid-destination', platoonId: id, ordered: 0, total: 0 };
+  const members = getPlatoonMembers(game, id, { activeOnly: true });
   if (members.length < 2) {
-    normalizeSmallPlatoon(game, platoonId);
-    return { ok: false, reason: 'platoon-too-small', platoonId, ordered: 0, total: members.length };
+    normalizeSmallPlatoon(game, id);
+    return { ok: false, reason: 'platoon-too-small', platoonId: id, ordered: 0, total: members.length };
   }
 
-  assignPlatoonSlots(game, platoonId);
+  assignPlatoonSlots(game, id);
   const width = Number(game?.config?.world?.width) || 0;
   const height = Number(game?.config?.world?.height) || 0;
   let ordered = 0;
@@ -99,5 +135,5 @@ export function issuePlatoonMove(game, platoonId, x, y) {
     results.push({ unitId: unit.id, ok });
   }
 
-  return { ok: ordered > 0, kind: 'platoon', platoonId, ordered, total: members.length, results };
+  return { ok: ordered > 0, kind: 'platoon', platoonId: id, ordered, total: members.length, results };
 }
