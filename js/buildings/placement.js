@@ -89,14 +89,16 @@ export function placementDefinition(type) {
 export function validatePlacement(game, type, x, y) {
   const definition = placementDefinition(type);
   if (!definition || !definition.enabled) return { ok: false, reason: 'disabled-or-unknown' };
-  if (freeWorkers(game) <= 0) return { ok: false, reason: 'no-workers' };
   if (type === 'mine' || type === 'oremine') {
     const resourceType = type === 'mine' ? 'crystal' : 'ore';
     const depot = findResourceDepotForPlacement(game, x, y, resourceType);
     if (!depot) return { ok: false, reason: 'no-matching-depot' };
+    // Final v26 reports an exhausted/invalid depot before worker availability.
+    if (freeWorkers(game) <= 0) return { ok: false, reason: 'no-workers', depot };
     if (placementBlocked(game, depot.x, depot.y, 24, type, { ignoreDepotId: depot.id, sameDepotId: depot.id })) return { ok: false, reason: 'blocked', depot };
     return { ok: true, definition, depot, x: depot.x, y: depot.y };
   }
+  if (freeWorkers(game) <= 0) return { ok: false, reason: 'no-workers' };
   if (placementBlocked(game, x, y, definition.radius, type)) return { ok: false, reason: 'blocked' };
   return { ok: true, definition, x, y };
 }
