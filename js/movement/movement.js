@@ -27,7 +27,10 @@ export function pointInRiver(game, x, y) {
   return false;
 }
 
-export function getIndividualUnitMoveSpeed(game, unit) {
+// Intrinsic + terrain + global movement modifier. This deliberately ignores the
+// per-frame Platoon/APC support cache so the unit runtime can rebuild that cache
+// without recursively applying group/support modifiers or river slowdown twice.
+export function getBaseUnitMoveSpeed(game, unit) {
   const definition = getUnitDefinition(unit);
   let speed = Number(definition?.moveSpeed) || 0;
   if (!isFlyingUnit(unit) && pointInRiver(game, unit.x, unit.y)) {
@@ -36,6 +39,12 @@ export function getIndividualUnitMoveSpeed(game, unit) {
   }
   const moveModifier = Number(game?.state?.modifiers?.unitMove);
   return speed * (Number.isFinite(moveModifier) ? moveModifier : 1);
+}
+
+export function getIndividualUnitMoveSpeed(game, unit) {
+  const speeds = game?.state?.unitRuntime?.speedById;
+  if (speeds instanceof Map && speeds.has(unit?.id)) return speeds.get(unit.id);
+  return getBaseUnitMoveSpeed(game, unit);
 }
 
 export function setUnitDestination(game, unit, x, y, options = {}) {
