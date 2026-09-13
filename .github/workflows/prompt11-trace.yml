@@ -1,38 +1,23 @@
-name: Prompt11 Trace
+name: Prompt11 Validation
 on:
   push:
     branches: [migration/projectiles-lifecycle]
 jobs:
-  trace:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Trace final projectile and lifecycle semantics
-        shell: bash
+      - name: Syntax check migrated modules
         run: |
-          node <<'NODE'
-          const fs = require('fs');
-          const files = ['v14a.js','v14b.js','v16a.js','v24.js','v25.js','v28.js','v29.js','v47.js','v48.js','v51.js','v53.js'];
-          const terms = [
-            'updateProjectiles','enemyBullets','bullets.push','hitEnemy','damageTarget',
-            'burnTick','slowTime','acidTime','markTime','passengerId','transportedIn',
-            'gameOver','baseHp','filter(u=>u.hp','filter(e=>e.hp','hp<=0','hp <= 0'
-          ];
-          for (const f of files) {
-            if (!fs.existsSync(f)) continue;
-            const s = fs.readFileSync(f,'utf8');
-            let header = false;
-            for (const term of terms) {
-              let pos = 0, count = 0;
-              while ((pos = s.indexOf(term, pos)) >= 0 && count < 4) {
-                if (!header) { console.log(`\n===== ${f} =====`); header = true; }
-                const a = Math.max(0, pos - 450), b = Math.min(s.length, pos + 1250);
-                console.log(`\n--- ${term} @ ${pos} ---\n${s.slice(a,b)}`);
-                pos += term.length; count++;
-              }
-            }
-          }
-          NODE
+          node --check js/combat/projectiles.js
+          node --check js/combat/statusEffects.js
+          node --check js/combat/lifecycle.js
+          node --check js/combat/combat.js
+          node --check js/enemies/enemyCombat.js
+          node --check js/enemies/enemyStatus.js
+          node --check js/enemies/enemies.js
+      - name: Run all clean-runtime regression suites
+        run: node --test tests/*.test.mjs
