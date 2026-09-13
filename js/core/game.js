@@ -10,7 +10,7 @@ import { updateCombat } from '../combat/combat.js';
 import { emitPlayerProjectile } from '../combat/projectiles.js';
 import { updateBuildings } from '../buildings/buildings.js';
 import { updateEconomy } from '../economy/economy.js';
-import { updateFog } from '../fog/fog.js';
+import { updateFog, isPointVisible } from '../fog/fog.js';
 
 export const CLEAN_RUNTIME_STATUS = MIGRATION_STATUS.SKELETON_CREATED;
 
@@ -26,8 +26,9 @@ export const FUTURE_UPDATE_PIPELINE = Object.freeze([
   Object.freeze({ id: 'fog', run: updateFog }),
 ]);
 
-function projectileServices(externalServices) {
+function runtimeServices(externalServices) {
   const defaultFirePlayerProjectile = (game, projectile) => emitPlayerProjectile(game, projectile);
+  const defaultFogVisible = (x, y, _target, _attacker, game) => isPointVisible(game, x, y);
   return {
     ...externalServices,
     playerCombat: Object.freeze({
@@ -38,6 +39,10 @@ function projectileServices(externalServices) {
       fireProjectile: defaultFirePlayerProjectile,
       ...(externalServices.towerCombat || {}),
     }),
+    fog: Object.freeze({
+      isVisible: defaultFogVisible,
+      ...(externalServices.fog || {}),
+    }),
   };
 }
 
@@ -46,7 +51,7 @@ export function createGame({ canvas = null, ctx = null, now = () => 0, services:
   const viewport = canvas
     ? { width: canvas.width, height: canvas.height }
     : { width: config.viewport.width, height: config.viewport.height };
-  const services = Object.freeze({ ...projectileServices(externalServices), now });
+  const services = Object.freeze({ ...runtimeServices(externalServices), now });
   const state = createInitialState({ config, viewport, now });
 
   const game = {
