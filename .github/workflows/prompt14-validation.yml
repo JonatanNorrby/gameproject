@@ -1,0 +1,24 @@
+name: Prompt14 Validation
+on:
+  push:
+    branches: [migration/final-runtime-integration]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check integration modules
+        run: |
+          node --check js/world/world.js
+          node --check js/core/runtime.js
+          node --check js/core/game.js
+          node --check js/main.js
+          node --check js/units/units.js
+          node --check js/movement/movement.js
+          node --check js/enemies/enemies.js
+          node --check js/combat/statusEffects.js
+      - name: Run all clean-runtime regression suites
+        run: node --test tests/*.test.mjs
