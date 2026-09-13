@@ -24,7 +24,7 @@ export {
   detachManualMoveSupport,
   detachMedicFollow,
 } from './support.js';
-export { findBoardablePassenger, loadApc, unloadApc } from './transport.js';
+export { canBoardApc, findNearestBoardableUnit, getApcPassenger, loadApc, unloadApc } from './transport.js';
 
 export const UNIT_SYSTEM_STATUS = MIGRATION_STATUS.MIGRATED;
 
