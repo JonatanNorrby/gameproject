@@ -3,8 +3,9 @@ import { ENEMY_CONFIG } from './enemyConfig.js';
 import { updateEnemyActor, assertEnemyAiCoverage } from './enemyAi.js';
 import { damageBaseAndConsumeEnemy } from './enemyCombat.js';
 import { updateEnemyDirector, ensureEnemyDirector } from './enemyDirector.js';
-import { cleanupDeadEnemies } from './enemyLifecycle.js';
-import { effectiveEnemySpeed, tickEnemyStatuses, tickStructureCorrosion } from './enemyStatus.js';
+import { effectiveEnemySpeed, tickEnemyStatuses } from './enemyStatus.js';
+import { updateStatusEffects } from '../combat/statusEffects.js';
+import { cleanupDestroyedEntities } from '../combat/lifecycle.js';
 import {
   initializeResourceCaches,
   isCacheGuard,
@@ -66,8 +67,6 @@ export function initializeEnemyRuntime(game, { forceCaches = false } = {}) {
   return game.state.enemyRuntime;
 }
 
-// Authoritative clean enemy subsystem update. Production still runs the legacy
-// loop until a later integration prompt; this function never calls legacy AI.
 export function updateEnemies(game, dt) {
   const step = Math.max(0, Number(dt) || 0);
   if (!game?.state?.entities || step <= 0) {
@@ -75,15 +74,15 @@ export function updateEnemies(game, dt) {
   }
   if (!game.state.enemyRuntime?.initialized) initializeEnemyRuntime(game);
 
-  // Current runtime launches/schedules hordes before the frame's enemy actor pass,
-  // so a batch emitted this frame can participate in this same enemy update.
   const directorResult = updateEnemyDirector(game, step);
-  tickStructureCorrosion(game, step);
+  // One shared owner advances marks, burn, slow and corrosion before enemy AI,
+  // matching the effective legacy ordering for statuses already active this frame.
+  updateStatusEffects(game, step);
 
   let actors = 0;
   for (const enemy of [...game.state.entities.enemies]) {
     if (isCacheGuard(enemy) || Number(enemy?.hp) <= 0) continue;
-    if (!tickEnemyStatuses(game, enemy, step)) continue;
+    if (!tickEnemyStatuses(game, enemy)) continue;
     enemy.effectiveSpeed = effectiveEnemySpeed(enemy);
     const result = updateEnemyActor(game, enemy, step);
     actors++;
@@ -91,13 +90,8 @@ export function updateEnemies(game, dt) {
     if (!result.lure && !result.attacked) damageBaseAndConsumeEnemy(game, enemy);
   }
 
-  // Guards intentionally use their cache-specific defend/leash policy, but shared
-  // status, target eligibility, melee damage and navigation blockers.
   const guards = updateCacheGuards(game, step);
-
-  // Remove dead enemies before evaluating cache contest so a dead defender cannot
-  // pause capture for one extra frame.
-  const removed = cleanupDeadEnemies(game);
+  const lifecycle = cleanupDestroyedEntities(game);
   const cachesCompleted = updateCacheCapture(game, step);
 
   return {
@@ -105,7 +99,7 @@ export function updateEnemies(game, dt) {
     hordeLaunched: directorResult.launched,
     actors,
     guards,
-    removed,
+    removed: lifecycle.enemies,
     cachesCompleted,
   };
 }
