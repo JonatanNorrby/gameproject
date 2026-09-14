@@ -65,7 +65,11 @@ export function cleanupDeadPlayerUnits(game) {
   return removed;
 }
 
-function cleanupDeadStructures(game) {
+// Exported separately for Step 6 production activation. Enemy bounty/removal is
+// owned by Step 4 and player-unit relationship cleanup is owned by Step 3, so the
+// building migration must be able to remove structures without running either of
+// those lifecycle passes a second time.
+export function cleanupDeadStructures(game) {
   const list = structures(game);
   let removed = 0;
   for (let i = list.length - 1; i >= 0; i--) {
