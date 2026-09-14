@@ -89,26 +89,39 @@ function enemyProjectileImpact(game, projectile) {
   return { consumed: true, hit: target };
 }
 
-export function updateProjectiles(game, dt) {
+// Production still stores player and enemy shots in separate legacy arrays so the
+// existing renderer can draw them differently. Step 5 routes both arrays through
+// this one simulator instead of retaining two legacy collision implementations.
+// `forcedTeam` is only a storage-compatibility hint; the normal clean runtime keeps
+// team identity on each projectile and calls updateProjectiles() below.
+export function updateProjectileCollection(game, dt, projectiles, forcedTeam = null) {
+  if (!Array.isArray(projectiles)) throw new TypeError('projectile collection must be an array');
   const step = Math.max(0, Number(dt) || 0);
-  const list = projectileList(game);
+  const team = forcedTeam === PROJECTILE_TEAM.ENEMY || forcedTeam === PROJECTILE_TEAM.PLAYER
+    ? forcedTeam
+    : null;
   let removed = 0, hits = 0;
-  for (let index = list.length - 1; index >= 0; index--) {
-    const projectile = list[index];
+  for (let index = projectiles.length - 1; index >= 0; index--) {
+    const projectile = projectiles[index];
+    if (team) projectile.team = team;
     projectile.x += finite(projectile.vx) * step;
     projectile.y += finite(projectile.vy) * step;
     projectile.life = finite(projectile.life) - step;
     if (projectile.life <= 0 || !Number.isFinite(projectile.x) || !Number.isFinite(projectile.y)) {
-      list.splice(index, 1); removed++; continue;
+      projectiles.splice(index, 1); removed++; continue;
     }
     if (projectile.team === PROJECTILE_TEAM.ENEMY) {
       const result = enemyProjectileImpact(game, projectile);
       if (result.hit) hits++;
-      if (result.consumed) { list.splice(index, 1); removed++; }
+      if (result.consumed) { projectiles.splice(index, 1); removed++; }
     } else {
       const hit = playerProjectileImpact(game, projectile);
-      if (hit) { hits++; list.splice(index, 1); removed++; }
+      if (hit) { hits++; projectiles.splice(index, 1); removed++; }
     }
   }
-  return { hits, removed, active: list.length };
+  return { hits, removed, active: projectiles.length };
+}
+
+export function updateProjectiles(game, dt) {
+  return updateProjectileCollection(game, dt, projectileList(game));
 }

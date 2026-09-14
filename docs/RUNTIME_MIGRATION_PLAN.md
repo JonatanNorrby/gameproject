@@ -153,14 +153,43 @@ Still legacy after Step 4:
 - rendering/camera/fog ownership;
 - global reset/frame/bootstrap ownership.
 
-## Step 5 — Towers + projectiles/combat
+## Step 5 — Towers + projectiles/combat — IMPLEMENTED ON MIGRATION STACK
 
-Move tower stats, target selection, tower combat, projectile resolution and damage ownership to:
+Production ownership moved to:
 
-- `js/towers/*`;
-- `js/combat/*`.
+- `js/combat/towerStats.js` for canonical effective tower stats and upgrade-level combat semantics;
+- `js/combat/towerTargeting.js` for tower target eligibility, visibility and target selection;
+- `js/combat/towerCombat.js` for every canonical tower attack decision;
+- `js/combat/projectiles.js` for persistent player/tower/enemy projectile movement, lifetime, collision and impact;
+- `js/combat/playerDamage.js` for player/tower damage modifiers such as marks, Climber vulnerability and Burrower damage reduction.
 
-Eliminate tower wrappers inherited from v21/v22 and remove temporary global-array filtering.
+The Step 5 production bridge is `js/migration/towerProjectileLegacyBridge.js`, installed through `js/migration/towerProjectileLegacyHost.js`. It replaces the final lexical `updateTowers()` and `updateProjectiles()` owners after the legacy stack has loaded, removing the production dependency on the v21/v22 tower-wrapper chain and the v47 projectile implementation.
+
+Production frame ordering is preserved: tower decisions execute at the existing `updateTowers()` call site, enemy AI still executes afterward through Step 4, and projectile travel/collision executes at the existing `updateProjectiles()` call site.
+
+Compatibility boundaries in Step 5:
+
+- `state.bullets` and `state.enemyBullets` remain separate storage arrays temporarily because the current legacy renderer draws friendly and hostile shots through separate loops; both arrays are nevertheless simulated by the same clean `updateProjectileCollection()` implementation;
+- Step 3 player-unit attacks and Step 5 tower attacks continue emitting friendly persistent shots into `state.bullets`;
+- Step 4 Spitter AI continues emitting hostile persistent shots into `state.enemyBullets`;
+- clean tower effects are translated into the existing legacy effect channels so rendering is unchanged;
+- current fog visibility and Saboteur reveal behavior are consumed through compatibility callbacks instead of duplicated;
+- direct tower damage and projectile impacts do not remove enemies or pay bounty: Step 4 remains the one authoritative enemy death/reward owner;
+- Step 3 remains the player-unit destruction/relationship owner;
+- structure destruction cleanup remains on the existing legacy cleanup path until Step 6, and Step 5 invokes that cleanup once after both projectile collections rather than duplicating it;
+- the bridge follows complete legacy state replacement after Restart;
+- tower placement, construction and upgrade UI remain intentionally outside this step.
+
+The active tower combat path no longer needs v22's temporary `state.structures` substitution to split old/new tower generations. All canonical towers are dispatched through one clean combat table.
+
+Still legacy after Step 5:
+
+- structure destruction lifecycle and building-specific teardown;
+- tower/building placement, construction, upgrades and Wall creation;
+- resource-cache capture/generation/reward;
+- route-recording and most selection/action UI;
+- rendering/camera/fog ownership;
+- global reset/frame/bootstrap ownership.
 
 ## Step 6 — Buildings, placement and Walls
 
