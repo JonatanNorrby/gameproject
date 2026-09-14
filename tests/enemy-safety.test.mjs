@@ -35,16 +35,16 @@ function gameFixture() {
 test('Burrower repairs a blocked emergence point and never exits inside world collision', () => {
   const game = gameFixture();
   const wall = {
-    id: 'wall-1', type: 'wall', x: 390, y: 300,
-    x1: 390, y1: 220, x2: 390, y2: 380,
+    id: 'wall-1', type: 'wall', x: 370, y: 300,
+    x1: 370, y1: 220, x2: 370, y2: 380,
     thickness: 12, built: true, hp: 1000, maxHp: 1000,
   };
-  // The raw v24 emergence point for this geometry is approximately x=453,y=300,
-  // which is still within the real 155px maximum burrow distance from x=300.
+  // The raw v24 emergence point for this geometry is approximately x=433,y=300.
   // Put a real building there so the repaired exit must account for object collision,
-  // not only natural terrain.
+  // not only natural terrain. The closer Wall leaves enough legitimate space for a
+  // repaired point while still enforcing the real 155px maximum burrow distance.
   const blocker = {
-    id: 'refinery-1', type: 'refinery', x: 453, y: 300,
+    id: 'refinery-1', type: 'refinery', x: 433, y: 300,
     built: true, hp: 200, maxHp: 200,
   };
   game.state.entities.structures.push(wall, blocker);
