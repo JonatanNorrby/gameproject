@@ -1,14 +1,19 @@
 import { bootGame } from './main.js';
 import { createProductionRenderingServices } from './rendering/presentation.js';
+import { drawProductionProjectiles } from './rendering/projectilePresentation.js';
 
 export const PRODUCTION_ENTRY = 'js/production.js';
 
 function browserServices(doc) {
   const hasRaf = typeof requestAnimationFrame === 'function';
+  const rendering = {
+    ...createProductionRenderingServices(),
+    drawProjectiles: drawProductionProjectiles,
+  };
   return {
     random: Math.random,
     ui: { document: doc },
-    rendering: createProductionRenderingServices(),
+    rendering,
     runtime: {
       requestFrame: hasRaf ? callback => requestAnimationFrame(callback) : undefined,
       cancelFrame: typeof cancelAnimationFrame === 'function' ? handle => cancelAnimationFrame(handle) : undefined,
@@ -45,6 +50,7 @@ export function bootProductionGame({ doc = typeof document !== 'undefined' ? doc
     uiOwner: 'js/ui/ui.js',
     renderingOwner: 'js/rendering/renderer.js',
     presentationOwner: 'js/rendering/presentation.js',
+    projectilePresentationOwner: 'js/rendering/projectilePresentation.js',
     fogOwner: 'js/fog/fog.js',
     cameraOwner: 'js/input/camera.js',
     configOwner: 'js/core/config.js',
