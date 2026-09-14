@@ -1,5 +1,5 @@
 import { createGameConfig } from '../core/config.js';
-import { getEnemyConfig, ENEMY_CONFIG } from '../enemies/enemyConfig.js';
+import { ENEMY_CONFIG } from '../enemies/enemyConfig.js';
 import { chooseHordeEnemyType, updateEnemyDirector } from '../enemies/enemyDirector.js';
 import { spawnEnemy as spawnEnemyClean } from '../enemies/enemySpawning.js';
 import { updateEnemyActors } from '../enemies/enemies.js';
@@ -82,11 +82,11 @@ function normalizeLegacyEnemy(enemy){
   const config=ENEMY_CONFIG[enemy.type];
   if(!config)return enemy;
   if(enemy.id==null||enemy.id==='')enemy.id=`legacy-e-${++legacyEnemyId}`;
-  if(!Number.isFinite(Number(enemy.maxHp))||Number(enemy.maxHp)<=0)enemy.maxHp=Math.max(1,numberOr(enemy.hp,numberOr(config.baseHp,1)));
+  if(!Number.isFinite(Number(enemy.maxHp))||Number(enemy.maxHp)<=0)enemy.maxHp=Math.max(1,numberOr(enemy.hp,1));
   if(!Number.isFinite(Number(enemy.hp)))enemy.hp=enemy.maxHp;
   if(!Number.isFinite(Number(enemy.r))||Number(enemy.r)<=0)enemy.r=Math.max(1,numberOr(config.radius,8));
   if(!Number.isFinite(Number(enemy.speed))||Number(enemy.speed)<0)enemy.speed=0;
-  if(!Number.isFinite(Number(enemy.damage))||Number(enemy.damage)<0)enemy.damage=Math.max(0,numberOr(config.baseDamage,0));
+  if(!Number.isFinite(Number(enemy.damage))||Number(enemy.damage)<0)enemy.damage=0;
   if(!Number.isFinite(Number(enemy.burn)))enemy.burn=0;
   if(!Number.isFinite(Number(enemy.burnTick)))enemy.burnTick=0;
   if(!Number.isFinite(Number(enemy.slowFactor))||Number(enemy.slowFactor)<=0)enemy.slowFactor=1;
@@ -160,9 +160,7 @@ export function createLegacyEnemyGame(hostInput){
   defineLiveProperty(entities,'enemyProjectiles',
     ()=>Array.isArray(current()?.enemyBullets)?current().enemyBullets:[],
     value=>{const state=current();if(state)state.enemyBullets=Array.isArray(value)?value:[];});
-  defineLiveProperty(entities,'effects',
-    ()=>[],
-    ()=>{});
+  defineLiveProperty(entities,'effects',()=>[],()=>{});
   defineLiveProperty(entities,'resourceCaches',
     ()=>Array.isArray(current()?.v47ResourceCaches)?current().v47ResourceCaches:[],
     value=>{const state=current();if(state)state.v47ResourceCaches=Array.isArray(value)?value:[];});
@@ -204,9 +202,7 @@ export function createLegacyEnemyGame(hostInput){
 }
 
 export function normalizeLegacyEnemyState(game){
-  const state=game?.state;
-  if(!state)return game;
-  directorForState(state===game.state?null:null,game.config);
+  if(!game?.state)return game;
   // Accessing the live director property performs the actual legacy-state sync.
   void game.state.director;
   for(const cache of game.state.entities.resourceCaches||[])normalizeLegacyCache(cache);
