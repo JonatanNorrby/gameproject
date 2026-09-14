@@ -96,6 +96,28 @@ test('clean production tower owner emits into the existing legacy player bullet 
   assert.equal(h.state.enemies[0].hp, 100, 'level-1 Laser remains a persistent projectile attack');
 });
 
+test('direct-damage tower can kill without removing or rewarding enemy outside Step 4 lifecycle', () => {
+  const state = makeState();
+  const enemy = {
+    id: 'enemy-1', type: 'ravager', x: 1100, y: 1000,
+    hp: 0.1, maxHp: 100, r: 7,
+  };
+  state.structures.push({
+    id: 'tower-1', type: 'cryo', x: 1000, y: 1000,
+    hp: 100, maxHp: 100, built: true, level: 1, cool: 0,
+  });
+  state.enemies.push(enemy);
+  const { h, owners } = install(harness(state));
+  const creditsBefore = state.credits;
+
+  const actions = owners.updateTowers(0.016);
+  assert.equal(actions, 1);
+  assert.ok(enemy.hp <= 0);
+  assert.equal(state.enemies.includes(enemy), true, 'Step 5 damage must not steal Step 4 removal ownership');
+  assert.equal(state.credits, creditsBefore, 'Step 5 damage must not pay enemy bounty');
+  assert.equal(h.cleanupCalls, 0, 'tower decision pass must not invoke legacy destruction cleanup');
+});
+
 test('both legacy projectile arrays are simulated by clean collision logic and cleanup runs once', () => {
   const state = makeState();
   const enemy = { id: 'enemy-1', type: 'ravager', x: 500, y: 500, hp: 50, maxHp: 50, r: 7 };
