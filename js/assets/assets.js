@@ -3,10 +3,12 @@ import { MIGRATION_STATUS } from '../core/config.js';
 export const ASSET_SYSTEM_STATUS = MIGRATION_STATUS.MIGRATED;
 
 export const ASSET_KEYS = Object.freeze({
+  MAIN_BASE: 'main-base',
   FIRING_SQUAD_SHEET: 'firing-squad-sheet',
 });
 
 export const ASSET_MANIFEST = Object.freeze({
+  [ASSET_KEYS.MAIN_BASE]: Object.freeze({ src: 'A2D31210-1B7B-4D4F-9C2D-0740047D4008.png', kind: 'image' }),
   [ASSET_KEYS.FIRING_SQUAD_SHEET]: Object.freeze({ src: 'firing_squad_sheet.png', kind: 'image' }),
 });
 
