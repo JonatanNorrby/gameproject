@@ -9,7 +9,7 @@ import {
   stepDirectTerrainOnly,
   wallThickness,
 } from './enemyMovement.js';
-import { isNavigationPointBlocked } from '../navigation/pathfinding.js';
+import { findNearestOpenDestination } from '../navigation/pathfinding.js';
 
 function emitEffect(game, effect) {
   const adapter = game?.services?.enemyAI?.emitEffect;
@@ -74,18 +74,17 @@ export function updateBurrower(game, enemy, context) {
     const point = nearestPointOnWall(enemy, wall);
     const push = wallThickness(game, wall) / 2 + enemyRadius(enemy) + 48;
     const world = game.config.world;
-    const rawX = point.x + dx / distance * push;
-    const rawY = point.y + dy / distance * push;
-    const ex = Math.max(enemy.r, Math.min(world.width - enemy.r, rawX));
-    const ey = Math.max(enemy.r, Math.min(world.height - enemy.r, rawY));
-    // Step 4 closes the old v24 emergence hole: the exit must be open against
-    // the same full Base/depot/building/Wall/terrain blocker used by navigation,
-    // not merely clear of shaped terrain.
-    if (Math.hypot(ex - enemy.x, ey - enemy.y) <= config.distance
-      && !isNavigationPointBlocked(game, ex, ey, enemyRadius(enemy) + 2)) {
+    const rawX = Math.max(enemy.r, Math.min(world.width - enemy.r, point.x + dx / distance * push));
+    const rawY = Math.max(enemy.r, Math.min(world.height - enemy.r, point.y + dy / distance * push));
+    // The old v24 check only considered shaped terrain, so a Burrower could emerge
+    // inside the Base, a depot, a building, or another Wall. Repair the intended
+    // exit with the same full blocker used by Step 2 navigation, but never extend
+    // the actual burrow beyond its configured maximum distance.
+    const exit = findNearestOpenDestination(game, rawX, rawY, enemyRadius(enemy) + 2);
+    if (exit && Math.hypot(exit.x - enemy.x, exit.y - enemy.y) <= config.distance) {
       enemy.burrowed = true;
       enemy.burrowTimer = config.time;
-      enemy.burrowExit = { x: ex, y: ey };
+      enemy.burrowExit = exit;
       emitEffect(game, { kind: 'burrow', x: enemy.x, y: enemy.y, durationMs: 320, legacyChannel: 'v24Effects' });
       return false;
     }
