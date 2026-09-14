@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { stat } from 'node:fs/promises';
 import { createGame } from '../js/core/game.js';
 import { createAssetRegistry, ASSET_KEYS, ASSET_MANIFEST } from '../js/assets/assets.js';
 import {
@@ -81,10 +82,10 @@ test('renderer exposes final world-to-fog-to-screen ordering',()=>{
   assert.deepEqual(RENDER_ORDER,['backdrop','base','structures','units','enemies','projectiles','particles','indicators','fog','screen']);
 });
 
-test('asset registry owns exactly the two tracked sprite PNGs and is Node-safe',async()=>{
-  assert.deepEqual(Object.keys(ASSET_MANIFEST).sort(),[ASSET_KEYS.MECH_STRIDER,ASSET_KEYS.RIFLE_SOLDIER].sort());
-  assert.equal(ASSET_MANIFEST[ASSET_KEYS.RIFLE_SOLDIER].src,'rifle_soldier.png');
-  assert.equal(ASSET_MANIFEST[ASSET_KEYS.MECH_STRIDER].src,'mech_strider.png');
+test('asset registry owns the actual production firing-squad sheet and is Node-safe',async()=>{
+  assert.deepEqual(Object.keys(ASSET_MANIFEST),[ASSET_KEYS.FIRING_SQUAD_SHEET]);
+  assert.equal(ASSET_MANIFEST[ASSET_KEYS.FIRING_SQUAD_SHEET].src,'firing_squad_sheet.png');
+  const sprite=await stat(new URL('../firing_squad_sheet.png',import.meta.url));assert.ok(sprite.size>0);
   const registry=createAssetRegistry({ImageCtor:null});const entries=await registry.loadAll();
-  assert.equal(entries.length,2);assert.ok(entries.every(entry=>entry.status==='unsupported'&&entry.image===null));
+  assert.equal(entries.length,1);assert.equal(entries[0].status,'unsupported');assert.equal(entries[0].image,null);
 });
