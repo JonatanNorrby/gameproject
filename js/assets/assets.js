@@ -3,13 +3,11 @@ import { MIGRATION_STATUS } from '../core/config.js';
 export const ASSET_SYSTEM_STATUS = MIGRATION_STATUS.MIGRATED;
 
 export const ASSET_KEYS = Object.freeze({
-  RIFLE_SOLDIER: 'rifle-soldier',
-  MECH_STRIDER: 'mech-strider',
+  FIRING_SQUAD_SHEET: 'firing-squad-sheet',
 });
 
 export const ASSET_MANIFEST = Object.freeze({
-  [ASSET_KEYS.RIFLE_SOLDIER]: Object.freeze({ src: 'rifle_soldier.png', kind: 'image' }),
-  [ASSET_KEYS.MECH_STRIDER]: Object.freeze({ src: 'mech_strider.png', kind: 'image' }),
+  [ASSET_KEYS.FIRING_SQUAD_SHEET]: Object.freeze({ src: 'firing_squad_sheet.png', kind: 'image' }),
 });
 
 function makeEntry(id, definition) {
