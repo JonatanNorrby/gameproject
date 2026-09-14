@@ -45,7 +45,10 @@ function clearRelationshipsToDeadUnit(game, dead) {
   }
 }
 
-function cleanupDeadUnits(game) {
+// Step 3 production activation needs a unit-only lifecycle owner. Keep this
+// separate from the aggregate cleanup so enemy/structure lifecycle can remain
+// on their existing owners until their dedicated migration steps.
+export function cleanupDeadPlayerUnits(game) {
   const list = units(game);
   let removed = 0;
   for (let i = list.length - 1; i >= 0; i--) {
@@ -92,7 +95,7 @@ export function applyBaseDamage(game, amount, context = {}) {
 
 export function cleanupDestroyedEntities(game) {
   const enemies = cleanupDeadEnemies(game);
-  const unitsRemoved = cleanupDeadUnits(game);
+  const unitsRemoved = cleanupDeadPlayerUnits(game);
   const structuresRemoved = cleanupDeadStructures(game);
   if (game?.state?.base && Number(game.state.base.hp) <= 0 && !game.state.session.gameOver) {
     game.state.session.gameOver = true;
