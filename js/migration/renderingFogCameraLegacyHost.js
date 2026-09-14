@@ -61,7 +61,15 @@
       mapOutClick:mapOut?.onclick||null,mapInClick:mapIn?.onclick||null,
       oldOutClick:oldOut?.onclick||null,oldInClick:oldIn?.onclick||null,
     };
+    const wheelCapture=e=>{
+      if(e?.target!==canvas)return;
+      try{if(typeof commandMenuOpen==='function'&&commandMenuOpen())return;}catch{}
+      e.preventDefault?.();e.stopImmediatePropagation?.();
+      const rect=canvas.getBoundingClientRect(),sx=(e.clientX-rect.left)*W/(rect.width||W),sy=(e.clientY-rect.top)*H/(rect.height||H);
+      return owners.setZoom(owners.zoomValue()+(e.deltaY<0?(Number(CONFIG?.WORLD?.ZOOM_STEP)||.10):-(Number(CONFIG?.WORLD?.ZOOM_STEP)||.10)),sx,sy);
+    };
     function restore(){
+      window.removeEventListener('wheel',wheelCapture,true);
       draw=previous.draw;updateCamera=previous.updateCamera;clampCamera=previous.clampCamera;worldFromEvent=previous.worldFromEvent;
       if(previous.setZoom)setZoom=previous.setZoom;
       if(previous.zoomValue)zoomValue=previous.zoomValue;
@@ -84,6 +92,10 @@
       refreshFogSourcesV32=function(){return owners.refreshFog();};
       pointVisibleV32=function(x,y){return owners.pointVisible(x,y);};
       bindZoomButton(mapOut,-1,owners);bindZoomButton(mapIn,1,owners);bindZoomButton(oldOut,-1,owners);bindZoomButton(oldIn,1,owners);
+      // v51's wheel listener lives on the canvas and cannot be removed by name.
+      // A window-capture owner runs earlier in the event path, applies clean
+      // camera math, then prevents the legacy target listener from firing.
+      window.addEventListener('wheel',wheelCapture,{capture:true,passive:false});
       window.__apdFogOwner='js/fog/fog.js';
     }catch(error){restore();throw error;}
     return restore;
