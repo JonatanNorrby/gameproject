@@ -112,7 +112,7 @@ test('actor production pass does not advance the director a second time', () => 
 
 test('clean Spitter AI emits into the existing legacy enemy projectile collection', () => {
   const { h, owners } = install();
-  const target = { id: 'u1', type: 'airunit', role: 'combatdrone', x: 1200, y: 1000, hp: 100, maxHp: 100 };
+  const target = { id: 'u1', type: 'airunit', role: 'combatdrone', x: 1160, y: 1000, hp: 100, maxHp: 100 };
   h.state.units.push(target);
   const spitter = owners.spawnEnemy('spitter', { horde: false, position: { x: 1000, y: 1000 } });
   spitter.rangeCooldown = 0;
