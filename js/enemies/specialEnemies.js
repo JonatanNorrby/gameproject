@@ -9,12 +9,30 @@ import {
   stepDirectTerrainOnly,
   wallThickness,
 } from './enemyMovement.js';
-import { findNearestOpenDestination } from '../navigation/pathfinding.js';
+import { isNavigationPointBlocked } from '../navigation/pathfinding.js';
 
 function emitEffect(game, effect) {
   const adapter = game?.services?.enemyAI?.emitEffect;
   if (typeof adapter === 'function') adapter(game, effect);
   else if (Array.isArray(game?.state?.entities?.effects)) game.state.entities.effects.push(effect);
+}
+
+function findSafeBurrowExit(game, enemy, rawX, rawY, maxDistance) {
+  const radius = enemyRadius(enemy) + 2;
+  const limit = Math.max(0, Number(maxDistance) || 0);
+  const rings = [0, 18, 30, 44, 60, 80, 105];
+  for (const ring of rings) {
+    const samples = ring === 0 ? 1 : 24;
+    for (let i = 0; i < samples; i++) {
+      const angle = samples === 1 ? 0 : i / samples * Math.PI * 2;
+      const x = rawX + Math.cos(angle) * ring;
+      const y = rawY + Math.sin(angle) * ring;
+      if (Math.hypot(x - enemy.x, y - enemy.y) > limit) continue;
+      if (isNavigationPointBlocked(game, x, y, radius)) continue;
+      return { x, y };
+    }
+  }
+  return null;
 }
 
 export function moveOrAttackBlockingWall(game, enemy, tx, ty, speed, dt, wallDamageMultiplier = 1) {
@@ -77,11 +95,11 @@ export function updateBurrower(game, enemy, context) {
     const rawX = Math.max(enemy.r, Math.min(world.width - enemy.r, point.x + dx / distance * push));
     const rawY = Math.max(enemy.r, Math.min(world.height - enemy.r, point.y + dy / distance * push));
     // The old v24 check only considered shaped terrain, so a Burrower could emerge
-    // inside the Base, a depot, a building, or another Wall. Repair the intended
-    // exit with the same full blocker used by Step 2 navigation, but never extend
-    // the actual burrow beyond its configured maximum distance.
-    const exit = findNearestOpenDestination(game, rawX, rawY, enemyRadius(enemy) + 2);
-    if (exit && Math.hypot(exit.x - enemy.x, exit.y - enemy.y) <= config.distance) {
+    // inside the Base, a depot, a building, or another Wall. Search around the
+    // intended exit using the full Step 2 blocker, while constraining every repair
+    // candidate to the Burrower's configured maximum travel distance.
+    const exit = findSafeBurrowExit(game, enemy, rawX, rawY, config.distance);
+    if (exit) {
       enemy.burrowed = true;
       enemy.burrowTimer = config.time;
       enemy.burrowExit = exit;
