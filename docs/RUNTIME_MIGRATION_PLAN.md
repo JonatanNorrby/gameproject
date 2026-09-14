@@ -191,14 +191,38 @@ Still legacy after Step 5:
 - rendering/camera/fog ownership;
 - global reset/frame/bootstrap ownership.
 
-## Step 6 — Buildings, placement and Walls
+## Step 6 — Buildings, placement and Walls — IMPLEMENTED ON MIGRATION STACK
 
-Move economic-building creation, construction, storage upgrades, Wall geometry and placement validation to:
+Production ownership moved to:
 
-- `js/buildings/*`;
-- clean placement/navigation geometry helpers.
+- `js/buildings/placement.js` for tower/economic-building placement validation, resource-depot Mine placement, worker availability, Wall geometry/path validation and Wall queueing;
+- `js/buildings/construction.js` for shared construction groups and Engineer construction acceleration;
+- `js/buildings/buildingRuntime.js` for canonical economic-building runtime/storage state and Refinery/Landing Pad storage upgrades;
+- `js/economy/depots.js` for authoritative Mine/depot linking and the three-Mines-per-depot rule;
+- structure-only cleanup from `js/combat/lifecycle.js` for destroyed towers, Walls and economic buildings.
 
-At the end of this step, economy/buildings should no longer require a legacy compatibility adapter.
+The Step 6 production bridge is `js/migration/buildingPlacementLegacyBridge.js`, installed through `js/migration/buildingPlacementLegacyHost.js`. The bridge uses live legacy state and follows complete state replacement after Restart; it does not create a second building/economy state.
+
+Compatibility boundaries in Step 6:
+
+- the existing pointer/tap listeners remain legacy-owned until Step 8, but their mutable `placeBuild`, Wall helper and construction call seams now delegate to clean owners;
+- the legacy Wall preview renderer remains active until Step 7; `state.v6WallPlacement` is the authoritative Wall draft and is mirrored into legacy `wallPath` only for preview drawing;
+- multi-segment Walls are created as one clean construction group and therefore consume one worker, matching current intended behavior;
+- the legacy storage panel remains UI-owned, but its upgrade button now delegates to the clean storage-upgrade runtime;
+- Step 6 replaces the aggregate `cleanupDestroyed()` seam with a deterministic composition of the clean Step 3 player-unit cleanup plus clean Step 6 structure cleanup; Step 4 remains the sole enemy removal/Gold-bounty owner;
+- Step 5's projectile pass continues invoking the current cleanup seam once after both projectile collections, so structure destruction is now clean-owned without introducing a second frame cleanup pass;
+- Mine destruction immediately normalizes legacy `depot.mineId` / `depot.mineIds` compatibility fields through the clean depot runtime;
+- Bunker remains disabled/removed and is not reintroduced.
+
+The Step 6 bootstrap explicitly waits for Step 3's unit-combat migration to leave its `loading` state before replacing the aggregate cleanup seam. This avoids dynamic-module download timing changing cleanup ownership in production.
+
+Still legacy after Step 6:
+
+- resource-cache capture/generation/reward;
+- route-recording and most selection/action UI dispatch;
+- Wall pointer gesture ownership and general input routing;
+- rendering, visual-effect drawing/expiry, fog and camera ownership;
+- global reset/frame/bootstrap ownership.
 
 ## Step 7 — Fog, rendering, assets and camera
 
@@ -224,4 +248,4 @@ Then:
 
 ## Regression rule
 
-`npm test` is the baseline check for every migration step. CI runs the full committed Node test suite on every push and pull request. Browser-level production-stack smoke tests should be added as the bootstrap/input layer is migrated so the final cutover is covered end-to-end.
+`npm test` is the baseline check for every migration step. CI runs the full committed Node test suite on every push and pull request. A production-stack ordering smoke test now guards the legacy-end → Step 1…Step 6 host/bootstrap sequence; browser-level interaction smoke coverage should still be expanded as the final rendering/input/bootstrap layers are migrated.
