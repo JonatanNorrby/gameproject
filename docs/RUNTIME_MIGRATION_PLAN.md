@@ -224,20 +224,47 @@ Still legacy after Step 6:
 - rendering, visual-effect drawing/expiry, fog and camera ownership;
 - global reset/frame/bootstrap ownership.
 
-## Step 7 — Fog, rendering, assets and camera
+## Step 7 — Fog, rendering, assets and camera — IMPLEMENTED ON MIGRATION STACK
 
-Move the final visual/runtime owners to:
+Production orchestration moved to:
 
-- `js/fog/*`;
-- `js/rendering/*`;
-- `js/assets/*`;
-- clean camera/viewport code.
+- `js/rendering/renderer.js` for the authoritative world-to-screen render pass, render order, zoom-aware culling and fog composition;
+- `js/fog/fog.js` for current visibility, persistent exploration and the final v47 vision values;
+- `js/input/camera.js` for camera pan/clamping, 18%–135% zoom, zoom-at-cursor and pointer world conversion;
+- `js/assets/assets.js` for the tracked production sprite registry;
+- `js/rendering/visualEffects.js` for timed visual-effect expiry outside the draw path.
 
-Rendering must become read-only with simulation-owned effect expiry.
+The Step 7 production bridge is `js/migration/renderingFogCameraLegacyBridge.js`, installed through `js/migration/renderingFogCameraLegacyHost.js`. It is a live view over the current legacy state and follows complete state replacement after Restart. `state.v7Fog` is the clean production fog state.
+
+Rendering is now simulation-state-read-only: fog refresh/exploration and timed effect pruning execute from the existing update-side camera call site before draw. The clean renderer no longer advances fog state or removes effects while painting a frame.
+
+Compatibility boundaries in Step 7:
+
+- the clean renderer owns **when, where and whether** world entities render, including camera transforms, culling, fog gating and final fog overlay;
+- the final detailed v35/v47/v53 primitive artwork is temporarily retained as read-only leaf callbacks so migration does not visually downgrade existing units, enemies, structures or terrain;
+- those legacy art callbacks are presentation-only. They do not own camera/fog/render ordering or effect lifetime;
+- the legacy v32 `pointVisibleV32` seam now delegates to clean fog, so old detailed enemy-art wrappers cannot retain a second visibility owner;
+- the existing v51 anonymous canvas wheel listener cannot be removed by reference. Step 7 installs an earlier window-capture wheel owner that applies clean camera zoom and stops propagation before the old listener can run, preventing double zoom ownership without rewriting the legacy file;
+- existing zoom buttons are rebound to clean camera math;
+- the asset manifest now points at the actual tracked production `firing_squad_sheet.png` instead of nonexistent placeholder PNG names, and the clean registry adopts the already-loaded production image when available;
+- input mode dispatch, selection/action UI and the outer animation/update loop remain legacy-owned until Step 8.
+
+Before the legacy script chain can be deleted, Step 8 must move the remaining detailed primitive art implementations currently supplied by the read-only v35/v47/v53 callbacks into clean rendering modules. Step 7 deliberately does not duplicate or redesign that artwork just to make this slice larger.
+
+Still legacy after Step 7:
+
+- resource-cache capture/generation/reward;
+- route-recording and most selection/action UI dispatch;
+- Wall pointer gesture ownership and general input routing;
+- menu/options/restart/state-bootstrap ownership;
+- outer requestAnimationFrame/update pipeline ownership;
+- the physical source location of the detailed compatibility art callbacks, pending their final extraction in Step 8.
 
 ## Step 8 — Input, UI, bootstrap and reset
 
 Move input dispatch, menu actions, reset/state initialization and the animation/update pipeline to the clean runtime.
+
+Also move the remaining detailed visual primitive implementations out of the legacy patch files and into clean rendering modules so the Step 7 presentation callbacks no longer require legacy source files.
 
 Then:
 
@@ -248,4 +275,4 @@ Then:
 
 ## Regression rule
 
-`npm test` is the baseline check for every migration step. CI runs the full committed Node test suite on every push and pull request. A production-stack ordering smoke test now guards the legacy-end → Step 1…Step 6 host/bootstrap sequence; browser-level interaction smoke coverage should still be expanded as the final rendering/input/bootstrap layers are migrated.
+`npm test` is the baseline check for every migration step. CI runs the full committed Node test suite on every push and pull request. A production-stack ordering smoke test now guards the legacy-end → Step 1…Step 7 host/bootstrap sequence; browser-level interaction smoke coverage should still be expanded as the final input/bootstrap layer is migrated.
