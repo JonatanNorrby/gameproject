@@ -2,277 +2,77 @@
 
 ## Goal
 
-Replace the accumulated `v14`–`v53` production monkey-patch chain with the clean `js/` runtime **incrementally**, without a big-bang rewrite and without changing game balance or intended behavior during migration.
+Replace the accumulated `v14`–`v53` production monkey-patch chain with the clean `js/` runtime incrementally, without redesigning gameplay, changing balance, or requiring one risky big-bang rewrite.
 
-Each step must leave the game playable. A subsystem is considered migrated only when:
+## Status
 
-1. production calls the clean implementation;
-2. legacy state/UI compatibility is explicit and isolated in `js/migration/`;
-3. regression tests cover the production adapter and clean subsystem;
-4. there is one authoritative simulation owner for the migrated behavior;
-5. the next migration step can be reverted independently.
+**All eight migration steps are implemented on the stacked migration branches.**
 
-No new gameplay feature should create another `vNN.js` ownership layer for a subsystem that has already been migrated.
+Step 8 completes the JavaScript production cutover: `index.html` now loads one ES-module entry, `js/production.js`. The historical `config.js`, versioned JavaScript files and transitional `js/migration/*` bridges remain in the repository but are not executed by production.
 
-## Step 1 — Economy / logistics runtime — IMPLEMENTED ON MIGRATION STACK
+Historical CSS remains linked for layout/style parity and can be cleaned separately after visual verification; this migration is about runtime ownership, not redesigning the UI.
 
-Production ownership moved to `js/economy/*` for:
+## Completed steps
 
-- Crystal/Ore Mine extraction;
-- Refinery Ore → Metal processing;
-- Landing Pad / export ship cooldown, loading and export;
-- Truck automatic service and route-stop service.
+### Step 1 — Economy / logistics
 
-Still legacy after this step:
+Clean ownership moved to `js/economy/*` for Mine extraction, Refinery conversion, Landing Pad/export ships and Truck service/routes. The production timing split—Mine/Refinery/Pad before movement, Truck service after movement—was preserved and is now encoded directly in `js/core/runtime.js`.
 
-- build placement and construction UI;
-- storage upgrade UI;
-- route recording UI;
-- rendering;
-- enemy targeting/damage presentation;
-- global frame/reset/input ownership.
+### Step 2 — Navigation + movement
 
-The transitional bridge is `js/migration/economyLegacyBridge.js`. It exposes the existing legacy arrays/objects to the clean subsystem through live state views; it does not create a second economy state. Legacy fields such as `mine.stored`, `truck.cargo`, `pad.crystalStored`, `pad.shipHp` and `pad.shipState` remain aliases to clean runtime storage/state so old rendering and enemy code continue to work.
+Clean ownership moved to `js/navigation/*`, `js/movement/*`, `js/units/commands.js` and `js/units/platoons.js`. This retained blocked-destination repair, heap A*, aircraft direct movement, river slowdown, Platoon speed/formation, support following and Truck route semantics.
 
-The production frame keeps its existing timing: Mine/Refinery/Pad simulation runs before unit movement, Truck servicing runs after unit movement.
+### Step 3 — Movable units + player combat
 
-## Step 2 — Navigation + movement commands — IMPLEMENTED ON MIGRATION STACK
+Clean ownership moved to unit deployment/transport and `js/combat/unitCombat.js` plus healing, repair, player-damage and player-mine modules. Unsafe blocked spawn/APC-unload fallbacks were removed while preserving intended behavior.
 
-Production ownership moved to:
+### Step 4 — Enemies + director
 
-- `js/navigation/pathfinding.js` for blockers, nearest-open destination repair and A*;
-- `js/movement/movement.js` for destination assignment and waypoint following;
-- `js/movement/runtime.js` for the production movement pass;
-- `js/units/commands.js` for normal manual movement command semantics;
-- `js/units/platoons.js` for Platoon formation move orders.
+Clean ownership moved to `js/enemies/*` for horde timing/spawning, AI, special enemy behavior, statuses, cache guard AI and enemy bounty/removal. Burrower emergence was hardened against full world collision.
 
-The Step 2 production bridge is `js/migration/navigationMovementLegacyBridge.js`, installed through the deterministic classic host `js/migration/navigationMovementLegacyHost.js`. The bridge uses live legacy arrays and state modifiers rather than creating a second movement state.
+### Step 5 — Towers + projectiles
 
-The old Prompt-5 `window.load` → injected classic script → dynamic module import handoff has been retired. Movement ownership is now installed deterministically after the legacy compatibility stack and START is gated until the clean owner has installed or explicitly fallen back.
+Clean ownership moved to `js/combat/towerStats.js`, `towerTargeting.js`, `towerCombat.js` and `projectiles.js`. The old tower wrapper chain and temporary structure substitutions stopped being authoritative.
 
-Current behavior preserved in the clean production movement owner:
+### Step 6 — Buildings, placement + Walls
 
-- v48 binary-heap A* and v51 nearest-open blocked-click repair;
-- direct terrain-ignoring aircraft movement;
-- failed reroutes retain the previous valid path;
-- river slowdown for ground units;
-- slowest-member Platoon movement speed;
-- manual Truck orders cancel route ownership while logistics moves preserve it;
-- Truck escort attachment offsets;
-- APC transported-passenger position synchronization;
-- APC support movement boost and follow positioning;
-- Medic follow positioning;
-- Restart state replacement through live state views.
+Clean ownership moved to `js/buildings/*` and structure lifecycle. Canonical placement validation, three-Mines-per-depot, Wall path/group construction, worker use and storage upgrades became authoritative.
 
-Still legacy after Step 2:
+### Step 7 — Fog, rendering, assets + camera
 
-- unit creation / purchase ownership and most unit lifecycle state;
-- combat and support effect execution;
-- route-recording UI and selection/input modes other than normal map movement;
-- APC load/unload UI;
-- rendering and camera;
-- global reset/frame/bootstrap ownership.
+Clean ownership moved to `js/fog/*`, `js/rendering/renderer.js`, `js/assets/assets.js` and `js/input/camera.js`. Rendering became read-only; fog exploration and VFX expiry moved to update-side owners. Detailed presentation was temporarily exposed through read-only compatibility callbacks.
 
-## Step 3 — Movable units + player-unit combat — IMPLEMENTED ON MIGRATION STACK
+### Step 8 — Input, UI, bootstrap, reset + final frame
 
-Production ownership moved to:
+Implemented on `migration/final-runtime-step8`:
 
-- `js/units/deployment.js` for canonical movable-unit identity, creation and Main Base deployment;
-- `js/units/transport.js` for APC load/unload state;
-- `js/combat/unitCombat.js` for all player-unit attack/support decisions;
-- `js/combat/healing.js`, `repair.js`, `playerDamage.js` and `unitMines.js` for clean support/damage behavior;
-- unit-only cleanup from `js/combat/lifecycle.js` for player-unit destruction relationships and APC passenger ejection.
+- `js/production.js` is the single browser entry;
+- `js/core/runtime.js` owns the authoritative frame/reset loop;
+- `js/input/*` owns player input and interaction dispatch;
+- `js/ui/*` owns menus, HUD and action controls;
+- `js/world/world.js` owns production terrain/depot/river generation;
+- `js/rendering/presentation.js` and `projectilePresentation.js` physically contain production presentation code instead of calling versioned renderer functions;
+- the Main Base and firing-squad images are clean asset-registry entries;
+- Restart preserves options/reach preference while rebuilding runtime state;
+- deterministic river fallback checks Base/depot collision;
+- unified hostile projectiles render through the same clean projectile collection used by simulation.
 
-The Step 3 production bridge is `js/migration/unitCombatLegacyBridge.js`, installed through `js/migration/unitCombatLegacyHost.js`. It is a live view over the current legacy state and follows complete state replacement after Restart.
+## Production loader rule
 
-Step 3 deliberately does **not** add another movement owner. Navigation, paths, manual commands, support-follow movement and per-frame unit movement remain owned by Step 2.
+Production must have exactly one JavaScript entry:
 
-The active legacy `updateUnitCombat` wrapper chain is replaced by one clean player-unit combat pass. This removes the live need for legacy unit-type masquerading and temporary `state.units` filtering while preserving final combat ordering and values for Riflemen, Heavy Gunners, Rocketeers, Medics, Engineers, Scouts, Snipers, Flamethrower Troopers, Spotters, Mine Layers, Mechs, Combat Drones, Combat Ships, Tanks, Mobile Artillery, Repair Vehicles, APCs and Machinegun Cars.
+```html
+<script type="module" src="js/production.js?v=1"></script>
+```
 
-Compatibility boundaries in Step 3:
+Do not add `config.js`, a `vNN.js` script, or a migration bridge back to `index.html`.
 
-- clean persistent player shots are emitted into existing `state.bullets`; projectile travel/collision still has one legacy owner;
-- clean combat effects are translated into the existing legacy effect arrays so rendering remains unchanged;
-- current fog visibility and Saboteur reveal rules are consumed through compatibility callbacks rather than duplicated;
-- unit purchases are captured before old v47/v53 purchase handlers so exactly one clean deployment path runs;
-- APC load/unload buttons use clean transport state, while the rest of selected-unit UI remains legacy;
-- clean unit death cleanup runs before the remaining legacy cleanup, which still owns enemy/structure lifecycle and rewards.
+## Historical files
 
-Safety fixes included with Step 3:
-
-- a fully blocked Main Base deployment area now fails and refunds instead of using v47's unchecked fallback spawn point;
-- voluntary APC unload now keeps the passenger loaded when no safe nearby point exists instead of forcing an unchecked fallback position;
-- zero/negative HP is preserved as legitimate dead state during compatibility normalization and is never revived.
-
-Still legacy after Step 3:
-
-- enemy spawning, director, AI, status processing and enemy death/reward lifecycle;
-- tower combat and tower projectile firing;
-- projectile travel/collision/impact simulation;
-- structure lifecycle;
-- route-recording and most selection/action UI;
-- rendering/camera/fog ownership;
-- global reset/frame/bootstrap ownership.
-
-## Step 4 — Enemies + director — IMPLEMENTED ON MIGRATION STACK
-
-Production ownership moved to:
-
-- `js/enemies/enemyDirector.js` for horde timing, threat scaling, queue/batch spawning and final v47 horde tuning;
-- `js/enemies/enemySpawning.js` for canonical enemy construction and spawn placement;
-- `js/enemies/enemyAi.js`, `enemyMovement.js`, `enemyTargeting.js` and `specialEnemies.js` for ordinary and special enemy behavior;
-- `js/combat/statusEffects.js` / `js/enemies/enemyStatus.js` for enemy marks, burn, slow, corrosion timing and Saboteur cloak state;
-- `js/enemies/enemyLifecycle.js` for enemy-only removal and Gold bounty ownership;
-- `js/enemies/resourceCaches.js` for cache-guard AI.
-
-The Step 4 production bridge is `js/migration/enemyLegacyBridge.js`, installed through `js/migration/enemyLegacyHost.js`. It keeps the original production frame ordering instead of collapsing director and actor work into one call: clean director processing runs at the existing `updateDirector()` call site and clean AI/lifecycle runs at the existing `updateEnemies()` call site.
-
-The live global `hitEnemy` entry now delegates to clean player-damage semantics. Legacy towers and legacy projectile collision can therefore keep calling the same entry point without retaining a second enemy death/reward owner. Actual enemy removal and bounty payment happen once in the clean enemy lifecycle pass.
-
-Compatibility boundaries in Step 4:
-
-- tower target selection/firing is still legacy-owned;
-- player/enemy projectile travel, collision and impact timing remain legacy-owned until Step 5;
-- clean Spitter shots are emitted into the existing `state.enemyBullets` collection;
-- enemy combat/effect presentation is translated into existing legacy effect arrays, so rendering remains unchanged;
-- v47 resource-cache **capture/generation/reward** remains legacy-owned because it is closure-bound to the outer v47 frame wrapper; running the clean capture pass as well would double-advance the objective;
-- resource-cache **guard AI** is clean-owned and legacy guard fields are normalized to the clean guard shape;
-- the bridge follows complete state replacement after Restart and keeps `state.v47Director` as an alias-compatible view of the clean director state.
-
-Safety fix included with Step 4:
-
-- Burrower emergence now uses the full navigation blocker (Base, depots, buildings, Walls and terrain) and repairs a blocked intended exit to a nearby open point without exceeding the configured burrow distance. It can no longer emerge inside a solid world object simply because natural terrain was clear.
-
-Still legacy after Step 4:
-
-- tower combat and tower target-selection ownership;
-- projectile travel/collision/impact simulation;
-- structure destruction lifecycle;
-- resource-cache capture/generation/reward;
-- route-recording and most selection/action UI;
-- rendering/camera/fog ownership;
-- global reset/frame/bootstrap ownership.
-
-## Step 5 — Towers + projectiles/combat — IMPLEMENTED ON MIGRATION STACK
-
-Production ownership moved to:
-
-- `js/combat/towerStats.js` for canonical effective tower stats and upgrade-level combat semantics;
-- `js/combat/towerTargeting.js` for tower target eligibility, visibility and target selection;
-- `js/combat/towerCombat.js` for every canonical tower attack decision;
-- `js/combat/projectiles.js` for persistent player/tower/enemy projectile movement, lifetime, collision and impact;
-- `js/combat/playerDamage.js` for player/tower damage modifiers such as marks, Climber vulnerability and Burrower damage reduction.
-
-The Step 5 production bridge is `js/migration/towerProjectileLegacyBridge.js`, installed through `js/migration/towerProjectileLegacyHost.js`. It replaces the final lexical `updateTowers()` and `updateProjectiles()` owners after the legacy stack has loaded, removing the production dependency on the v21/v22 tower-wrapper chain and the v47 projectile implementation.
-
-Production frame ordering is preserved: tower decisions execute at the existing `updateTowers()` call site, enemy AI still executes afterward through Step 4, and projectile travel/collision executes at the existing `updateProjectiles()` call site.
-
-Compatibility boundaries in Step 5:
-
-- `state.bullets` and `state.enemyBullets` remain separate storage arrays temporarily because the current legacy renderer draws friendly and hostile shots through separate loops; both arrays are nevertheless simulated by the same clean `updateProjectileCollection()` implementation;
-- Step 3 player-unit attacks and Step 5 tower attacks continue emitting friendly persistent shots into `state.bullets`;
-- Step 4 Spitter AI continues emitting hostile persistent shots into `state.enemyBullets`;
-- clean tower effects are translated into the existing legacy effect channels so rendering is unchanged;
-- current fog visibility and Saboteur reveal behavior are consumed through compatibility callbacks instead of duplicated;
-- direct tower damage and projectile impacts do not remove enemies or pay bounty: Step 4 remains the one authoritative enemy death/reward owner;
-- Step 3 remains the player-unit destruction/relationship owner;
-- structure destruction cleanup remains on the existing legacy cleanup path until Step 6, and Step 5 invokes that cleanup once after both projectile collections rather than duplicating it;
-- the bridge follows complete legacy state replacement after Restart;
-- tower placement, construction and upgrade UI remain intentionally outside this step.
-
-The active tower combat path no longer needs v22's temporary `state.structures` substitution to split old/new tower generations. All canonical towers are dispatched through one clean combat table.
-
-Still legacy after Step 5:
-
-- structure destruction lifecycle and building-specific teardown;
-- tower/building placement, construction, upgrades and Wall creation;
-- resource-cache capture/generation/reward;
-- route-recording and most selection/action UI;
-- rendering/camera/fog ownership;
-- global reset/frame/bootstrap ownership.
-
-## Step 6 — Buildings, placement and Walls — IMPLEMENTED ON MIGRATION STACK
-
-Production ownership moved to:
-
-- `js/buildings/placement.js` for tower/economic-building placement validation, resource-depot Mine placement, worker availability, Wall geometry/path validation and Wall queueing;
-- `js/buildings/construction.js` for shared construction groups and Engineer construction acceleration;
-- `js/buildings/buildingRuntime.js` for canonical economic-building runtime/storage state and Refinery/Landing Pad storage upgrades;
-- `js/economy/depots.js` for authoritative Mine/depot linking and the three-Mines-per-depot rule;
-- structure-only cleanup from `js/combat/lifecycle.js` for destroyed towers, Walls and economic buildings.
-
-The Step 6 production bridge is `js/migration/buildingPlacementLegacyBridge.js`, installed through `js/migration/buildingPlacementLegacyHost.js`. The bridge uses live legacy state and follows complete state replacement after Restart; it does not create a second building/economy state.
-
-Compatibility boundaries in Step 6:
-
-- the existing pointer/tap listeners remain legacy-owned until Step 8, but their mutable `placeBuild`, Wall helper and construction call seams now delegate to clean owners;
-- the legacy Wall preview renderer remains active until Step 7; `state.v6WallPlacement` is the authoritative Wall draft and is mirrored into legacy `wallPath` only for preview drawing;
-- multi-segment Walls are created as one clean construction group and therefore consume one worker, matching current intended behavior;
-- the legacy storage panel remains UI-owned, but its upgrade button now delegates to the clean storage-upgrade runtime;
-- Step 6 replaces the aggregate `cleanupDestroyed()` seam with a deterministic composition of the clean Step 3 player-unit cleanup plus clean Step 6 structure cleanup; Step 4 remains the sole enemy removal/Gold-bounty owner;
-- Step 5's projectile pass continues invoking the current cleanup seam once after both projectile collections, so structure destruction is now clean-owned without introducing a second frame cleanup pass;
-- Mine destruction immediately normalizes legacy `depot.mineId` / `depot.mineIds` compatibility fields through the clean depot runtime;
-- Bunker remains disabled/removed and is not reintroduced.
-
-The Step 6 bootstrap explicitly waits for Step 3's unit-combat migration to leave its `loading` state before replacing the aggregate cleanup seam. This avoids dynamic-module download timing changing cleanup ownership in production.
-
-Still legacy after Step 6:
-
-- resource-cache capture/generation/reward;
-- route-recording and most selection/action UI dispatch;
-- Wall pointer gesture ownership and general input routing;
-- rendering, visual-effect drawing/expiry, fog and camera ownership;
-- global reset/frame/bootstrap ownership.
-
-## Step 7 — Fog, rendering, assets and camera — IMPLEMENTED ON MIGRATION STACK
-
-Production orchestration moved to:
-
-- `js/rendering/renderer.js` for the authoritative world-to-screen render pass, render order, zoom-aware culling and fog composition;
-- `js/fog/fog.js` for current visibility, persistent exploration and the final v47 vision values;
-- `js/input/camera.js` for camera pan/clamping, 18%–135% zoom, zoom-at-cursor and pointer world conversion;
-- `js/assets/assets.js` for the tracked production sprite registry;
-- `js/rendering/visualEffects.js` for timed visual-effect expiry outside the draw path.
-
-The Step 7 production bridge is `js/migration/renderingFogCameraLegacyBridge.js`, installed through `js/migration/renderingFogCameraLegacyHost.js`. It is a live view over the current legacy state and follows complete state replacement after Restart. `state.v7Fog` is the clean production fog state.
-
-Rendering is now simulation-state-read-only: fog refresh/exploration and timed effect pruning execute from the existing update-side camera call site before draw. The clean renderer no longer advances fog state or removes effects while painting a frame.
-
-Compatibility boundaries in Step 7:
-
-- the clean renderer owns **when, where and whether** world entities render, including camera transforms, culling, fog gating and final fog overlay;
-- the final detailed v35/v47/v53 primitive artwork is temporarily retained as read-only leaf callbacks so migration does not visually downgrade existing units, enemies, structures or terrain;
-- those legacy art callbacks are presentation-only. They do not own camera/fog/render ordering or effect lifetime;
-- the legacy v32 `pointVisibleV32` seam now delegates to clean fog, so old detailed enemy-art wrappers cannot retain a second visibility owner;
-- the existing v51 anonymous canvas wheel listener cannot be removed by reference. Step 7 installs an earlier window-capture wheel owner that applies clean camera zoom and stops propagation before the old listener can run, preventing double zoom ownership without rewriting the legacy file;
-- existing zoom buttons are rebound to clean camera math;
-- the asset manifest now points at the actual tracked production `firing_squad_sheet.png` instead of nonexistent placeholder PNG names, and the clean registry adopts the already-loaded production image when available;
-- input mode dispatch, selection/action UI and the outer animation/update loop remain legacy-owned until Step 8.
-
-Before the legacy script chain can be deleted, Step 8 must move the remaining detailed primitive art implementations currently supplied by the read-only v35/v47/v53 callbacks into clean rendering modules. Step 7 deliberately does not duplicate or redesign that artwork just to make this slice larger.
-
-Still legacy after Step 7:
-
-- resource-cache capture/generation/reward;
-- route-recording and most selection/action UI dispatch;
-- Wall pointer gesture ownership and general input routing;
-- menu/options/restart/state-bootstrap ownership;
-- outer requestAnimationFrame/update pipeline ownership;
-- the physical source location of the detailed compatibility art callbacks, pending their final extraction in Step 8.
-
-## Step 8 — Input, UI, bootstrap and reset
-
-Move input dispatch, menu actions, reset/state initialization and the animation/update pipeline to the clean runtime.
-
-Also move the remaining detailed visual primitive implementations out of the legacy patch files and into clean rendering modules so the Step 7 presentation callbacks no longer require legacy source files.
-
-Then:
-
-- load one production entry module from `index.html`;
-- remove the legacy `v14`–`v53` script chain from production;
-- archive obsolete historical patch files outside the active web runtime;
-- delete transitional `js/migration/*` bridges once no longer needed.
+Versioned JavaScript and `js/migration/*` files are retained for history, parity investigation and safe rollback comparison. They are no longer runtime owners. They can be archived or removed in a later repository-cleanup change after the clean runtime has had browser/playtest verification; deletion is not required for the production cutover.
 
 ## Regression rule
 
-`npm test` is the baseline check for every migration step. CI runs the full committed Node test suite on every push and pull request. A production-stack ordering smoke test now guards the legacy-end → Step 1…Step 7 host/bootstrap sequence; browser-level interaction smoke coverage should still be expanded as the final input/bootstrap layer is migrated.
+`npm test` is mandatory for every runtime change. CI runs the committed Node suite on push and pull request. The production-loader smoke test explicitly fails if the legacy JavaScript stack or migration bridges are reactivated.
+
+The final Step 8 branch also tests world generation, collision-safe river fallback, exact frame phase ordering, pause semantics, 33ms clamping, Restart/options preservation, Landing Pad attraction, update-side VFX expiry and unified projectile presentation.
