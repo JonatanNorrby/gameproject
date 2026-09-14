@@ -114,13 +114,44 @@ Still legacy after Step 3:
 - rendering/camera/fog ownership;
 - global reset/frame/bootstrap ownership.
 
-## Step 4 — Enemies + director
+## Step 4 — Enemies + director — IMPLEMENTED ON MIGRATION STACK
 
-Move spawning, horde director, targeting, special AI, status effects and lifecycle to:
+Production ownership moved to:
 
-- `js/enemies/*`.
+- `js/enemies/enemyDirector.js` for horde timing, threat scaling, queue/batch spawning and final v47 horde tuning;
+- `js/enemies/enemySpawning.js` for canonical enemy construction and spawn placement;
+- `js/enemies/enemyAi.js`, `enemyMovement.js`, `enemyTargeting.js` and `specialEnemies.js` for ordinary and special enemy behavior;
+- `js/combat/statusEffects.js` / `js/enemies/enemyStatus.js` for enemy marks, burn, slow, corrosion timing and Saboteur cloak state;
+- `js/enemies/enemyLifecycle.js` for enemy-only removal and Gold bounty ownership;
+- `js/enemies/resourceCaches.js` for cache-guard AI.
 
-Remove the accumulated `spawnEnemy`, `updateEnemies`, special-enemy and spatial-grid overrides.
+The Step 4 production bridge is `js/migration/enemyLegacyBridge.js`, installed through `js/migration/enemyLegacyHost.js`. It keeps the original production frame ordering instead of collapsing director and actor work into one call: clean director processing runs at the existing `updateDirector()` call site and clean AI/lifecycle runs at the existing `updateEnemies()` call site.
+
+The live global `hitEnemy` entry now delegates to clean player-damage semantics. Legacy towers and legacy projectile collision can therefore keep calling the same entry point without retaining a second enemy death/reward owner. Actual enemy removal and bounty payment happen once in the clean enemy lifecycle pass.
+
+Compatibility boundaries in Step 4:
+
+- tower target selection/firing is still legacy-owned;
+- player/enemy projectile travel, collision and impact timing remain legacy-owned until Step 5;
+- clean Spitter shots are emitted into the existing `state.enemyBullets` collection;
+- enemy combat/effect presentation is translated into existing legacy effect arrays, so rendering remains unchanged;
+- v47 resource-cache **capture/generation/reward** remains legacy-owned because it is closure-bound to the outer v47 frame wrapper; running the clean capture pass as well would double-advance the objective;
+- resource-cache **guard AI** is clean-owned and legacy guard fields are normalized to the clean guard shape;
+- the bridge follows complete state replacement after Restart and keeps `state.v47Director` as an alias-compatible view of the clean director state.
+
+Safety fix included with Step 4:
+
+- Burrower emergence now uses the full navigation blocker (Base, depots, buildings, Walls and terrain) and repairs a blocked intended exit to a nearby open point without exceeding the configured burrow distance. It can no longer emerge inside a solid world object simply because natural terrain was clear.
+
+Still legacy after Step 4:
+
+- tower combat and tower target-selection ownership;
+- projectile travel/collision/impact simulation;
+- structure destruction lifecycle;
+- resource-cache capture/generation/reward;
+- route-recording and most selection/action UI;
+- rendering/camera/fog ownership;
+- global reset/frame/bootstrap ownership.
 
 ## Step 5 — Towers + projectiles/combat
 
