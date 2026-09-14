@@ -73,14 +73,46 @@ Still legacy after Step 2:
 - rendering and camera;
 - global reset/frame/bootstrap ownership.
 
-## Step 3 — Movable units + player-unit combat
+## Step 3 — Movable units + player-unit combat — IMPLEMENTED ON MIGRATION STACK
 
-Move unit identity, creation, lifecycle and combat/support behavior to:
+Production ownership moved to:
 
-- `js/units/*`;
-- `js/combat/playerUnitCombat.js` / `js/combat/unitCombat.js` and shared combat foundations.
+- `js/units/deployment.js` for canonical movable-unit identity, creation and Main Base deployment;
+- `js/units/transport.js` for APC load/unload state;
+- `js/combat/unitCombat.js` for all player-unit attack/support decisions;
+- `js/combat/healing.js`, `repair.js`, `playerDamage.js` and `unitMines.js` for clean support/damage behavior;
+- unit-only cleanup from `js/combat/lifecycle.js` for player-unit destruction relationships and APC passenger ejection.
 
-Remove unit-type masquerading and temporary `state.units` filtering used by legacy compatibility layers. Keep movement on the Step 2 owner rather than introducing another movement wrapper.
+The Step 3 production bridge is `js/migration/unitCombatLegacyBridge.js`, installed through `js/migration/unitCombatLegacyHost.js`. It is a live view over the current legacy state and follows complete state replacement after Restart.
+
+Step 3 deliberately does **not** add another movement owner. Navigation, paths, manual commands, support-follow movement and per-frame unit movement remain owned by Step 2.
+
+The active legacy `updateUnitCombat` wrapper chain is replaced by one clean player-unit combat pass. This removes the live need for legacy unit-type masquerading and temporary `state.units` filtering while preserving final combat ordering and values for Riflemen, Heavy Gunners, Rocketeers, Medics, Engineers, Scouts, Snipers, Flamethrower Troopers, Spotters, Mine Layers, Mechs, Combat Drones, Combat Ships, Tanks, Mobile Artillery, Repair Vehicles, APCs and Machinegun Cars.
+
+Compatibility boundaries in Step 3:
+
+- clean persistent player shots are emitted into existing `state.bullets`; projectile travel/collision still has one legacy owner;
+- clean combat effects are translated into the existing legacy effect arrays so rendering remains unchanged;
+- current fog visibility and Saboteur reveal rules are consumed through compatibility callbacks rather than duplicated;
+- unit purchases are captured before old v47/v53 purchase handlers so exactly one clean deployment path runs;
+- APC load/unload buttons use clean transport state, while the rest of selected-unit UI remains legacy;
+- clean unit death cleanup runs before the remaining legacy cleanup, which still owns enemy/structure lifecycle and rewards.
+
+Safety fixes included with Step 3:
+
+- a fully blocked Main Base deployment area now fails and refunds instead of using v47's unchecked fallback spawn point;
+- voluntary APC unload now keeps the passenger loaded when no safe nearby point exists instead of forcing an unchecked fallback position;
+- zero/negative HP is preserved as legitimate dead state during compatibility normalization and is never revived.
+
+Still legacy after Step 3:
+
+- enemy spawning, director, AI, status processing and enemy death/reward lifecycle;
+- tower combat and tower projectile firing;
+- projectile travel/collision/impact simulation;
+- structure lifecycle;
+- route-recording and most selection/action UI;
+- rendering/camera/fog ownership;
+- global reset/frame/bootstrap ownership.
 
 ## Step 4 — Enemies + director
 
