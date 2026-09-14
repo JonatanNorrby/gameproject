@@ -20,6 +20,7 @@ const migrationPairs = [
   ['js/migration/enemyLegacyHost.js', 'js/migration/enemyLegacyBootstrap.js'],
   ['js/migration/towerProjectileLegacyHost.js', 'js/migration/towerProjectileLegacyBootstrap.js'],
   ['js/migration/buildingPlacementLegacyHost.js', 'js/migration/buildingPlacementLegacyBootstrap.js'],
+  ['js/migration/renderingFogCameraLegacyHost.js', 'js/migration/renderingFogCameraLegacyBootstrap.js'],
 ];
 
 test('production migration hosts/bootstrap pairs remain after the legacy patch chain and in step order', () => {
@@ -35,9 +36,9 @@ test('production migration hosts/bootstrap pairs remain after the legacy patch c
   }
 });
 
-test('Step 6 production cutover remains the final migration layer before body close', () => {
+test('Step 7 production cutover remains the final migration layer before body close', () => {
   assert.deepEqual(
     ordered.slice(-2),
-    ['js/migration/buildingPlacementLegacyHost.js', 'js/migration/buildingPlacementLegacyBootstrap.js'],
+    ['js/migration/renderingFogCameraLegacyHost.js', 'js/migration/renderingFogCameraLegacyBootstrap.js'],
   );
 });
