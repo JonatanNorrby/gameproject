@@ -28,8 +28,10 @@ export function initializeEconomyRuntime(game) {
   return game.state.economyRuntime;
 }
 
-// Authoritative clean economy/logistics update. Production remains on the legacy
-// loop until final integration; this function is never installed as a wrapper.
+// Authoritative clean economy/logistics update for the future single-module
+// pipeline. Production migration step 1 reuses these same clean subsystem passes
+// through js/migration/economyLegacyBridge.js, split around legacy unit movement
+// to preserve the current frame order.
 export function updateEconomy(game, dt) {
   const step = Math.max(0, Number(dt) || 0);
   if (!game?.state?.entities || step <= 0) return { extracted: 0, trucksServiced: 0, oreProcessed: 0, metalProduced: 0, pads: { landed: 0, launched: 0, loaded: 0 } };
