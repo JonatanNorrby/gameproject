@@ -5,7 +5,7 @@ import { damageBaseAndConsumeEnemy } from './enemyCombat.js';
 import { updateEnemyDirector, ensureEnemyDirector } from './enemyDirector.js';
 import { effectiveEnemySpeed, tickEnemyStatuses } from './enemyStatus.js';
 import { updateStatusEffects } from '../combat/statusEffects.js';
-import { cleanupDestroyedEntities } from '../combat/lifecycle.js';
+import { cleanupDeadEnemies } from './enemyLifecycle.js';
 import {
   initializeResourceCaches,
   isCacheGuard,
@@ -67,14 +67,22 @@ export function initializeEnemyRuntime(game, { forceCaches = false } = {}) {
   return game.state.enemyRuntime;
 }
 
-export function updateEnemies(game, dt) {
+// The legacy production frame has two distinct enemy call sites: director work
+// happens near the start of the simulation frame, while movement/AI happens after
+// player/tower combat. Keep a clean actor-only pass so incremental production
+// migration can preserve that ordering without running the director twice.
+//
+// manageCacheCapture=false is used only by the Step 4 compatibility bridge. v47's
+// outer update wrapper still owns resource-cache capture/reward after the legacy
+// frame returns, so running clean capture as well would double-advance that world
+// objective. Cache GUARD AI is still clean-owned here.
+export function updateEnemyActors(game, dt, { manageCacheCapture = true } = {}) {
   const step = Math.max(0, Number(dt) || 0);
   if (!game?.state?.entities || step <= 0) {
-    return { spawned: 0, actors: 0, guards: 0, removed: 0, cachesCompleted: 0 };
+    return { actors: 0, guards: 0, removed: 0, cachesCompleted: 0 };
   }
   if (!game.state.enemyRuntime?.initialized) initializeEnemyRuntime(game);
 
-  const directorResult = updateEnemyDirector(game, step);
   // One shared owner advances marks, burn, slow and corrosion before enemy AI,
   // matching the effective legacy ordering for statuses already active this frame.
   updateStatusEffects(game, step);
@@ -91,15 +99,24 @@ export function updateEnemies(game, dt) {
   }
 
   const guards = updateCacheGuards(game, step);
-  const lifecycle = cleanupDestroyedEntities(game);
-  const cachesCompleted = updateCacheCapture(game, step);
+  const removed = cleanupDeadEnemies(game);
+  const cachesCompleted = manageCacheCapture ? updateCacheCapture(game, step) : 0;
 
+  return { actors, guards, removed, cachesCompleted };
+}
+
+export function updateEnemies(game, dt) {
+  const step = Math.max(0, Number(dt) || 0);
+  if (!game?.state?.entities || step <= 0) {
+    return { spawned: 0, actors: 0, guards: 0, removed: 0, cachesCompleted: 0 };
+  }
+  if (!game.state.enemyRuntime?.initialized) initializeEnemyRuntime(game);
+
+  const directorResult = updateEnemyDirector(game, step);
+  const actorResult = updateEnemyActors(game, step);
   return {
     spawned: directorResult.spawned,
     hordeLaunched: directorResult.launched,
-    actors,
-    guards,
-    removed: lifecycle.enemies,
-    cachesCompleted,
+    ...actorResult,
   };
 }
