@@ -31,6 +31,7 @@ export {
   emitEnemyProjectile,
   emitPlayerProjectile,
   emitProjectile,
+  updateProjectileCollection,
   updateProjectiles,
 } from './projectiles.js';
 export { applyBaseDamage, cleanupDestroyedEntities, ejectDestroyedApcPassenger } from './lifecycle.js';
