@@ -27,15 +27,23 @@ export function pointInRiver(game, x, y) {
   return false;
 }
 
-export function getIndividualUnitMoveSpeed(game, unit) {
+// Intrinsic movement deliberately excludes the global unitMove modifier. The
+// final legacy runtime computes Platoon/APC support caps first and applies the
+// global modifier afterward; keeping this primitive separate preserves that
+// ordering when production movement is migrated.
+export function getIntrinsicUnitMoveSpeed(game, unit) {
   const definition = getUnitDefinition(unit);
   let speed = Number(definition?.moveSpeed) || 0;
   if (!isFlyingUnit(unit) && pointInRiver(game, unit.x, unit.y)) {
     const riverSlow = Number(game?.config?.rivers?.slowFactor);
     speed *= Number.isFinite(riverSlow) ? riverSlow : 1;
   }
+  return speed;
+}
+
+export function getIndividualUnitMoveSpeed(game, unit) {
   const moveModifier = Number(game?.state?.modifiers?.unitMove);
-  return speed * (Number.isFinite(moveModifier) ? moveModifier : 1);
+  return getIntrinsicUnitMoveSpeed(game, unit) * (Number.isFinite(moveModifier) ? moveModifier : 1);
 }
 
 export function setUnitDestination(game, unit, x, y, options = {}) {
@@ -73,7 +81,8 @@ export function setUnitDestination(game, unit, x, y, options = {}) {
   unit.moveTarget = { x: destination.x, y: destination.y };
 
   // Preserve the small compatibility side effect already owned by the current
-  // destination primitive. Route creation/service/loop orchestration stays legacy.
+  // destination primitive. Route creation/service/loop orchestration stays in
+  // economy/truckLogistics.js.
   if (unit.type === 'truck' && !options.preserveRoute) {
     unit.routeActive = false;
     unit.routeLoop = false;
@@ -81,7 +90,7 @@ export function setUnitDestination(game, unit, x, y, options = {}) {
   return true;
 }
 
-export function updateUnitMovement(game, unit, dt) {
+export function updateUnitMovement(game, unit, dt, options = {}) {
   if (!game || !unit || !Number.isFinite(dt) || dt <= 0) return false;
   if (!Array.isArray(unit.path) || !unit.path.length) return false;
 
@@ -99,7 +108,8 @@ export function updateUnitMovement(game, unit, dt) {
     return true;
   }
 
-  const speed = getIndividualUnitMoveSpeed(game, unit);
+  const override = Number(options.speed);
+  const speed = Number.isFinite(override) ? Math.max(0, override) : getIndividualUnitMoveSpeed(game, unit);
   const step = Math.min(distance, speed * dt);
   unit.heading = Math.atan2(dy, dx);
   unit.x += dx / distance * step;

@@ -14,16 +14,16 @@ Each step must leave the game playable. A subsystem is considered migrated only 
 
 No new gameplay feature should create another `vNN.js` ownership layer for a subsystem that has already been migrated.
 
-## Step 1 — Economy / logistics runtime — IN PROGRESS
+## Step 1 — Economy / logistics runtime — IMPLEMENTED ON MIGRATION STACK
 
-Production ownership being moved to `js/economy/*`:
+Production ownership moved to `js/economy/*` for:
 
 - Crystal/Ore Mine extraction;
 - Refinery Ore → Metal processing;
 - Landing Pad / export ship cooldown, loading and export;
 - Truck automatic service and route-stop service.
 
-Still legacy in this step:
+Still legacy after this step:
 
 - build placement and construction UI;
 - storage upgrade UI;
@@ -36,25 +36,51 @@ The transitional bridge is `js/migration/economyLegacyBridge.js`. It exposes the
 
 The production frame keeps its existing timing: Mine/Refinery/Pad simulation runs before unit movement, Truck servicing runs after unit movement.
 
-## Step 2 — Navigation + movement commands
+## Step 2 — Navigation + movement commands — IMPLEMENTED ON MIGRATION STACK
 
-Move all player/logistics/support movement to:
+Production ownership moved to:
 
-- `js/navigation/*`;
-- `js/movement/*`;
-- `js/units/commands.js`;
-- `js/units/platoons.js`.
+- `js/navigation/pathfinding.js` for blockers, nearest-open destination repair and A*;
+- `js/movement/movement.js` for destination assignment and waypoint following;
+- `js/movement/runtime.js` for the production movement pass;
+- `js/units/commands.js` for normal manual movement command semantics;
+- `js/units/platoons.js` for Platoon formation move orders.
 
-Remove the asynchronous Prompt-5 manual-move bridge and legacy `setUnitDestination`/path ownership. Preserve current route, Platoon, support-follow and aircraft behavior.
+The Step 2 production bridge is `js/migration/navigationMovementLegacyBridge.js`, installed through the deterministic classic host `js/migration/navigationMovementLegacyHost.js`. The bridge uses live legacy arrays and state modifiers rather than creating a second movement state.
+
+The old Prompt-5 `window.load` → injected classic script → dynamic module import handoff has been retired. Movement ownership is now installed deterministically after the legacy compatibility stack and START is gated until the clean owner has installed or explicitly fallen back.
+
+Current behavior preserved in the clean production movement owner:
+
+- v48 binary-heap A* and v51 nearest-open blocked-click repair;
+- direct terrain-ignoring aircraft movement;
+- failed reroutes retain the previous valid path;
+- river slowdown for ground units;
+- slowest-member Platoon movement speed;
+- manual Truck orders cancel route ownership while logistics moves preserve it;
+- Truck escort attachment offsets;
+- APC transported-passenger position synchronization;
+- APC support movement boost and follow positioning;
+- Medic follow positioning;
+- Restart state replacement through live state views.
+
+Still legacy after Step 2:
+
+- unit creation / purchase ownership and most unit lifecycle state;
+- combat and support effect execution;
+- route-recording UI and selection/input modes other than normal map movement;
+- APC load/unload UI;
+- rendering and camera;
+- global reset/frame/bootstrap ownership.
 
 ## Step 3 — Movable units + player-unit combat
 
-Move unit identity, creation, movement update and combat/support behavior to:
+Move unit identity, creation, lifecycle and combat/support behavior to:
 
 - `js/units/*`;
-- `js/combat/playerUnitCombat.js` and shared combat foundations.
+- `js/combat/playerUnitCombat.js` / `js/combat/unitCombat.js` and shared combat foundations.
 
-Remove unit-type masquerading and temporary `state.units` filtering used by legacy compatibility layers.
+Remove unit-type masquerading and temporary `state.units` filtering used by legacy compatibility layers. Keep movement on the Step 2 owner rather than introducing another movement wrapper.
 
 ## Step 4 — Enemies + director
 

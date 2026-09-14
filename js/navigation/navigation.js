@@ -1,6 +1,6 @@
 import { MIGRATION_STATUS } from '../core/config.js';
 
-export const NAVIGATION_SYSTEM_STATUS = MIGRATION_STATUS.PARTIALLY_MIGRATED;
+export const NAVIGATION_SYSTEM_STATUS = MIGRATION_STATUS.MIGRATED;
 
 export {
   findNearestOpenDestination,
@@ -10,6 +10,7 @@ export {
 } from './pathfinding.js';
 export { isNavigationTerrainBlocked } from './terrain.js';
 
-// Pathfinding is request-driven. This update hook remains intentionally empty
-// until a later prompt migrates higher-level movement-command orchestration.
+// Navigation is request-driven rather than frame-driven. Production Step 2 now
+// routes path/blocking requests through these clean owners; the empty update hook
+// remains for the future single clean update pipeline.
 export function updateNavigation(_game, _dt) {}
