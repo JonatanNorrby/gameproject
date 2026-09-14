@@ -73,16 +73,23 @@ export function findBaseDeploymentPoint(game, roleOrType) {
       if (!spawnBlocked(game, x, y, radius, false)) return { x, y };
     }
   }
-  return {
+  // Never return the old unchecked v47 fallback. If every deployment ring is
+  // blocked, the purchase must fail and be refunded rather than overlap terrain,
+  // a building, a depot, a Wall or another unit.
+  const fallback = {
     x: Math.max(radius + 8, Math.min(game.config.world.width - radius - 8, base.x + base.radius + radius + 70)),
     y: base.y,
   };
+  return spawnBlocked(game, fallback.x, fallback.y, radius, false) ? null : fallback;
 }
 
 export function createPlayerUnit(game, roleOrType, point = null) {
   const role = normalizeUnitType(roleOrType);
   const config = getUnitConfig(role);
   const position = point || findBaseDeploymentPoint(game, role);
+  if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+    throw new Error('no-open-deployment-point');
+  }
   const members = Math.max(1, Number(config.members) || Number(config.barrels) || 1);
   const unit = {
     id: id(game, role),
@@ -130,6 +137,11 @@ export function deployUnitFromBase(game, roleOrType) {
     return { ok: true, unit, role, cost: config.cost };
   } catch (error) {
     refundResources(game, config.cost);
-    return { ok: false, reason: 'deployment-failed', role, error };
+    return {
+      ok: false,
+      reason: error?.message === 'no-open-deployment-point' ? 'no-open-deployment-point' : 'deployment-failed',
+      role,
+      error,
+    };
   }
 }

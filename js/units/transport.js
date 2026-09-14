@@ -55,9 +55,12 @@ export function unloadApc(game, apc) {
     const angle = (Number(apc.heading) || 0) + i / 12 * Math.PI * 2;
     point = findNearestOpenDestination(game, apc.x + Math.cos(angle) * distance, apc.y + Math.sin(angle) * distance, passenger);
   }
+  // Never force a living passenger into an unchecked fallback point. If the APC
+  // is boxed in, keep the passenger safely loaded and let the player move first.
+  if (!point) return { ok: false, reason: 'no-open-unload-point', passenger };
   passenger.transportedIn = null;
-  passenger.x = point?.x ?? apc.x + distance;
-  passenger.y = point?.y ?? apc.y;
+  passenger.x = point.x;
+  passenger.y = point.y;
   passenger.path = [];
   passenger.moveTarget = null;
   apc.passengerId = null;
