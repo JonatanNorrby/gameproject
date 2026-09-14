@@ -6,10 +6,11 @@ export { MAX_TOWER_LEVEL, getEffectiveTowerStats, getTowerLevel } from '../comba
 export { canTowerAffectEnemy, findTowerTarget, findTowerTargets } from '../combat/towerTargeting.js';
 export { assertTowerCombatCoverage, updateTowerCombat } from '../combat/towerCombat.js';
 
-export const TOWER_SYSTEM_STATUS = MIGRATION_STATUS.PARTIALLY_MIGRATED;
+export const TOWER_SYSTEM_STATUS = MIGRATION_STATUS.MIGRATED;
 
-// Prompt 8 makes this the clean tower-system entry point. Production still uses
-// the legacy updateTowers chain until the later runtime activation prompt.
+// Step 5 installs this clean tower-system entry point into the production frame
+// through js/migration/towerProjectileLegacyBridge.js. Placement, upgrades and
+// rendering remain on their existing owners until their dedicated migration steps.
 export function updateTowers(game, dt) {
   return updateTowerCombat(game, dt);
 }
