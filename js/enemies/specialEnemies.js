@@ -9,7 +9,7 @@ import {
   stepDirectTerrainOnly,
   wallThickness,
 } from './enemyMovement.js';
-import { isNavigationTerrainBlocked } from '../navigation/terrain.js';
+import { isNavigationPointBlocked } from '../navigation/pathfinding.js';
 
 function emitEffect(game, effect) {
   const adapter = game?.services?.enemyAI?.emitEffect;
@@ -73,17 +73,19 @@ export function updateBurrower(game, enemy, context) {
     const distance = Math.hypot(dx, dy) || 1;
     const point = nearestPointOnWall(enemy, wall);
     const push = wallThickness(game, wall) / 2 + enemyRadius(enemy) + 48;
-    const ex = point.x + dx / distance * push;
-    const ey = point.y + dy / distance * push;
     const world = game.config.world;
+    const rawX = point.x + dx / distance * push;
+    const rawY = point.y + dy / distance * push;
+    const ex = Math.max(enemy.r, Math.min(world.width - enemy.r, rawX));
+    const ey = Math.max(enemy.r, Math.min(world.height - enemy.r, rawY));
+    // Step 4 closes the old v24 emergence hole: the exit must be open against
+    // the same full Base/depot/building/Wall/terrain blocker used by navigation,
+    // not merely clear of shaped terrain.
     if (Math.hypot(ex - enemy.x, ey - enemy.y) <= config.distance
-      && !isNavigationTerrainBlocked(game, ex, ey, enemyRadius(enemy) + 2, { allTerrainKinds: true })) {
+      && !isNavigationPointBlocked(game, ex, ey, enemyRadius(enemy) + 2)) {
       enemy.burrowed = true;
       enemy.burrowTimer = config.time;
-      enemy.burrowExit = {
-        x: Math.max(enemy.r, Math.min(world.width - enemy.r, ex)),
-        y: Math.max(enemy.r, Math.min(world.height - enemy.r, ey)),
-      };
+      enemy.burrowExit = { x: ex, y: ey };
       emitEffect(game, { kind: 'burrow', x: enemy.x, y: enemy.y, durationMs: 320, legacyChannel: 'v24Effects' });
       return false;
     }
