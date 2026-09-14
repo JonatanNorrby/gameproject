@@ -73,11 +73,14 @@ test('production visibility is clean-fog owned before detailed enemy art callbac
 test('clean camera preserves zoom-at-cursor and clamps world bounds',()=>{
   const {h,owners}=install();
   h.state.camera={x:100,y:100,zoom:1,speed:1200};
-  const worldBefore={x:100+200,y:100+100};owners.setZoom(2,200,100);
-  assert.equal(h.state.camera.x,200);assert.equal(h.state.camera.y,150);
-  assert.equal(h.state.camera.x+200/2,worldBefore.x);assert.equal(h.state.camera.y+100/2,worldBefore.y);
+  const worldBefore={x:100+200,y:100+100};
+  const zoom=owners.setZoom(1.25,200,100);
+  assert.equal(zoom,1.25);assert.equal(h.state.camera.x,140);assert.equal(h.state.camera.y,120);
+  assert.equal(h.state.camera.x+200/zoom,worldBefore.x);assert.equal(h.state.camera.y+100/zoom,worldBefore.y);
+  assert.equal(owners.setZoom(2,200,100),1.35);
   h.state.camera.x=99999;h.state.camera.y=99999;owners.clampCamera();
-  assert.ok(h.state.camera.x<=10120-1280/2);assert.ok(h.state.camera.y<=7590-800/2);
+  const currentZoom=owners.zoomValue();
+  assert.ok(h.state.camera.x<=10120-1280/currentZoom);assert.ok(h.state.camera.y<=7590-800/currentZoom);
 });
 
 test('pointer world conversion uses the same clean camera transform as rendering',()=>{
