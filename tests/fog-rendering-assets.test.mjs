@@ -82,10 +82,12 @@ test('renderer exposes final world-to-fog-to-screen ordering',()=>{
   assert.deepEqual(RENDER_ORDER,['backdrop','base','structures','units','enemies','projectiles','particles','indicators','fog','screen']);
 });
 
-test('asset registry owns the actual production firing-squad sheet and is Node-safe',async()=>{
-  assert.deepEqual(Object.keys(ASSET_MANIFEST),[ASSET_KEYS.FIRING_SQUAD_SHEET]);
+test('asset registry owns both tracked production images and is Node-safe',async()=>{
+  assert.deepEqual(Object.keys(ASSET_MANIFEST),[ASSET_KEYS.MAIN_BASE,ASSET_KEYS.FIRING_SQUAD_SHEET]);
+  assert.equal(ASSET_MANIFEST[ASSET_KEYS.MAIN_BASE].src,'A2D31210-1B7B-4D4F-9C2D-0740047D4008.png');
   assert.equal(ASSET_MANIFEST[ASSET_KEYS.FIRING_SQUAD_SHEET].src,'firing_squad_sheet.png');
+  const base=await stat(new URL('../A2D31210-1B7B-4D4F-9C2D-0740047D4008.png',import.meta.url));assert.ok(base.size>0);
   const sprite=await stat(new URL('../firing_squad_sheet.png',import.meta.url));assert.ok(sprite.size>0);
   const registry=createAssetRegistry({ImageCtor:null});const entries=await registry.loadAll();
-  assert.equal(entries.length,1);assert.equal(entries[0].status,'unsupported');assert.equal(entries[0].image,null);
+  assert.equal(entries.length,2);assert.ok(entries.every(entry=>entry.status==='unsupported'&&entry.image===null));
 });
